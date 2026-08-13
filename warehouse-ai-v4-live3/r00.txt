@@ -1,0 +1,42 @@
+Input();photos=[];renderPhotos();show('operation');
+}
+function toggleArrival(){$('arrivalCustom').classList.toggle('hidden',$('arrivedNow').checked)}
+function addFiles(target,list){
+  [...list].forEach(file=>{if(!file.type.startsWith('image/'))return;const r=new FileReader();r.onload=e=>{target.push({file,data:e.target.result,name:file.name||`foto-${target.length+1}.jpg`,capturedAt:new Date().toISOString()});target===photos?renderPhotos():renderRequestPhotos()};r.readAsDataURL(file)})
+}
+$('cameraInput').addEventListener('change',e=>{addFiles(photos,e.target.files);e.target.value=''})
+$('galleryInput').addEventListener('change',e=>{addFiles(photos,e.target.files);e.target.value=''})
+$('requestCamera').addEventListener('change',e=>{addFiles(requestPhotos,e.target.files);e.target.value=''})
+$('requestGallery').addEventListener('change',e=>{addFiles(requestPhotos,e.target.files);e.target.value=''})
+function renderPhotos(){renderPhotoArray(photos,'photoGrid',true);$('clearPhotosBtn').classList.toggle('hidden',!photos.length)}
+function renderRequestPhotos(){renderPhotoArray(requestPhotos,'requestPhotoGrid',false)}
+function renderPhotoArray(arr,id,isOp){$(id).innerHTML=arr.map((p,i)=>`<div class="thumb"><img src="${p.data}"><button onclick="${isOp?'removePhoto':'removeRequestPhoto'}(${i})">×</button><b>FOTO ${i+1}</b></div>`).join('')}
+function removePhoto(i){photos.splice(i,1);renderPhotos()}function removeRequestPhoto(i){requestPhotos.splice(i,1);renderRequestPhotos()}function clearPhotos(){photos=[];renderPhotos()}
+
+function cartonPrompt(){
+ return `Analizza le ${photos.length} fotografie di cartoni di magazzino nell'ordine in cui sono allegate.
+
+Devi estrarre soltanto i dati utili al magazzino:
+- codice articolo base;
+- tutte le taglie/varianti visibili;
+- quantità associata a ogni taglia/riga;
+- stato della specifica riga: NUOVO, SCARICATO, USATO, DISMESSO oppure NON_CHIARO.
+
+REGOLE IMPORTANTI:
+- Nei nostri codici, quando il primo carattere sembra "1" ma il codice articolo normalmente inizia con I, interpretalo come lettera I maiuscola. Esempi: I30861, I00215.
+- Un cartone può contenere più articoli e più taglie.
+- Esempio: I30861 con L/50 e M/18 significa due righe: L=50 e M=18.
+- La stessa taglia può comparire più volte con stati diversi: mantieni righe separate.
+- Usa la posizione visiva delle scritte per associare quantità e stato, non solo OCR lineare.
+- Se una parola di stato è visibile ma non sai a quale quantità appartiene, usa NON_CHIARO.
+- Non inventare dati.
+- Restituisci SOLO JSON valido, senza markdown e senza testo aggiuntivo.
+
+Formato:
+{"photos":[{"photo_index":1,"groups":[{"article_base":"I30861","description":"","confidence":0.95,"variants":[{"size":"L","quantity":50,"state":"SCARICATO","confidence":0.95,"note":""}]}],"general_note":""}]}`
+}
+function requestPrompt(){
+ return `Analizza le ${requestPhotos.length} fotografie della richiesta cartacea di magazzino nell'ordine in cui sono allegate.
+
+Estrai tutte le righe richieste con:
+-
