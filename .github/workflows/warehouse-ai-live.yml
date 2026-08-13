@@ -1,0 +1,62 @@
+name: Warehouse AI Live
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/warehouse-ai-live.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Warehouse AI
+        run: |
+          python - <<'PY'
+          import base64, gzip, json, pathlib, urllib.request
+
+          shas = [
+            '442445d7742f8731617f547b9144961487a955d2',
+            '2e38a096b7d208e453ecc40aac41500e2fdf0ff8',
+            'f131f7eb4583be934232ef64cf60f81755247c9e',
+            '8caaaefd3c829ddbc35ba61c6c65b2d5f697269f',
+            '1b2382595b03f7abd718710e22e6d67cd7e4b5f1',
+            'e65ced4a9ef8f74a2cc66dc54c61440503a8c542',
+            'd588a02da4f35033abd7c395ad50ee35db71389f',
+            '3c707557a6f7a3956d43950e0350131b87d49d18',
+            '589a9733000aa617c875e9f4af50c79e6351c0dc',
+            'cde0c9f6bbabfe0da2f3c645f0e7e1c2cb513b0a',
+            'e7b89ea2a31b7ed9dffd52c5a95077b13acf93c2',
+            '5b216bc34f1845f1f4afac9459bf64b574eaf703',
+            '730edf09bc43cc612f45a070192e32031523bfda',
+            '4a21931e2a888c82e45b0d9a3d30d25e20ac9e0e',
+            'f0048c0cf2f257eb56843216b23ef99e59a17d5a',
+            'b04d79cdccc1b58963e0145975edf516a05519e5',
+          ]
+          repo = 'Mexpy88/audio-grattaevinci'
+          packed = bytearray()
+          for sha in shas:
+              url = f'https://api.github.com/repos/{repo}/git/blobs/{sha}'
+              req = urllib.request.Request(url, headers={'Accept':'application/vnd.github+json','User-Agent':'warehouse-ai-publisher'})
+              with urllib.request.urlopen(req) as response:
+                  obj = json.load(response)
+              packed.extend(base64.b64decode(obj['content']))
+          html = gzip.decompress(bytes(packed))
+          pathlib.Path('site').mkdir(exist_ok=True)
+          pathlib.Path('site/index.html').write_bytes(html)
+          print('Warehouse AI:', len(html), 'bytes')
+          PY
+
+      - name: Publish static branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: warehouse-ai-live
+          publish_dir: ./site
+          force_orphan: true
