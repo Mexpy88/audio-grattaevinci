@@ -1,0 +1,187 @@
+ICA GIACENZE</button>
+    </section>
+
+    <section id="requestDetail" class="screen">
+      <button class="back" onclick="show('requestsScreen')">← RICHIESTE</button>
+      <div id="requestDetailHeader"></div>
+      <div id="requestAvailability"></div>
+      <div class="card">
+        <div class="sectionTitle">Aggiungi materiale non richiesto</div>
+        <input id="extraSearch" class="field" placeholder="Cerca articolo o taglia" oninput="renderExtraStockSearch()">
+        <div id="extraStockResults"></div>
+      </div>
+      <div class="card">
+        <label>Note generali<input id="requestGeneralNote" class="field" placeholder="Facoltativo" onchange="saveRequestDraftNote()"></label>
+      </div>
+      <button id="confirmPickBtn" class="btn success" onclick="confirmPicking()">CONFERMA E SCARICA GIACENZA</button>
+    </section>
+  </main>
+</div>
+
+
+<dialog id="loginDialog">
+  <div class="dialogHead"><h2>Accesso operatore</h2><button onclick="closeLogin()">×</button></div>
+  <p class="loginHint">Inserisci il PIN personale di 4 cifre.</p>
+  <input id="pinInput" class="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="PIN operatore">
+  <div id="loginError" class="authError hidden">PIN non valido.</div>
+  <button class="btn primary" onclick="submitLogin()">ACCEDI</button>
+</dialog>
+
+<dialog id="masterDialog">
+  <div class="dialogHead"><h2>Importa magazzino master</h2><button onclick="masterDialog.close()">×</button></div>
+  <label>Foglio Excel<select id="masterSheet" class="field" onchange="prepareMasterSheet()"></select></label>
+  <div id="masterPreviewInfo" class="status"></div>
+  <label>Articolo *<select id="mapArticle" class="field"></select></label>
+  <div class="twoCols">
+    <label>Taglia<select id="mapSize" class="field"></select></label>
+    <label>Quantità *<select id="mapQty" class="field"></select></label>
+  </div>
+  <label>Stato<select id="mapState" class="field"></select></label>
+  <label>Fila/Scaffale già uniti<select id="mapLocation" class="field"></select></label>
+  <div class="twoCols">
+    <label>Oppure Fila<select id="mapFila" class="field"></select></label>
+    <label>Scaffale<select id="mapScaffale" class="field"></select></label>
+  </div>
+  <label>Bancale<select id="mapBancale" class="field"></select></label>
+  <div class="status warn">L'importazione sostituisce la giacenza master attuale. I movimenti registrati dopo l'importazione continueranno ad aggiornare la giacenza.</div>
+  <button class="btn success" onclick="importMappedMaster()">IMPORTA COME MASTER</button>
+</dialog>
+
+<dialog id="documentDialog">
+  <div class="dialogHead"><h2 id="documentTitle">Scarico</h2><button onclick="documentDialog.close()">×</button></div>
+  <div id="documentBody"></div>
+</dialog>
+
+<dialog id="editMovementDialog">
+  <div class="dialogHead"><h2>Modifica movimento</h2><button onclick="editMovementDialog.close()">×</button></div>
+  <input id="editMovementId" type="hidden">
+  <label>Articolo<input id="editArticle" class="field"></label>
+  <div class="twoCols"><label>Taglia<input id="editSize" class="field"></label><label>Quantità<input id="editQty" class="field" type="number" min="0"></label></div>
+  <label>Stato<select id="editState" class="field"><option>NUOVO</option><option>SCARICATO</option><option>USATO</option><option>DISMESSO</option><option>NON_CHIARO</option></select></label>
+  <label>Fila/Scaffale<input id="editFilaScaffale" class="field"></label><label>Bancale<input id="editBancale" class="field"></label>
+  <label>Note<input id="editNote" class="field"></label>
+  <button class="btn primary" onclick="saveMovementEdit()">SALVA</button>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const STATES=['NUOVO','SCARICATO','USATO','DISMESSO','NON_CHIARO'];
+const DESTINATIONS=['LINA','SPEDIZIONI','LAVAGGIO','PRODUZIONE','CONTROLLO QUALITÀ','ALTRO'];
+const $=id=>document.getElementById(id);
+const storeKey='so_magazzino_v2';
+let db=loadDb();
+let operation='CARICA';
+let photos=[];
+let requestPhotos=[];
+let analysisMode='CARTON';
+let currentPrompt='';
+let importedPhotos=[];
+let requestReviewLines=[];
+let bridgeBackScreen='operation';
+let registryTab='MOVIMENTI';
+let activeRequestId=null;
+let masterWorkbook=null;
+let masterFileName='';
+let masterMatrix=[];
+let masterHeaderRow=0;
+const USER_HASHES={
+  'a4a83020b7bcf38c771155cf99a83265fcee6b4c6dad1b1f041dc8615b788140':'Mattia',
+  'c7f64465ddbc194f297e7a82e0a1fae97632e24f8a6cfcf25fb6827b7f146630':'Massimo',
+  'c7a2797dbb855b475ccc5a3f6fe19345ad5259331d0cebe956813091a94cad7f':'Alessandra'
+};
+let currentUser=sessionStorage.getItem('so_current_user')||'';
+
+function blankDb(){return {version:3,master:{rows:[],imported_at:null,filename:'',sheet:'',operator:''},movements:[],documents:[],requests:[],audits:[],counters:{scarico:0,request:0}}}
+function loadDb(){
+  try{
+    const raw=localStorage.getItem(storeKey); if(raw){const parsed=JSON.parse(raw),base=blankDb();return {...base,...parsed,master:{...base.master,...(parsed.master||{})},counters:{...base.counters,...(parsed.counters||{})}};}
+  }catch{}
+  return blankDb();
+}
+function saveDb(){localStorage.setItem(storeKey,JSON.stringify(db))}
+function uid(){return crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(16).slice(2)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function nowLocalInput(d=new Date()){const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`}
+function fmtDateTime(v){if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+function fmtDate(v){if(!v)return '';const d=new Date(v);return d.toLocaleDateString('it-IT')}
+function dateOnlyISO(v){if(!v)return '';const d=new Date(v);const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`}
+function normalizeArticle(s,vision=false){
+  let x=String(s??'').trim().toUpperCase().replace(/\s+/g,'');
+  if(vision && /^1[A-Z0-9]/.test(x)) x='I'+x.slice(1);
+  return x;
+}
+function searchNorm(s){return normalizeArticle(s).replace(/^1(?=[A-Z0-9])/,'I')}
+function articleMatches(a,q){const A=searchNorm(a),Q=searchNorm(q);return !Q||A.includes(Q)}
+function locationOf(x){
+ const combined=String(x?.fila_scaffale||'').trim().toUpperCase();
+ if(combined)return combined;
+ const f=String(x?.fila||'').trim().toUpperCase(),s=String(x?.scaffale||'').trim().toUpperCase();
+ if(f&&s)return `${f}/${s}`;
+ return f||s
+}
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');window.scrollTo({top:0,behavior:'smooth'})}
+function setStatus(id,text,type=''){const el=$(id);el.className='status '+type;el.textContent=text;el.classList.remove('hidden')}
+function hideStatus(id){$(id).classList.add('hidden')}
+function operatorName(){return currentUser||''}
+function requireLogin(){if(currentUser)return true;openLogin();return false}
+function syncAuthUI(){
+  const logged=!!currentUser;
+  document.body.classList.toggle('loggedOut',!logged);
+  $('loginBtn').classList.toggle('hidden',logged);
+  $('userBtn').classList.toggle('hidden',!logged);
+  $('logoutBtn').classList.toggle('hidden',!logged);
+  $('userBtn').textContent=logged?currentUser:'';
+  if($('homeLoginState'))$('homeLoginState').textContent=logged?`Operatore: ${currentUser}`:'Effettua il login per iniziare';
+}
+function openLogin(){
+  $('pinInput').value='';
+  $('loginError').classList.add('hidden');
+  if(!$('loginDialog').open)$('loginDialog').showModal();
+  setTimeout(()=>$('pinInput').focus(),80);
+}
+function closeLogin(){if($('loginDialog').open)$('loginDialog').close()}
+async function sha256Text(text){
+  const bytes=new TextEncoder().encode(text);
+  const digest=await crypto.subtle.digest('SHA-256',bytes);
+  return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function submitLogin(){
+  const pin=String($('pinInput').value||'').replace(/\D/g,'').slice(0,4);
+  if(pin.length!==4)return;
+  const hash=await sha256Text('warehouse-so|'+pin);
+  const user=USER_HASHES[hash];
+  if(!user){$('loginError').classList.remove('hidden');$('pinInput').value='';$('pinInput').focus();return}
+  currentUser=user;
+  sessionStorage.setItem('so_current_user',currentUser);
+  closeLogin();syncAuthUI();
+}
+function logout(){
+  currentUser='';
+  sessionStorage.removeItem('so_current_user');
+  photos=[];requestPhotos=[];importedPhotos=[];requestReviewLines=[];activeRequestId=null;
+  show('home');syncAuthUI();
+}
+function audit(action,entityType,entityId,before,after){db.audits.unshift({id:uid(),action,entityType,entityId,operator:operatorName(),at:new Date().toISOString(),before,after});saveDb()}
+
+$('pinInput').addEventListener('input',e=>{
+  e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);
+  $('loginError').classList.add('hidden');
+});
+
+function nextDocId(){db.counters.scarico=(db.counters.scarico||0)+1;return `SC-${new Date().getFullYear()}-${String(db.counters.scarico).padStart(5,'0')}`}
+function nextRequestId(){db.counters.request=(db.counters.request||0)+1;return `RQ-${new Date().getFullYear()}-${String(db.counters.request).padStart(5,'0')}`}
+
+function init(){
+  $('operationAt').value=nowLocalInput();
+  $('arrivalAt').value=nowLocalInput();
+  $('requestAt').value=nowLocalInput();
+  syncAuthUI();
+  if($('masterStatus'))renderMasterStatus();
+}
+init();
+
+function openOperation(op){if(!requireLogin())return;
+  operation=op;$('opTitle').textContent=op==='CARICA'?'Carica':'Scarica';$('opEyebrow').textContent=op==='CARICA'?'ENTRATA MERCE':'USCITA MERCE';
+  $('destWrap').classList.toggle('hidden',op!=='SCARICA');$('arrivalWrap').classList.toggle('hidden',op!=='CARICA');
+  $('operationAt').value=nowLocal
