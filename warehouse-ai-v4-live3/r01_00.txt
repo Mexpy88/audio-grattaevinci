@@ -1,0 +1,11 @@
+ codice articolo;
+- taglia/variante;
+- quantità richiesta;
+- eventuale nota leggibile.
+
+REGOLE IMPORTANTI:
+- Nei nostri codici, quando il primo carattere sembra "1" ma il codice articolo normalmente inizia con I, interpretalo come lettera I maiuscola. Esempi: I30861, I00215.
+- Se una riga contiene più taglie, separale.
+- Non inventare quantità o codici.
+- Se un dato non è leggibile, lascia stringa vuota o quantità 0 e segnala il dubbio nella nota.
+- Restituisci SOLO JSON valido, senza markdown e
