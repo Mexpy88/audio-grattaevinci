@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2c60aa">
+<title>Magazzino Servizi Ospedalieri</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <button class="logoButton" onclick="show('home')" aria-label="Home"><img src="logo.svg" alt="Servizi Ospedalieri"></button>
+    <div class="authArea">
+      <button id="loginBtn" class="loginBtn" onclick="openLogin()">LOGIN</button>
+      <button id="userBtn" class="userBtn hidden" type="button" disabled></button>
+      <button id="logoutBtn" class="logoutBtn hidden" onclick="logout()">LOGOUT</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="home" class="screen on">
+      <div class="hero">
+        <img src="logo.svg" alt="Servizi Ospedalieri" class="heroLogo">
+        <div class="heroTitle">Gestione Magazzino</div>
+      </div>
+      <div class="homeGrid">
+        <button class="homeBtn carica" onclick="openOperation('CARICA')"><span class="icon">＋</span><b>CARICA</b><small>Entrata merce</small></button>
+        <button class="homeBtn scarica" onclick="openOperation('SCARICA')"><span class="icon">−</span><b>SCARICA</b><small>Uscita merce</small></button>
+        <button class="homeBtn cerca" onclick="openSearch()"><span class="icon">⌕</span><b>CERCA</b><small>Giacenze e posizioni</small></button>
+        <button class="homeBtn registro" onclick="openRegistry()"><span class="icon">≡</span><b>REGISTRO</b><small>Movimenti e scarichi</small></button>
+        <button class="homeBtn richieste full" onclick="openRequests()"><span class="icon">✓</span><b>RICHIESTE</b><small>Lista di prelievo</small></button>
+      </div>
+    </section>
+
+    <section id="operation" class="screen">
+      <button class="back" onclick="show('home')">← HOME</button>
+      <div class="eyebrow" id="opEyebrow">ENTRATA MERCE</div>
+      <h1 id="opTitle">Carica</h1>
+
+      <div class="card">
+        <label>Fila/Scaffale<input id="filaScaffale" class="field" placeholder="Es. A/64"></label>
+        <label class="positionBancale">Bancale<input id="bancale" class="field" placeholder="Es. 135"></label>
+        <div id="destWrap" class="hidden">
+          <label>Destinazione
+            <select id="destination" class="field">
+              <option>LINA</option><option>SPEDIZIONI</option><option>LAVAGGIO</option><option>PRODUZIONE</option><option>CONTROLLO QUALITÀ</option><option>ALTRO</option>
+            </select>
+          </label>
+        </div>
+        <label>Data e ora operazione<input id="operationAt" type="datetime-local" class="field"></label>
+        <div id="arrivalWrap">
+          <label class="check"><input id="arrivedNow" type="checkbox" checked onchange="toggleArrival()"> Merce arrivata adesso</label>
+          <label id="arrivalCustom" class="hidden">Data e ora di arrivo<input id="arrivalAt" type="datetime-local" class="field"></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="eyebrow">ACQUISIZIONE</div>
+        <h2>Foto cartoni</h2>
+        <div class="photoActions">
+          <label class="fileBtn primary"><span>📷</span>SCATTA<input id="cameraInput" hidden type="file" accept="image/*" capture="environment"></label>
+          <label class="fileBtn secondary"><span>▦</span>PIÙ FOTO<input id="galleryInput" hidden type="file" accept="image/*" multiple></label>
+        </div>
+        <div id="photoGrid" class="photoGrid"></div>
+        <button id="clearPhotosBtn" class="btn soft hidden" onclick="clearPhotos()">ELIMINA TUTTE LE FOTO</button>
+        <button class="btn primary" onclick="prepareCartonAnalysis()">ANALIZZA FOTO</button>
+        <button class="btn soft" onclick="startManualEntry()">INSERISCI MANUALMENTE</button>
+      </div>
+    </section>
+
+    <section id="bridge" class="screen">
+      <button class="back" onclick="show(bridgeBackScreen)">← INDIETRO</button>
+      <div class="eyebrow">ANALISI FOTO</div><h1 id="bridgeTitle">Lettura cartoni</h1>
+      <div class="card">
+        <div class="step"><span>1</span><div><b>Condividi le foto</b><p>Usa il pulsante qui sotto e scegli ChatGPT dall’elenco delle app disponibili.</p></div></div>
+        <button class="btn primary" onclick="shareAnalysis()">CONDIVIDI FOTO E ISTRUZIONI</button>
+        <button class="btn soft" onclick="copyAnalysisPrompt()">COPIA ISTRUZIONI</button>
+        <button class="btn soft" onclick="openChatGPT()">APRI CHATGPT</button>
+        <div id="shareStatus" class="status hidden"></div>
+      </div>
+      <div class="card">
+        <div class="step"><span>2</span><div><b>Incolla il risultato</b><p>Quando ricevi la risposta, incollala qui e premi Importa.</p></div></div>
+        <textarea id="jsonInput" class="field textarea" placeholder="Incolla qui il risultato..."></textarea>
+        <button class="btn success" onclick="importAnalysisResult()">IMPORTA RISULTATO</button>
+        <div id="importStatus" class="status hidden"></div>
+      </div>
+    </section>
+
+    <section id="results" class="screen">
+      <button class="back" onclick="show('bridge')">← ANALISI</button>
+      <div class="eyebrow">CONTROLLO</div><h1>Verifica risultati</h1>
+      <div id="resultSummary" class="status good"></div>
+      <div id="resultOutput"></div>
+      <button class="btn success" onclick="confirmOperation()">CONFERMA TUTTO</button>
+    </section>
+
+    <section id="searchScreen" class="screen">
+      <button class="back" onclick="show('home')">← HOME</button>
+      <div class="eyebrow">GIACENZE</div><h1>Cerca articolo</h1>
+      <div class="card">
+        <input id="searchInput" class="field" placeholder="Codice articolo o taglia" oninput="renderStock()">
+      </div>
+      <div id="stockList"></div>
+    </section>
+
+    <section id="registryScreen" class="screen">
+      <button class="back" onclick="show('home')">← HOME</button>
+      <div class="eyebrow">STORICO</div><h1>Registro</h1>
+      <div class="tabs">
+        <button id="tabMovBtn" class="tab active" onclick="setRegistryTab('MOVIMENTI')">MOVIMENTI</button>
+        <button id="tabDocBtn" class="tab" onclick="setRegistryTab('SCARICHI')">SCARICHI</button>
+      </div>
+      <div class="card">
+        <div class="sectionTitle">Magazzino master</div>
+        <div id="masterStatus" class="status">Nessun file master importato.</div>
+        <label class="btn primary fileInline">IMPORTA FILE EXCEL MASTER
+          <input id="masterInput" hidden type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
+        </label>
+      </div>
+      <div id="registryFilters" class="card">
+        <div class="twoCols">
+          <label>Dal<input id="regFrom" class="field" type="date" onchange="renderRegistry()"></label>
+          <label>Al<input id="regTo" class="field" type="date" onchange="renderRegistry()"></label>
+        </div>
+        <label>Destinazione
+          <select id="regDest" class="field" onchange="renderRegistry()">
+            <option value="">TUTTE</option><option>LINA</option><option>SPEDIZIONI</option><option>LAVAGGIO</option><option>PRODUZIONE</option><option>CONTROLLO QUALITÀ</option><option>ALTRO</option>
+          </select>
+        </label>
+        <button id="exportFilteredBtn" class="btn soft hidden" onclick="exportFilteredDischarges()">ESPORTA EXCEL</button>
+      </div>
+      <div id="registryList"></div>
+      <div class="card compact">
+        <button class="btn soft" onclick="exportBackup()">ESPORTA BACKUP</button>
+        <label class="btn soft fileInline">IMPORTA BACKUP<input id="backupInput" hidden type="file" accept="application/json"></label>
+      </div>
+    </section>
+
+    <section id="requestsScreen" class="screen">
+      <button class="back" onclick="show('home')">← HOME</button>
+      <div class="eyebrow">PRELIEVI</div><h1>Richieste</h1>
+      <button class="btn primary" onclick="newRequest()">＋ NUOVA RICHIESTA</button>
+      <div class="sectionTitle">Richieste salvate</div>
+      <div id="requestList"></div>
+    </section>
+
+    <section id="requestNew" class="screen">
+      <button class="back" onclick="show('requestsScreen')">← RICHIESTE</button>
+      <div class="eyebrow">NUOVA RICHIESTA</div><h1>Acquisisci richiesta</h1>
+      <div class="card">
+        <label>Richiedente / Destinazione
+          <select id="requestDestination" class="field">
+            <option>LINA</option><option>SPEDIZIONI</option><option>LAVAGGIO</option><option>PRODUZIONE</option><option>CONTROLLO QUALITÀ</option><option>ALTRO</option>
+          </select>
+        </label>
+        <label>Data e ora richiesta<input id="requestAt" type="datetime-local" class="field"></label>
+        <label>Riferimento / Note<input id="requestReference" class="field" placeholder="Facoltativo"></label>
+      </div>
+      <div class="card">
+        <div class="photoActions">
+          <label class="fileBtn primary"><span>📷</span>SCATTA FOGLIO<input id="requestCamera" hidden type="file" accept="image/*" capture="environment"></label>
+          <label class="fileBtn secondary"><span>▦</span>PIÙ FOTO<input id="requestGallery" hidden type="file" accept="image/*" multiple></label>
+        </div>
+        <div id="requestPhotoGrid" class="photoGrid"></div>
+        <button class="btn primary" onclick="prepareRequestAnalysis()">ANALIZZA RICHIESTA</button>
+        <button class="btn soft" onclick="createManualRequest()">INSERISCI RICHIESTA MANUALMENTE</button>
+      </div>
+    </section>
+
+    <section id="requestReview" class="screen">
+      <button class="back" onclick="show('requestNew')">← RICHIESTA</button>
+      <div class="eyebrow">CONTROLLO RICHIESTA</div><h1>Articoli richiesti</h1>
+      <div id="requestReviewLines"></div>
+      <button class="btn soft" onclick="addRequestLine()">＋ AGGIUNGI RIGA</button>
+      <button class="btn success" onclick="saveRequestFromReview()">SALVA E VERIFICA GIACENZE</button>
+    </section>
+
+    <section id="requestDetail" class="screen">
+      <button class="back" onclick="show('requestsScreen')">← RICHIESTE</button>
+      <div id="requestDetailHeader"></div>
+      <div id="requestAvailability"></div>
+      <div class="card">
+        <div class="sectionTitle">Aggiungi materiale non richiesto</div>
+        <input id="extraSearch" class="field" placeholder="Cerca articolo o taglia" oninput="renderExtraStockSearch()">
+        <div id="extraStockResults"></div>
+      </div>
+      <div class="card">
+        <label>Note generali<input id="requestGeneralNote" class="field" placeholder="Facoltativo" onchange="saveRequestDraftNote()"></label>
+      </div>
+      <button id="confirmPickBtn" class="btn success" onclick="confirmPicking()">CONFERMA E SCARICA GIACENZA</button>
+    </section>
+  </main>
+</div>
+
+
+<dialog id="loginDialog">
+  <div class="dialogHead"><h2>Accesso operatore</h2><button onclick="closeLogin()">×</button></div>
+  <p class="loginHint">Inserisci il PIN personale di 4 cifre.</p>
+  <input id="pinInput" class="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="PIN operatore">
+  <div id="loginError" class="authError hidden">PIN non valido.</div>
+  <button class="btn primary" onclick="submitLogin()">ACCEDI</button>
+</dialog>
+
+<dialog id="masterDialog">
+  <div class="dialogHead"><h2>Importa magazzino master</h2><button onclick="masterDialog.close()">×</button></div>
+  <label>Foglio Excel<select id="masterSheet" class="field" onchange="prepareMasterSheet()"></select></label>
+  <div id="masterPreviewInfo" class="status"></div>
+  <label>Articolo *<select id="mapArticle" class="field"></select></label>
+  <div class="twoCols">
+    <label>Taglia<select id="mapSize" class="field"></select></label>
+    <label>Quantità *<select id="mapQty" class="field"></select></label>
+  </div>
+  <label>Stato<select id="mapState" class="field"></select></label>
+  <label>Fila/Scaffale già uniti<select id="mapLocation" class="field"></select></label>
+  <div class="twoCols">
+    <label>Oppure Fila<select id="mapFila" class="field"></select></label>
+    <label>Scaffale<select id="mapScaffale" class="field"></select></label>
+  </div>
+  <label>Bancale<select id="mapBancale" class="field"></select></label>
+  <div class="status warn">L'importazione sostituisce la giacenza master attuale. I movimenti registrati dopo l'importazione continueranno ad aggiornare la giacenza.</div>
+  <button class="btn success" onclick="importMappedMaster()">IMPORTA COME MASTER</button>
+</dialog>
+
+<dialog id="documentDialog">
+  <div class="dialogHead"><h2 id="documentTitle">Scarico</h2><button onclick="documentDialog.close()">×</button></div>
+  <div id="documentBody"></div>
+</dialog>
+
+<dialog id="editMovementDialog">
+  <div class="dialogHead"><h2>Modifica movimento</h2><button onclick="editMovementDialog.close()">×</button></div>
+  <input id="editMovementId" type="hidden">
+  <label>Articolo<input id="editArticle" class="field"></label>
+  <div class="twoCols"><label>Taglia<input id="editSize" class="field"></label><label>Quantità<input id="editQty" class="field" type="number" min="0"></label></div>
+  <label>Stato<select id="editState" class="field"><option>NUOVO</option><option>SCARICATO</option><option>USATO</option><option>DISMESSO</option><option>NON_CHIARO</option></select></label>
+  <label>Fila/Scaffale<input id="editFilaScaffale" class="field"></label><label>Bancale<input id="editBancale" class="field"></label>
+  <label>Note<input id="editNote" class="field"></label>
+  <button class="btn primary" onclick="saveMovementEdit()">SALVA</button>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="app0.js"></script><script src="app1.js"></script><script src="app2.js"></script><script src="app3.js"></script>
+</body>
+</html>
