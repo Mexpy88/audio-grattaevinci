@@ -44,11 +44,26 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#edf3f8}
         link.href='modifica.css?v=20260814-0756';
         d.head.appendChild(link);
       }
+      if(!d.getElementById('warehouseFixCss')){
+        const link=d.createElement('link');
+        link.id='warehouseFixCss';
+        link.rel='stylesheet';
+        link.href='fixes.css?v=20260814-0845';
+        d.head.appendChild(link);
+      }
 
       if(!d.getElementById('stockEditJs')){
         const script=d.createElement('script');
         script.id='stockEditJs';
         script.src='modifica.js?v=20260814-0756';
+        script.async=false;
+        d.body.appendChild(script);
+      }
+      if(!d.getElementById('warehouseFixJs')){
+        const script=d.createElement('script');
+        script.id='warehouseFixJs';
+        script.src='fixes.js?v=20260814-0845';
+        script.async=false;
         d.body.appendChild(script);
       }
     }catch(err){
