@@ -66,6 +66,14 @@ jobs:
           spec.loader.exec_module(module)
           html = module.apply_master_patch(html)
 
+          spec2 = importlib.util.spec_from_file_location(
+              'warehouse_master_delete_visibility',
+              '.github/scripts/patch_master_delete_visibility.py',
+          )
+          module2 = importlib.util.module_from_spec(spec2)
+          spec2.loader.exec_module(module2)
+          html = module2.apply_delete_visibility_patch(html)
+
           pathlib.Path('site').mkdir(exist_ok=True)
           pathlib.Path('site/index.html').write_text(html, encoding='utf-8')
           print('Warehouse AI:', len(html.encode('utf-8')), 'bytes')
@@ -79,4 +87,4 @@ jobs:
           publish_dir: ./site
           force_orphan: true
 
-# republish PIN-protected master deletion
+# republish visible master deletion and search reset
