@@ -2,6 +2,32 @@ import re
 
 
 def apply_master_patch(html: str) -> str:
+    # Solo area MASTER: importazione definitiva + cancellazione protetta da PIN.
+    master_card_old = '''        <label class="btn primary fileInline">IMPORTA FILE EXCEL MASTER
+          <input id="masterInput" hidden type="file" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv">
+        </label>'''
+    master_card_new = master_card_old + '''
+        <button id="deleteMasterBtn" class="btn danger hidden" onclick="openDeleteMasterDialog()">ELIMINA MASTER</button>'''
+    if master_card_old not in html:
+        raise RuntimeError('Blocco Magazzino master non trovato')
+    html = html.replace(master_card_old, master_card_new, 1)
+
+    delete_dialog = r'''
+<dialog id="deleteMasterDialog">
+  <div class="dialogHead"><h2>Elimina magazzino master</h2><button onclick="closeDeleteMasterDialog()">×</button></div>
+  <p>Per eliminare il master inserisci nuovamente il PIN dell'operatore <b id="deleteMasterUser"></b>.</p>
+  <input id="deleteMasterPin" class="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="PIN conferma eliminazione master" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4);$('deleteMasterError').classList.add('hidden')">
+  <div id="deleteMasterError" class="authError hidden">PIN non corretto per l'operatore collegato.</div>
+  <div class="status warn">Verrà eliminata soltanto l'importazione master. Movimenti, scarichi e richieste già registrati resteranno nello storico.</div>
+  <button class="btn danger" onclick="confirmDeleteMaster()">ELIMINA MASTER</button>
+</dialog>
+
+'''
+    dialog_marker = '<dialog id="masterDialog">'
+    if dialog_marker not in html:
+        raise RuntimeError('masterDialog non trovato')
+    html = html.replace(dialog_marker, delete_dialog + dialog_marker, 1)
+
     helpers = r'''function definitiveMasterColumns(headers){
  const norm=headers.map(masterNormHeader),find=(...names)=>norm.findIndex(h=>names.includes(h));
  const location=find('SCAFFALE / FILA','SCAFFALE/FILA','SCAFFALE FILA');
@@ -29,6 +55,29 @@ function setDefinitiveMasterUi(active){
  document.querySelectorAll('#masterDialog .twoCols').forEach(el=>el.classList.toggle('hidden',active));
  const btn=document.querySelector('#masterDialog .btn.success');
  if(btn)btn.textContent=active?'CONFERMA IMPORTAZIONE':'IMPORTA COME MASTER';
+}
+function openDeleteMasterDialog(){
+ if(!requireLogin())return;
+ if(!(db.master?.rows||[]).length)return alert('Non c\'è nessun master da eliminare.');
+ $('deleteMasterUser').textContent=currentUser;
+ $('deleteMasterPin').value='';
+ $('deleteMasterError').classList.add('hidden');
+ if(!$('deleteMasterDialog').open)$('deleteMasterDialog').showModal();
+ setTimeout(()=>$('deleteMasterPin').focus(),80);
+}
+function closeDeleteMasterDialog(){if($('deleteMasterDialog').open)$('deleteMasterDialog').close()}
+async function confirmDeleteMaster(){
+ if(!requireLogin())return;
+ const pin=String($('deleteMasterPin').value||'').replace(/\D/g,'').slice(0,4);
+ if(pin.length!==4){$('deleteMasterError').classList.remove('hidden');return}
+ const hash=await sha256Text('warehouse-so|'+pin);
+ if(USER_HASHES[hash]!==currentUser){$('deleteMasterError').classList.remove('hidden');$('deleteMasterPin').value='';$('deleteMasterPin').focus();return}
+ if(!confirm('Confermi l\'eliminazione completa del file master importato? Movimenti, scarichi e richieste resteranno nello storico.'))return;
+ const before=structuredClone(db.master||{});
+ db.master=blankDb().master;
+ audit('DELETE','MASTER','MASTER',before,null);
+ saveDb();closeDeleteMasterDialog();renderMasterStatus();renderRegistry();
+ alert('Magazzino master eliminato. Ora puoi importare un altro file per le tue prove.');
 }
 '''
     marker = 'function prepareMasterSheet(){'
@@ -87,7 +136,18 @@ function setDefinitiveMasterUi(active){
     if n != 1:
         raise RuntimeError('importMappedMaster patch fallita')
 
-    for required in ['CARICA','SCARICA','CERCA','REGISTRO','RICHIESTE','Fila/Scaffale','submitLogin','deleteRequest','definitiveMasterColumns','splitMasterArticleSize','setDefinitiveMasterUi']:
+    new_status = r'''function renderMasterStatus(){
+ const m=db.master||{},count=(m.rows||[]).length;
+ if($('deleteMasterBtn'))$('deleteMasterBtn').classList.toggle('hidden',!count);
+ if(!count){$('masterStatus').className='status';$('masterStatus').textContent='Nessun file master importato.';return}
+ $('masterStatus').className='status good';
+ $('masterStatus').textContent=`${m.filename||'Master'} · ${count} righe · importato ${fmtDateTime(m.imported_at)} da ${m.operator||'—'}`
+}'''
+    html, n = re.subn(r'function renderMasterStatus\(\)\{.*?\n\}', new_status, html, count=1, flags=re.S)
+    if n != 1:
+        raise RuntimeError('renderMasterStatus patch fallita')
+
+    for required in ['CARICA','SCARICA','CERCA','REGISTRO','RICHIESTE','Fila/Scaffale','submitLogin','deleteRequest','definitiveMasterColumns','splitMasterArticleSize','setDefinitiveMasterUi','deleteMasterBtn','confirmDeleteMaster']:
         if required not in html:
             raise RuntimeError(f'Controllo fallito: {required}')
     return html
