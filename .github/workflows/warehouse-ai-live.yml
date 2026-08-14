@@ -79,4 +79,4 @@ jobs:
           publish_dir: ./site
           force_orphan: true
 
-# republish simplified definitive master import
+# republish PIN-protected master deletion
