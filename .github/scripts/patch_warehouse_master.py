@@ -4,9 +4,13 @@ import re
 def apply_master_patch(html: str) -> str:
     helpers = r'''function definitiveMasterColumns(headers){
  const norm=headers.map(masterNormHeader),find=(...names)=>norm.findIndex(h=>names.includes(h));
+ const location=find('SCAFFALE / FILA','SCAFFALE/FILA','SCAFFALE FILA');
+ const bancale=find('BANCALE');
+ const nuovo=find('NUOVO'),scaricato=find('SCARICATO'),usato=find('USATO');
+ let article=find('ARTICOLO');
+ if(article<0&&location>=0&&bancale>=0&&(nuovo>=0||scaricato>=0||usato>=0)&&headers.length>2)article=2;
  return {
-  location:find('SCAFFALE / FILA','SCAFFALE/FILA','SCAFFALE FILA'),
-  bancale:find('BANCALE'),article:find('ARTICOLO'),nuovo:find('NUOVO'),scaricato:find('SCARICATO'),usato:find('USATO'),
+  location,bancale,article,nuovo,scaricato,usato,
   controlDate:find('DATA CONTROLLO QUANTITA')
  };
 }
@@ -18,6 +22,14 @@ function splitMasterArticleSize(v){
  return {article:raw,size:''};
 }
 function isDefinitiveMaster(c){return c.article>=0&&c.location>=0&&c.bancale>=0&&(c.nuovo>=0||c.scaricato>=0||c.usato>=0)}
+function setDefinitiveMasterUi(active){
+ ['mapArticle','mapSize','mapQty','mapState','mapLocation','mapFila','mapScaffale','mapBancale'].forEach(id=>{
+  const el=$(id);if(!el)return;const label=el.closest('label');if(label)label.classList.toggle('hidden',active);
+ });
+ document.querySelectorAll('#masterDialog .twoCols').forEach(el=>el.classList.toggle('hidden',active));
+ const btn=document.querySelector('#masterDialog .btn.success');
+ if(btn)btn.textContent=active?'CONFERMA IMPORTAZIONE':'IMPORTA COME MASTER';
+}
 '''
     marker = 'function prepareMasterSheet(){'
     if marker not in html:
@@ -30,12 +42,16 @@ function isDefinitiveMaster(c){return c.article>=0&&c.location>=0&&c.bancale>=0&
  masterMatrix=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false,blankrows:false});masterHeaderRow=detectMasterHeader(masterMatrix);
  const headers=(masterMatrix[masterHeaderRow]||[]).map(v=>String(v||'').trim());
  $('mapArticle').innerHTML=masterOptions(headers,'article',false);$('mapSize').innerHTML=masterOptions(headers,'size',true);$('mapQty').innerHTML=masterOptions(headers,'qty',false);$('mapState').innerHTML=masterOptions(headers,'state',true);$('mapLocation').innerHTML=masterOptions(headers,'location',true);$('mapFila').innerHTML=masterOptions(headers,'fila',true);$('mapScaffale').innerHTML=masterOptions(headers,'scaffale',true);$('mapBancale').innerHTML=masterOptions(headers,'bancale',true);
- const c=definitiveMasterColumns(headers);
- if(isDefinitiveMaster(c)){
+ const c=definitiveMasterColumns(headers),recognized=isDefinitiveMaster(c);setDefinitiveMasterUi(recognized);
+ if(recognized){
   $('mapArticle').value=String(c.article);$('mapSize').value='';$('mapLocation').value=String(c.location);$('mapFila').value='';$('mapScaffale').value='';$('mapBancale').value=String(c.bancale);$('mapState').value='';
   const q=c.nuovo>=0?c.nuovo:(c.scaricato>=0?c.scaricato:c.usato);if(q>=0)$('mapQty').value=String(q);
-  $('masterPreviewInfo').textContent=`Formato magazzino riconosciuto. ${Math.max(0,masterMatrix.length-masterHeaderRow-1)} righe da leggere. NUOVO, SCARICATO e USATO verranno importati automaticamente.`;
- }else $('masterPreviewInfo').textContent=`Intestazioni rilevate alla riga ${masterHeaderRow+1}. ${Math.max(0,masterMatrix.length-masterHeaderRow-1)} righe dati da leggere.`;
+  $('masterPreviewInfo').className='status good';
+  $('masterPreviewInfo').textContent=`Formato magazzino riconosciuto. ${Math.max(0,masterMatrix.length-masterHeaderRow-1)} righe da leggere. Articolo e taglia verranno separati automaticamente; NUOVO, SCARICATO e USATO verranno importati come giacenze distinte.`;
+ }else{
+  $('masterPreviewInfo').className='status';
+  $('masterPreviewInfo').textContent=`Intestazioni rilevate alla riga ${masterHeaderRow+1}. ${Math.max(0,masterMatrix.length-masterHeaderRow-1)} righe dati da leggere.`;
+ }
 }'''
     html, n = re.subn(r'function prepareMasterSheet\(\)\{.*?\n\}', new_prepare, html, count=1, flags=re.S)
     if n != 1:
@@ -71,7 +87,7 @@ function isDefinitiveMaster(c){return c.article>=0&&c.location>=0&&c.bancale>=0&
     if n != 1:
         raise RuntimeError('importMappedMaster patch fallita')
 
-    for required in ['CARICA','SCARICA','CERCA','REGISTRO','RICHIESTE','Fila/Scaffale','submitLogin','deleteRequest','definitiveMasterColumns','splitMasterArticleSize']:
+    for required in ['CARICA','SCARICA','CERCA','REGISTRO','RICHIESTE','Fila/Scaffale','submitLogin','deleteRequest','definitiveMasterColumns','splitMasterArticleSize','setDefinitiveMasterUi']:
         if required not in html:
             raise RuntimeError(f'Controllo fallito: {required}')
     return html
