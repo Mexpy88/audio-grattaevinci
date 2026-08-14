@@ -1,0 +1,8 @@
+.homeBtn.modifica{background:linear-gradient(135deg,#c87812,#e5a33e)}
+.stockEditRow{background:#fff;border:1px solid #dae5ee;border-radius:21px;padding:15px;margin:10px 0;box-shadow:0 7px 21px #15395810}
+.stockEditRow.deleted{opacity:.58;background:#f6f7f8}
+.stockEditRow.deleted .field{background:#f0f2f4}
+.stockEditHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px}
+.stockEditHead b{font-size:17px}
+.stockEditOrigin{font-size:12px;color:var(--muted);font-weight:800;margin:2px 0 10px}
+.stockEditNotice{margin-top:10px}
