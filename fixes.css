@@ -1,0 +1,76 @@
+/* Correzioni UI/UX aggiuntive. Non modifica le funzioni già esistenti. */
+.userBtn{
+  max-width:138px!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:nowrap!important;
+}
+
+#warehouseToastHost{
+  position:fixed;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%);
+  z-index:99999;
+  width:min(92vw,520px);
+  pointer-events:none;
+}
+.warehouseToast{
+  opacity:0;
+  transform:translateY(12px);
+  transition:opacity .18s ease,transform .18s ease;
+  border-radius:16px;
+  padding:14px 16px;
+  font-weight:900;
+  box-shadow:0 12px 34px #102a4260;
+  background:#17314d;
+  color:#fff;
+  text-align:center;
+}
+.warehouseToast.show{opacity:1;transform:translateY(0)}
+.warehouseToast.success{background:#13734a}
+.warehouseToast.error{background:#a43a34}
+.warehouseToast.warn{background:#8b6410}
+
+.viewModeSwitch{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  background:#dfe8f0;
+  border:1px solid #d2dee8;
+  border-radius:17px;
+  padding:5px;
+  margin:-7px 0 15px;
+}
+.viewModeSwitch button{
+  min-height:43px;
+  border:0;
+  border-radius:13px;
+  background:transparent;
+  color:#486178;
+  font-weight:950;
+  font-size:13px;
+}
+.viewModeSwitch button.active{background:#fff;color:var(--blue);box-shadow:0 4px 12px #15395818}
+
+body.desktopMode .app{max-width:1180px;padding-left:28px;padding-right:28px}
+body.desktopMode #home .hero{max-width:900px;margin-left:auto;margin-right:auto;padding:30px 28px}
+body.desktopMode #home .heroLogo{width:min(100%,500px)!important}
+body.desktopMode #home .homeGrid{grid-template-columns:repeat(3,1fr);gap:16px}
+body.desktopMode #home .homeBtn,
+body.desktopMode #home .homeBtn.full{grid-column:auto;min-height:180px}
+body.desktopMode .screen:not(#home){max-width:980px;margin-left:auto;margin-right:auto}
+body.desktopMode .stockCard,
+body.desktopMode .movementCard,
+body.desktopMode .documentCard,
+body.desktopMode .requestCard{padding:20px}
+
+@media(max-width:430px){
+  .userBtn{max-width:128px!important;font-size:14px!important;padding-left:11px!important;padding-right:11px!important}
+  .logoButton{min-width:0!important;flex:1 1 auto!important}
+  .logoButton img{width:min(165px,42vw)!important;max-width:none!important}
+}
+@media(max-width:360px){
+  .userBtn{max-width:116px!important;font-size:13px!important;padding-left:8px!important;padding-right:8px!important}
+  .logoButton img{width:min(145px,40vw)!important}
+}
