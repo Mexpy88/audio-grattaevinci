@@ -78,3 +78,5 @@ jobs:
           publish_branch: warehouse-ai-live
           publish_dir: ./site
           force_orphan: true
+
+# republish simplified definitive master import
