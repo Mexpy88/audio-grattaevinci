@@ -19,7 +19,7 @@ jobs:
       - name: Build Warehouse AI
         run: |
           python - <<'PY'
-          import base64, gzip, json, pathlib, urllib.request
+          import base64, gzip, json, pathlib, re, urllib.request
 
           shas = [
             '442445d7742f8731617f547b9144961487a955d2',
@@ -47,10 +47,87 @@ jobs:
               with urllib.request.urlopen(req) as response:
                   obj = json.load(response)
               packed.extend(base64.b64decode(obj['content']))
-          html = gzip.decompress(bytes(packed))
+
+          html = gzip.decompress(bytes(packed)).decode('utf-8')
+
+          helpers = r'''function definitiveMasterColumns(headers){
+ const norm=headers.map(masterNormHeader),find=(...names)=>norm.findIndex(h=>names.includes(h));
+ return {
+  location:find('SCAFFALE / FILA','SCAFFALE/FILA','SCAFFALE FILA'),
+  bancale:find('BANCALE'),article:find('ARTICOLO'),nuovo:find('NUOVO'),scaricato:find('SCARICATO'),usato:find('USATO'),
+  controlDate:find('DATA CONTROLLO QUANTITA','DATA CONTROLLO QUANTITA ')
+ };
+}
+function splitMasterArticleSize(v){
+ const raw=normalizeArticle(v);if(!raw)return {article:'',size:''};
+ const i=raw.lastIndexOf('-');if(i<=0)return {article:raw,size:''};
+ const suffix=raw.slice(i+1).toUpperCase();
+ if(/^(?:[0-9]{1,3}|[2-9]?XS|[2-9]?XL|XXS|XXL|XS|S|M|L|XL|TU|UNI|UNICA)$/.test(suffix))return {article:raw.slice(0,i),size:suffix};
+ return {article:raw,size:''};
+}
+function isDefinitiveMaster(c){return c.article>=0&&c.location>=0&&c.bancale>=0&&(c.nuovo>=0||c.scaricato>=0||c.usato>=0)}
+'''
+          marker = 'function prepareMasterSheet(){'
+          if marker not in html:
+              raise RuntimeError('prepareMasterSheet non trovato')
+          html = html.replace(marker, helpers + marker, 1)
+
+          new_prepare = r'''function prepareMasterSheet(){
+ if(!masterWorkbook)return;
+ const name=$('masterSheet').value||masterWorkbook.SheetNames[0],ws=masterWorkbook.Sheets[name];
+ masterMatrix=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false,blankrows:false});masterHeaderRow=detectMasterHeader(masterMatrix);
+ const headers=(masterMatrix[masterHeaderRow]||[]).map(v=>String(v||'').trim());
+ $('mapArticle').innerHTML=masterOptions(headers,'article',false);$('mapSize').innerHTML=masterOptions(headers,'size',true);$('mapQty').innerHTML=masterOptions(headers,'qty',false);$('mapState').innerHTML=masterOptions(headers,'state',true);$('mapLocation').innerHTML=masterOptions(headers,'location',true);$('mapFila').innerHTML=masterOptions(headers,'fila',true);$('mapScaffale').innerHTML=masterOptions(headers,'scaffale',true);$('mapBancale').innerHTML=masterOptions(headers,'bancale',true);
+ const c=definitiveMasterColumns(headers);
+ if(isDefinitiveMaster(c)){
+  $('mapArticle').value=String(c.article);$('mapSize').value='';$('mapLocation').value=String(c.location);$('mapFila').value='';$('mapScaffale').value='';$('mapBancale').value=String(c.bancale);$('mapState').value='';
+  const q=c.nuovo>=0?c.nuovo:(c.scaricato>=0?c.scaricato:c.usato);if(q>=0)$('mapQty').value=String(q);
+  $('masterPreviewInfo').textContent=`Formato magazzino riconosciuto. ${Math.max(0,masterMatrix.length-masterHeaderRow-1)} righe da leggere. NUOVO, SCARICATO e USATO verranno importati automaticamente.`;
+ }else $('masterPreviewInfo').textContent=`Intestazioni rilevate alla riga ${masterHeaderRow+1}. ${Math.max(0,masterMatrix.length-masterHeaderRow-1)} righe dati da leggere.`;
+}'''
+          html, n = re.subn(r'function prepareMasterSheet\(\)\{.*?\n\}', new_prepare, html, count=1, flags=re.S)
+          if n != 1:
+              raise RuntimeError('prepareMasterSheet patch fallita')
+
+          old_import_pat = r'function importMappedMaster\(\)\{.*?\n\}'
+          new_import = r'''function importMappedMaster(){
+ if(!requireLogin())return;
+ const headers=(masterMatrix[masterHeaderRow]||[]).map(v=>String(v||'').trim()),c=definitiveMasterColumns(headers),rows=[];
+ if(isDefinitiveMaster(c)){
+  for(const row of masterMatrix.slice(masterHeaderRow+1)){
+   const parsed=splitMasterArticleSize(row[c.article]);if(!parsed.article)continue;
+   const loc=String(row[c.location]||'').trim().toUpperCase(),bancale=String(row[c.bancale]||'').trim().toUpperCase(),controlDate=c.controlDate>=0?String(row[c.controlDate]||'').trim():'';
+   [[c.nuovo,'NUOVO'],[c.scaricato,'SCARICATO'],[c.usato,'USATO']].forEach(([idx,state])=>{
+    if(idx<0)return;const qty=parseMasterQty(row[idx]);if(qty<=0)return;
+    rows.push({article_base:parsed.article,size:parsed.size,quantity:qty,state,fila_scaffale:loc,fila:loc,scaffale:'',bancale,data_controllo_quantita:controlDate});
+   });
+  }
+ }else{
+  if($('mapArticle').value===''||$('mapQty').value==='')return alert('Seleziona almeno le colonne Articolo e Quantità.');
+  for(const row of masterMatrix.slice(masterHeaderRow+1)){
+   const article=normalizeArticle(masterCell(row,'mapArticle')),qty=parseMasterQty(masterCell(row,'mapQty'));if(!article||qty<=0)continue;
+   const size=String(masterCell(row,'mapSize')||'').trim().toUpperCase(),state=$('mapState').value===''?'NON_CHIARO':normalizeMasterState(masterCell(row,'mapState'));
+   let loc=String(masterCell(row,'mapLocation')||'').trim().toUpperCase();if(!loc){const f=String(masterCell(row,'mapFila')||'').trim().toUpperCase(),s=String(masterCell(row,'mapScaffale')||'').trim().toUpperCase();loc=f&&s?`${f}/${s}`:(f||s)}
+   const bancale=String(masterCell(row,'mapBancale')||'').trim().toUpperCase();rows.push({article_base:article,size,quantity:qty,state,fila_scaffale:loc,fila:loc,scaffale:'',bancale});
+  }
+ }
+ if(!rows.length)return alert('Non ho trovato giacenze valide da importare.');
+ if(!confirm(`Importare ${rows.length} giacenze come nuovo magazzino master? La giacenza master precedente verrà sostituita.`))return;
+ const before=structuredClone(db.master||{}),now=new Date().toISOString();db.master={rows,imported_at:now,filename:masterFileName,sheet:$('masterSheet').value,operator:operatorName()};
+ audit('MASTER_IMPORT','MASTER','MASTER',before,structuredClone(db.master));saveDb();masterDialog.close();renderMasterStatus();renderRegistry();alert(`Master importato: ${rows.length} giacenze.`)
+}'''
+          html, n = re.subn(old_import_pat, new_import, html, count=1, flags=re.S)
+          if n != 1:
+              raise RuntimeError('importMappedMaster patch fallita')
+
+          # Verifiche: nessun'altra struttura viene modificata.
+          for required in ['CARICA','SCARICA','CERCA','REGISTRO','RICHIESTE','Fila/Scaffale','submitLogin','deleteRequest','definitiveMasterColumns','splitMasterArticleSize']:
+              if required not in html:
+                  raise RuntimeError(f'Controllo fallito: {required}')
+
           pathlib.Path('site').mkdir(exist_ok=True)
-          pathlib.Path('site/index.html').write_bytes(html)
-          print('Warehouse AI:', len(html), 'bytes')
+          pathlib.Path('site/index.html').write_text(html, encoding='utf-8')
+          print('Warehouse AI:', len(html.encode('utf-8')), 'bytes')
           PY
 
       - name: Publish static branch
