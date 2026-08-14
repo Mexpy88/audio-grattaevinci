@@ -87,4 +87,4 @@ jobs:
           publish_dir: ./site
           force_orphan: true
 
-# republish visible master deletion and search reset
+# republish persistent master reset
