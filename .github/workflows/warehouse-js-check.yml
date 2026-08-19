@@ -4,9 +4,10 @@ on:
     branches: [warehouse-ai-live]
     paths:
       - 'index.html'
-      - 'm365-*.js'
+      - 'local-master.js'
       - 'modifica.js'
       - 'fixes.js'
+      - 'm365-*.js'
       - '.github/workflows/warehouse-js-check.yml'
   workflow_dispatch:
 jobs:
@@ -21,6 +22,7 @@ jobs:
         run: |
           node --check modifica.js
           node --check fixes.js
+          node --check local-master.js
           node --check m365-core.js
           node --check m365-auth.js
           node --check m365-resolver.js
