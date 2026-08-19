@@ -14,6 +14,8 @@ on:
       - 'fixes.js'
       - 'm365-*.js'
       - '.github/workflows/warehouse-js-check.yml'
+  pull_request:
+    branches: [warehouse-ai-live]
   workflow_dispatch:
 jobs:
   syntax:
