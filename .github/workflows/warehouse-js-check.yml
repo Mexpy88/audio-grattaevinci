@@ -1,0 +1,29 @@
+name: Warehouse JS Check
+on:
+  push:
+    branches: [warehouse-ai-live]
+    paths:
+      - 'index.html'
+      - 'm365-*.js'
+      - 'modifica.js'
+      - 'fixes.js'
+      - '.github/workflows/warehouse-js-check.yml'
+  workflow_dispatch:
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check modifica.js
+          node --check fixes.js
+          node --check m365-core.js
+          node --check m365-auth.js
+          node --check m365-write.js
+          node --check m365-shared.js
+          node --check m365-ui.js
+          node --check m365-hooks.js
