@@ -55,6 +55,10 @@
       if(cancel)cancel.disabled=true;if(close)close.disabled=true;
       if(info){info.className='status warn';info.textContent='Importazione del master in corso. Non chiudere questa schermata…'}
       try{
+        if(typeof window.WarehouseUX?.beforeMasterImport==='function'){
+          const allowed=await window.WarehouseUX.beforeMasterImport();
+          if(allowed===false){if(info){info.className='status';info.textContent='Importazione annullata. Il master attuale non è stato modificato.'}return}
+        }
         const result=legacyImport.call(window);
         if(result&&typeof result.then==='function')await result;
         let changed=false;
