@@ -5,6 +5,7 @@ on:
     paths:
       - 'index.html'
       - 'local-master.js'
+      - 'local-master-ooxml.js'
       - 'local-master-ux.js'
       - 'modifica.js'
       - 'fixes.js'
@@ -24,6 +25,7 @@ jobs:
           node --check modifica.js
           node --check fixes.js
           node --check local-master.js
+          node --check local-master-ooxml.js
           node --check local-master-ux.js
           node --check m365-core.js
           node --check m365-auth.js
