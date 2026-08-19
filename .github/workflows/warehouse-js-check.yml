@@ -23,6 +23,7 @@ jobs:
           node --check fixes.js
           node --check m365-core.js
           node --check m365-auth.js
+          node --check m365-resolver.js
           node --check m365-write.js
           node --check m365-shared.js
           node --check m365-data.js
