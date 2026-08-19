@@ -9,8 +9,11 @@ on:
       - 'local-master-ooxml.js'
       - 'local-master-ux.js'
       - 'ui-hardening.js'
+      - 'super-ux.js'
+      - 'super-ux.css'
       - 'tests/ui-button-integrity.mjs'
       - 'tests/ui-hardening-runtime.mjs'
+      - 'tests/super-ux-integrity.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
@@ -33,9 +36,13 @@ jobs:
           node --check local-master-ooxml.js
           node --check local-master-ux.js
           node --check ui-hardening.js
+          node --check super-ux.js
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
+          node --check tests/super-ux-integrity.mjs
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
         run: node tests/ui-hardening-runtime.mjs
+      - name: Check Super UX features
+        run: node tests/super-ux-integrity.mjs
