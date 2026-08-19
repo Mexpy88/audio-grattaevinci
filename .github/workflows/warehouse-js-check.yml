@@ -27,5 +27,6 @@ jobs:
           node --check m365-write.js
           node --check m365-shared.js
           node --check m365-data.js
+          node --check m365-performance.js
           node --check m365-ui.js
           node --check m365-hooks.js
