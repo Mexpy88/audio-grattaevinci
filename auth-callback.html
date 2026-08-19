@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accesso Microsoft 365</title>
+<style>html,body{margin:0;background:#edf3f8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#17314d}.box{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center}.card{background:#fff;border:1px solid #d8e4ee;border-radius:24px;padding:28px;max-width:420px;box-shadow:0 12px 35px #15395818}.spin{width:34px;height:34px;border:4px solid #dce7ef;border-top-color:#2c60aa;border-radius:50%;animation:s .8s linear infinite;margin:0 auto 14px}@keyframes s{to{transform:rotate(360deg)}}p{color:#65788c}</style>
+</head>
+<body>
+<div class="box"><div class="card"><div class="spin"></div><b>Accesso Microsoft 365</b><p>Sto completando il collegamento al magazzino. Questa finestra si chiuderà automaticamente.</p></div></div>
+<script>
+(function(){
+  const p=new URLSearchParams(location.search);
+  const result={type:'so-m365-auth-result',code:p.get('code')||'',state:p.get('state')||'',error:p.get('error')||'',error_description:p.get('error_description')||''};
+  try{localStorage.setItem('so_m365_oauth_result',JSON.stringify({...result,at:Date.now()}));}catch{}
+  try{const bc=new BroadcastChannel('so_m365_auth');bc.postMessage(result);setTimeout(()=>bc.close(),300);}catch{}
+  try{if(window.opener)window.opener.postMessage(result,location.origin);}catch{}
+  setTimeout(()=>window.close(),450);
+})();
+</script>
+</body>
+</html>
