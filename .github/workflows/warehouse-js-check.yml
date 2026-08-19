@@ -11,9 +11,12 @@ on:
       - 'ui-hardening.js'
       - 'super-ux.js'
       - 'super-ux.css'
+      - 'request-cartons.js'
+      - 'request-cartons.css'
       - 'tests/ui-button-integrity.mjs'
       - 'tests/ui-hardening-runtime.mjs'
       - 'tests/super-ux-integrity.mjs'
+      - 'tests/request-cartons-integrity.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
@@ -37,12 +40,16 @@ jobs:
           node --check local-master-ux.js
           node --check ui-hardening.js
           node --check super-ux.js
+          node --check request-cartons.js
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
           node --check tests/super-ux-integrity.mjs
+          node --check tests/request-cartons-integrity.mjs
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
         run: node tests/ui-hardening-runtime.mjs
       - name: Check Super UX features
         run: node tests/super-ux-integrity.mjs
+      - name: Check request carton semantics
+        run: node tests/request-cartons-integrity.mjs
