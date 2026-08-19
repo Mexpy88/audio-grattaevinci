@@ -9,6 +9,7 @@ on:
       - 'local-master-ux.js'
       - 'ui-hardening.js'
       - 'tests/ui-button-integrity.mjs'
+      - 'tests/ui-hardening-runtime.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - 'm365-*.js'
@@ -31,6 +32,7 @@ jobs:
           node --check local-master-ux.js
           node --check ui-hardening.js
           node --check tests/ui-button-integrity.mjs
+          node --check tests/ui-hardening-runtime.mjs
           node --check m365-core.js
           node --check m365-auth.js
           node --check m365-resolver.js
@@ -42,3 +44,5 @@ jobs:
           node --check m365-hooks.js
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
+      - name: Check hardened master import runtime
+        run: node tests/ui-hardening-runtime.mjs
