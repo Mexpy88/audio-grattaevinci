@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 const files=[
-  'base.html','modifica.js','fixes.js','local-master.js','local-master-ooxml.js','local-master-ux.js','ui-hardening.js','super-ux.js'
+  'base.html','modifica.js','fixes.js','local-master.js','local-master-ooxml.js','local-master-ux.js','ui-hardening.js','super-ux.js','request-cartons.js'
 ];
 const sources=Object.fromEntries(files.map(f=>[f,fs.readFileSync(f,'utf8')]));
 const combined=Object.values(sources).join('\n');
@@ -31,7 +31,7 @@ while((m=attrRe.exec(combined))){
   for(const name of callees(m[2]))if(!defined(name))unresolved.push({name,code:m[2].slice(0,180)});
 }
 
-const critical=['show','openLogin','submitLogin','logout','openOperation','openSearch','openRegistry','openRequests','confirmOperation','importMappedMaster','confirmPicking','saveRequestFromReview','openStockEdit','saveStockEdit','validateLocation','uxQuickOperation','uxQuickEdit','startBarcodeScanner','undoLastOperation'];
+const critical=['show','openLogin','submitLogin','logout','openOperation','openSearch','openRegistry','openRequests','confirmOperation','importMappedMaster','confirmPicking','saveRequestFromReview','openStockEdit','saveStockEdit','validateLocation','uxQuickOperation','uxQuickEdit','startBarcodeScanner','undoLastOperation','renderRequestReview','ensureDraftAllocations','updateAllocation','exportRequest'];
 for(const name of critical)if(!defined(name))unresolved.push({name,code:'CRITICAL_HANDLER'});
 
 const hard=sources['ui-hardening.js'];
