@@ -1,17 +1,18 @@
 import fs from 'node:fs';
-const js=fs.readFileSync('local-master.js','utf8');
-const css=fs.readFileSync('local-master.css','utf8');
+const js=fs.readFileSync('dashboard-links.js','utf8');
 const checks=[
-  ['Movimenti shortcut',/data-lm-nav="movimenti"/],
-  ['Scarichi shortcut',/data-lm-nav="scarichi"/],
-  ['Richieste shortcut',/data-lm-nav="richieste"/],
+  ['Movimenti shortcut',/key:'movimenti'/],
+  ['Scarichi shortcut',/key:'scarichi'/],
+  ['Richieste shortcut',/key:'richieste'/],
   ['Registry movements route',/setRegistryTab\('MOVIMENTI'\)/],
   ['Registry discharges route',/setRegistryTab\('SCARICHI'\)/],
   ['Requests route',/openRequests\(\)/],
-  ['Keyboard accessible buttons',/<button[^>]+class="lmStatBtn"/],
-  ['Clickable styling',/\.lmStatBtn/]
+  ['Click navigation',/addEventListener\('click'/],
+  ['Keyboard navigation',/addEventListener\('keydown'/],
+  ['Accessible role',/setAttribute\('role','button'\)/],
+  ['Touch feedback',/lmStatLink:active/]
 ];
 const missing=[];
-for(const [name,re] of checks){const src=name==='Clickable styling'?css:js;if(!re.test(src))missing.push(name)}
+for(const [name,re] of checks)if(!re.test(js))missing.push(name);
 if(missing.length){console.error('Dashboard shortcuts FAILED:',missing.join(', '));process.exit(1)}
-console.log('Dashboard shortcuts OK: Movimenti, Scarichi e Richieste sono pulsanti navigabili con route dedicate.');
+console.log('Dashboard shortcuts OK: Movimenti, Scarichi e Richieste sono cliccabili, accessibili e collegati alle viste corrette.');
