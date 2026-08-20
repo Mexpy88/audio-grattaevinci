@@ -14,6 +14,7 @@ on:
       - 'request-cartons.js'
       - 'request-cartons.css'
       - 'dashboard-links.js'
+      - 'dashboard-collapse.js'
       - 'xlsx-download-fix.js'
       - 'stock-rectifications.js'
       - 'tests/ui-button-integrity.mjs'
@@ -21,6 +22,7 @@ on:
       - 'tests/super-ux-integrity.mjs'
       - 'tests/request-cartons-integrity.mjs'
       - 'tests/dashboard-shortcuts.mjs'
+      - 'tests/dashboard-collapse-integrity.mjs'
       - 'tests/xlsx-download-integrity.mjs'
       - 'tests/stock-rectifications-integrity.mjs'
       - 'tests/stock-rectifications-runtime.mjs'
@@ -49,6 +51,7 @@ jobs:
           node --check super-ux.js
           node --check request-cartons.js
           node --check dashboard-links.js
+          node --check dashboard-collapse.js
           node --check xlsx-download-fix.js
           node --check stock-rectifications.js
           node --check tests/ui-button-integrity.mjs
@@ -56,6 +59,7 @@ jobs:
           node --check tests/super-ux-integrity.mjs
           node --check tests/request-cartons-integrity.mjs
           node --check tests/dashboard-shortcuts.mjs
+          node --check tests/dashboard-collapse-integrity.mjs
           node --check tests/xlsx-download-integrity.mjs
           node --check tests/stock-rectifications-integrity.mjs
           node --check tests/stock-rectifications-runtime.mjs
@@ -69,6 +73,8 @@ jobs:
         run: node tests/request-cartons-integrity.mjs
       - name: Check dashboard shortcuts
         run: node tests/dashboard-shortcuts.mjs
+      - name: Check dashboard collapse
+        run: node tests/dashboard-collapse-integrity.mjs
       - name: Check XLSX download semantics
         run: node tests/xlsx-download-integrity.mjs
       - name: Check stock rectification semantics
