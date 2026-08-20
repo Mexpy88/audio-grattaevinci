@@ -13,3 +13,4 @@ if(listeners.touchstart||listeners.touchmove||listeners.touchend||listeners.touc
 context.show('searchScreen');if(current!=='searchScreen')throw new Error('Normal navigation failed after disabling swipe');
 context.show('home');if(current!=='home')throw new Error('Normal back button navigation failed after disabling swipe');
 console.log('Swipe disabled runtime OK: no swipe listeners registered and normal navigation remains functional.');
+// validation trigger
