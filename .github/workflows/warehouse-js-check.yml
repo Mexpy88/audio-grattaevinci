@@ -17,7 +17,7 @@ on:
       - 'dashboard-collapse.js'
       - 'xlsx-download-fix.js'
       - 'stock-rectifications.js'
-      - 'mobile-search-v2.js'
+      - 'mobile-search-v3.js'
       - 'mobile-search-v2.css'
       - 'flexible-position-v2.js'
       - 'tests/ui-button-integrity.mjs'
@@ -62,8 +62,8 @@ jobs:
           node --check dashboard-collapse.js
           node --check xlsx-download-fix.js
           node --check stock-rectifications.js
-          node --check mobile-search-v2.js
           node --check flexible-position-v2.js
+          node --check mobile-search-v3.js
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
           node --check tests/super-ux-integrity.mjs
@@ -96,9 +96,9 @@ jobs:
         run: node tests/stock-rectifications-integrity.mjs
       - name: Run stock rectification runtime
         run: node tests/stock-rectifications-runtime.mjs
-      - name: Check Mobile Search V2 wiring
+      - name: Check Mobile Search V3 wiring
         run: node tests/mobile-search-v2-integrity.mjs
-      - name: Run Mobile Search V2 runtime
+      - name: Run Mobile Search V3 runtime
         run: node tests/mobile-search-v2-runtime.mjs
       - name: Run grouped availability runtime
         run: node tests/mobile-search-v2-render-runtime.mjs
