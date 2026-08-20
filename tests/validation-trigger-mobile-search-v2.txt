@@ -1,1 +1,0 @@
-This marker ensures the latest Mobile Search V2 commit is included in validation.
