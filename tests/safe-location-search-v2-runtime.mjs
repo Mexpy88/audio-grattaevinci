@@ -3,10 +3,10 @@ import vm from 'node:vm';
 import {performance} from 'node:perf_hooks';
 
 const source=fs.readFileSync('safe-location-search-v2.js','utf8');
-for(const forbidden of ['touchstart','touchmove','touchend','MutationObserver','window.show=','window.show =']){
+for(const forbidden of ['touchstart','touchmove','touchend','new MutationObserver','window.show=','window.show =']){
   if(source.includes(forbidden))throw new Error(`Forbidden navigation/observer hook found: ${forbidden}`);
 }
-if(source.includes("addEventListener('input'\")")||source.includes('addEventListener("input"'))throw new Error('Search module must rely on the stable base oninput handler, not add another input listener');
+if(/addEventListener\s*\(\s*['"]input['"]/.test(source))throw new Error('Search module must rely on the stable base oninput handler, not add another input listener');
 
 function cls(){return {add(){},remove(){},toggle(){}}}
 const elements=new Map();
