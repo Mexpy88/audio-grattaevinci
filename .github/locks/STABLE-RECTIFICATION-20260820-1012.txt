@@ -1,0 +1,1 @@
+Stable reference before collapsible Master dashboard UI: commit 4be6340e3f2d0565318fe936be5c496f5038a9fa
