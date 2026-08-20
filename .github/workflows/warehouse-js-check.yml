@@ -20,6 +20,7 @@ on:
       - 'mobile-search-v3.js'
       - 'mobile-search-v2.css'
       - 'flexible-position-v2.js'
+      - 'mobile-navigation-hotfix.js'
       - 'tests/ui-button-integrity.mjs'
       - 'tests/ui-hardening-runtime.mjs'
       - 'tests/super-ux-integrity.mjs'
@@ -34,6 +35,7 @@ on:
       - 'tests/mobile-search-v2-render-runtime.mjs'
       - 'tests/flexible-position-v2-runtime.mjs'
       - 'tests/swipe-back-runtime.mjs'
+      - 'tests/mobile-navigation-hotfix-runtime.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
@@ -64,6 +66,7 @@ jobs:
           node --check stock-rectifications.js
           node --check flexible-position-v2.js
           node --check mobile-search-v3.js
+          node --check mobile-navigation-hotfix.js
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
           node --check tests/super-ux-integrity.mjs
@@ -78,6 +81,7 @@ jobs:
           node --check tests/mobile-search-v2-render-runtime.mjs
           node --check tests/flexible-position-v2-runtime.mjs
           node --check tests/swipe-back-runtime.mjs
+          node --check tests/mobile-navigation-hotfix-runtime.mjs
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
@@ -106,3 +110,5 @@ jobs:
         run: node tests/flexible-position-v2-runtime.mjs
       - name: Run swipe-back runtime
         run: node tests/swipe-back-runtime.mjs
+      - name: Run mobile navigation stability runtime
+        run: node tests/mobile-navigation-hotfix-runtime.mjs
