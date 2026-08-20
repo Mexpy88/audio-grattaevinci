@@ -14,11 +14,13 @@ on:
       - 'request-cartons.js'
       - 'request-cartons.css'
       - 'dashboard-links.js'
+      - 'xlsx-download-fix.js'
       - 'tests/ui-button-integrity.mjs'
       - 'tests/ui-hardening-runtime.mjs'
       - 'tests/super-ux-integrity.mjs'
       - 'tests/request-cartons-integrity.mjs'
       - 'tests/dashboard-shortcuts.mjs'
+      - 'tests/xlsx-download-integrity.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
@@ -44,11 +46,13 @@ jobs:
           node --check super-ux.js
           node --check request-cartons.js
           node --check dashboard-links.js
+          node --check xlsx-download-fix.js
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
           node --check tests/super-ux-integrity.mjs
           node --check tests/request-cartons-integrity.mjs
           node --check tests/dashboard-shortcuts.mjs
+          node --check tests/xlsx-download-integrity.mjs
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
@@ -59,3 +63,5 @@ jobs:
         run: node tests/request-cartons-integrity.mjs
       - name: Check dashboard shortcuts
         run: node tests/dashboard-shortcuts.mjs
+      - name: Check XLSX download semantics
+        run: node tests/xlsx-download-integrity.mjs
