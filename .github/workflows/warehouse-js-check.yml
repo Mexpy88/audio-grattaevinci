@@ -17,6 +17,9 @@ on:
       - 'dashboard-collapse.js'
       - 'xlsx-download-fix.js'
       - 'stock-rectifications.js'
+      - 'mobile-search-v2.js'
+      - 'mobile-search-v2.css'
+      - 'flexible-position-v2.js'
       - 'tests/ui-button-integrity.mjs'
       - 'tests/ui-hardening-runtime.mjs'
       - 'tests/super-ux-integrity.mjs'
@@ -26,6 +29,8 @@ on:
       - 'tests/xlsx-download-integrity.mjs'
       - 'tests/stock-rectifications-integrity.mjs'
       - 'tests/stock-rectifications-runtime.mjs'
+      - 'tests/mobile-search-v2-integrity.mjs'
+      - 'tests/mobile-search-v2-runtime.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
@@ -54,6 +59,8 @@ jobs:
           node --check dashboard-collapse.js
           node --check xlsx-download-fix.js
           node --check stock-rectifications.js
+          node --check mobile-search-v2.js
+          node --check flexible-position-v2.js
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
           node --check tests/super-ux-integrity.mjs
@@ -63,6 +70,8 @@ jobs:
           node --check tests/xlsx-download-integrity.mjs
           node --check tests/stock-rectifications-integrity.mjs
           node --check tests/stock-rectifications-runtime.mjs
+          node --check tests/mobile-search-v2-integrity.mjs
+          node --check tests/mobile-search-v2-runtime.mjs
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
@@ -81,3 +90,7 @@ jobs:
         run: node tests/stock-rectifications-integrity.mjs
       - name: Run stock rectification runtime
         run: node tests/stock-rectifications-runtime.mjs
+      - name: Check Mobile Search V2 wiring
+        run: node tests/mobile-search-v2-integrity.mjs
+      - name: Run Mobile Search V2 runtime
+        run: node tests/mobile-search-v2-runtime.mjs
