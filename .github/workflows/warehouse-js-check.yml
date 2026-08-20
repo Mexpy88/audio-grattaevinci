@@ -108,7 +108,7 @@ jobs:
         run: node tests/mobile-search-v2-render-runtime.mjs
       - name: Run flexible position runtime
         run: node tests/flexible-position-v2-runtime.mjs
-      - name: Run swipe-back runtime
+      - name: Run swipe-disabled runtime
         run: node tests/swipe-back-runtime.mjs
       - name: Run mobile navigation stability runtime
         run: node tests/mobile-navigation-hotfix-runtime.mjs
