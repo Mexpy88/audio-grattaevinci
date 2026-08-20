@@ -1,0 +1,1 @@
+Stable reference before Mobile Search V2 updates. Base commit: 4be6340e3f2d0565318fe936be5c496f5038a9fa. Collapsible dashboard version was subsequently at bc5c469b0d4f295fa2135d0eb5be6bca7b954a22 on warehouse-ai-live; use that commit directly for exact pre-Mobile-V2 rollback.
