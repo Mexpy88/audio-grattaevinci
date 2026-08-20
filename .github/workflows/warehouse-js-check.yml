@@ -23,6 +23,7 @@ on:
       - 'tests/dashboard-shortcuts.mjs'
       - 'tests/xlsx-download-integrity.mjs'
       - 'tests/stock-rectifications-integrity.mjs'
+      - 'tests/stock-rectifications-runtime.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
@@ -57,6 +58,7 @@ jobs:
           node --check tests/dashboard-shortcuts.mjs
           node --check tests/xlsx-download-integrity.mjs
           node --check tests/stock-rectifications-integrity.mjs
+          node --check tests/stock-rectifications-runtime.mjs
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
@@ -71,3 +73,5 @@ jobs:
         run: node tests/xlsx-download-integrity.mjs
       - name: Check stock rectification semantics
         run: node tests/stock-rectifications-integrity.mjs
+      - name: Run stock rectification runtime
+        run: node tests/stock-rectifications-runtime.mjs
