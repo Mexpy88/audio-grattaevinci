@@ -4,7 +4,7 @@ import vm from 'node:vm';
 const source=fs.readFileSync('stock-rectifications.js','utf8');
 let id=0;
 const els=new Map();
-function el(idv=''){return {id:idv,classList:{add(){},remove(){}},style:{},dataset:{},innerHTML:'',textContent:'',value:'',appendChild(){},remove(){},querySelector(){return {onclick:null}},querySelectorAll(){return []}}}
+function el(idv=''){return {id:idv,classList:{add(){},remove(){}},style:{},dataset:{},innerHTML:'',textContent:'',value:'',options:[],appendChild(ch){if(this.options)this.options.push(ch)},remove(){},querySelector(){return {onclick:null}},querySelectorAll(){return []}}}
 const document={
   getElementById(idv){if(!els.has(idv))els.set(idv,el(idv));return els.get(idv)},
   querySelector(){return null},
