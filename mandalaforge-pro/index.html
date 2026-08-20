@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#07090d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>MandalaForge Pro — Multilayer Laser Designer</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="toast" id="toast">Fatto</div>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none"><path d="M32 7 44 15 57 18 49 31 51 46 37 48 25 57 18 44 7 36 15 24 18 10 32 7Z" fill="white" opacity=".95"/><circle cx="32" cy="32" r="12" fill="#ff6737"/><path d="M32 20v24M20 32h24" stroke="white" stroke-width="4" stroke-linecap="round"/></svg>
+        </div>
+        <div><h1>MandalaForge Pro</h1><p>Generatore multilayer laser · frame, stili reali, 3D libero</p></div>
+      </div>
+      <div class="version">v1.0</div>
+    </header>
+
+    <section class="summary">
+      <div class="metric"><span>Formato</span><strong id="sumSize">350 × 350 mm</strong></div>
+      <div class="metric"><span>Livelli</span><strong id="sumLayers">5</strong></div>
+      <div class="metric"><span>Stack</span><strong id="sumHeight">15 mm</strong></div>
+    </section>
+
+    <nav class="tabs" aria-label="Sezioni">
+      <button class="tab active" data-tab="design" type="button">Design</button>
+      <button class="tab" data-tab="layers" type="button">Livelli</button>
+      <button class="tab" data-tab="preview" type="button">3D</button>
+      <button class="tab" data-tab="export" type="button">Export</button>
+    </nav>
+
+    <section class="panel active" id="design">
+      <div class="card">
+        <div class="section-head"><div><h2>Tipo di progetto</h2><p>Scegli il motore di composizione prima di generare.</p></div><span class="tag">Motore</span></div>
+        <div class="mode-switch">
+          <button id="modeRadial" class="mode-btn active" type="button">Radiale<small>mandala classico</small></button>
+          <button id="modeOrnamental" class="mode-btn" type="button">Ornamentale<small>pannello libero</small></button>
+          <button id="modeReference" class="mode-btn" type="button">Da immagine<small>reference-driven</small></button>
+        </div>
+        <div id="modeDescription" class="callout info">Composizione radiale con anelli, simmetria e reveal progressivo tra i livelli.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><div><h2>Forma / cornice</h2><p>Definisce il contorno fisico di tutti i layer.</p></div><span class="tag">Frame</span></div>
+        <div class="shape-grid" id="frameGrid"></div>
+        <div class="grid2" style="margin-top:12px">
+          <label class="field"><span class="field-title">Larghezza (mm)</span><input id="widthMm" type="number" min="80" max="1200" step="1" value="350"></label>
+          <label class="field"><span class="field-title">Altezza (mm)</span><input id="heightMm" type="number" min="80" max="1200" step="1" value="350"></label>
+        </div>
+        <div id="customFrameWrap" class="hidden" style="margin-top:10px">
+          <label class="field"><span class="field-title">SVG contorno personalizzato</span><input id="customFrameFile" type="file" accept="image/svg+xml,.svg"><div class="field-help">Viene usato il primo contorno chiuso trovato nel file SVG.</div></label>
+        </div>
+        <div style="margin-top:12px">
+          <div class="field-title"><span>Margine strutturale</span><strong id="frameMarginVal">8 mm</strong></div>
+          <input id="frameMargin" type="range" min="3" max="30" step="1" value="8">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><div><h2>Struttura</h2><p>Dimensiona stack, sicurezza e quantità di dettaglio.</p></div><span class="tag">Laser-safe</span></div>
+        <div class="grid2">
+          <label class="field"><span class="field-title">Livelli</span><select id="layerCount"></select></label>
+          <label class="field"><span class="field-title">Materiale (mm)</span><select id="thickness"><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select></label>
+        </div>
+        <div style="margin-top:12px">
+          <div class="field-title"><span>Ponte minimo</span><strong id="bridgeVal">2.0 mm</strong></div>
+          <input id="bridge" type="range" min="12" max="60" step="1" value="20">
+        </div>
+        <div style="margin-top:12px">
+          <div class="field-title"><span>Densità dettagli</span><strong id="densityVal">58%</strong></div>
+          <input id="density" type="range" min="20" max="92" step="1" value="58">
+        </div>
+        <div style="margin-top:12px">
+          <div class="field-title"><span>Rapporto pieno / vuoto</span><strong id="voidVal">52%</strong></div>
+          <input id="voidRatio" type="range" min="25" max="78" step="1" value="52">
+        </div>
+        <div style="margin-top:12px">
+          <div class="field-title"><span>Reveal tra i livelli</span><strong id="revealVal">48%</strong></div>
+          <input id="reveal" type="range" min="10" max="90" step="1" value="48">
+        </div>
+      </div>
+
+      <div class="card" id="compositionCard">
+        <div class="section-head"><div><h2>Composizione</h2><p>Controlla ritmo, simmetria, direzione e peso visivo.</p></div><span class="tag">Layout</span></div>
+        <div class="grid2">
+          <label class="field"><span class="field-title">Simmetria</span><select id="symmetry"><option value="0">OFF</option><option value="6">6</option><option value="8">8</option><option value="10">10</option><option value="12" selected>12</option><option value="16">16</option><option value="20">20</option></select></label>
+          <label class="field"><span class="field-title">Composizione</span><select id="composition"><option value="balanced" selected>Bilanciata</option><option value="free">Libera</option><option value="semi">Semi-simmetrica</option><option value="symmetric">Simmetrica</option></select></label>
+          <label class="field"><span class="field-title">Flow</span><select id="flow"><option value="radial">Radiale</option><option value="horizontal">Orizzontale</option><option value="vertical">Verticale</option><option value="diagonal">Diagonale</option><option value="swirl">Swirl</option></select></label>
+          <label class="field"><span class="field-title">Forme principali</span><select id="majorShapes"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select></label>
+          <label class="field"><span class="field-title">Elemento focale</span><select id="focal"><option value="none">Nessuno</option><option value="leaf" selected>Foglia</option><option value="paisley">Paisley</option><option value="spiral">Spirale</option><option value="petal">Petalo</option><option value="star">Stella</option><option value="diamond">Geometrico</option></select></label>
+          <label class="field"><span class="field-title">Angoli</span><select id="corners"><option value="off">Off</option><option value="light">Light</option><option value="medium" selected>Medium</option><option value="rich">Rich</option></select></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><div><h2>Mix di stili</h2><p>Seleziona fino a 4 famiglie. Ogni famiglia usa una geometria realmente diversa.</p></div><span class="tag" id="styleCount">2 / 4</span></div>
+        <div class="style-grid" id="styleGrid"></div>
+        <div class="style-limit">Lo stile di ogni layer può essere poi modificato singolarmente.</div>
+      </div>
+
+      <div class="card hidden" id="referenceCard">
+        <div class="section-head"><div><h2>Analisi immagine</h2><p>Palette, densità, punti di contrasto e distribuzione guidano il nuovo multilayer.</p></div><span class="tag">Reference</span></div>
+        <label class="field"><span class="field-title">Immagine di riferimento</span><input id="referenceFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
+        <img id="referencePreview" class="reference-preview" alt="Anteprima reference">
+        <div id="referenceProgress" class="hidden"><div class="progress"><i id="referenceProgressBar"></i></div><div class="analysis-status" id="referenceStatus">In attesa…</div></div>
+        <div id="referenceAnalysis" class="hidden">
+          <div class="analysis-grid"><div class="analysis-box"><span>Contrasto</span><strong id="aContrast">—</strong></div><div class="analysis-box"><span>Punti guida</span><strong id="aPoints">—</strong></div><div class="analysis-box"><span>Rapporto</span><strong id="aRatio">—</strong></div></div>
+          <div class="palette" id="referencePalette"></div>
+          <button id="buildFromReference" class="btn primary btn-wide" type="button" style="margin-top:10px">Ricostruisci dal riferimento</button>
+        </div>
+      </div>
+
+      <div class="card preview-card">
+        <div class="section-head"><div><h2>Anteprima 2D</h2><p>Vista combinata dei layer, aggiornata in tempo reale.</p></div><span class="tag" id="previewTag">Radiale</span></div>
+        <div class="preview-shell"><div class="preview-grid"></div><div id="designPreview"></div></div>
+        <div class="preview-caption"><span id="previewCaption">Pronto</span><button id="randomizeDesign" class="btn primary" type="button">Genera variante</button></div>
+      </div>
+    </section>
+
+    <section class="panel" id="layers">
+      <div class="card"><div class="section-head"><div><h2>Stack dei livelli</h2><p>Dal retro al fronte. Colore, materiale, ruolo e stile sono indipendenti.</p></div><span class="tag" id="layerCountTag">5 layer</span></div><div class="callout">Il motore usa aperture progressive: i layer superiori aprono finestre più ampie e lasciano emergere i colori inferiori senza ridurre banalmente la sagoma.</div></div>
+      <div class="layer-list" id="layerList"></div>
+    </section>
+
+    <section class="panel" id="preview">
+      <div class="card">
+        <div class="section-head"><div><h2>Vista 3D libera</h2><p>Rotazione completa orizzontale e verticale. Nessun blocco ai poli.</p></div><span class="tag">360°</span></div>
+        <div class="stage-wrap"><div class="stage-grid"></div><div id="threeHost"></div><span class="mode-badge" id="modeBadge">Assemblato</span><span class="stage-hint">1 dito: ruota · 2 dita: zoom</span></div>
+        <div style="margin-top:12px"><div class="field-title"><span>Esplosione</span><strong id="explodeVal">0 mm</strong></div><input id="explode" type="range" min="0" max="35" step="1" value="0"></div>
+        <div class="view-controls"><button id="viewFront" class="btn" type="button">Frontale</button><button id="viewIso" class="btn" type="button">Isometrica</button><button id="viewExploded" class="btn primary" type="button">Esploso</button><button id="fitView" class="btn" type="button">Adatta</button></div>
+        <div class="material-legend" id="materialLegend"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="export">
+      <div class="card">
+        <div class="section-head"><div><h2>Controlli di produzione</h2><p>Verifica automatica prima del download.</p></div><span class="tag">Check</span></div>
+        <div class="check-list" id="checks"></div>
+      </div>
+      <div class="card">
+        <div class="section-head"><div><h2>File per layer</h2><p>SVG e DXF in dimensioni reali, con origine condivisa.</p></div><span class="tag">Export</span></div>
+        <div class="export-list" id="exportList"></div>
+      </div>
+      <div class="card">
+        <div class="grid2"><button id="downloadZip" class="btn primary" type="button">ZIP completo</button><button id="downloadProject" class="btn secondary" type="button">Project JSON</button><button id="downloadPreviewSvg" class="btn secondary" type="button">Preview SVG</button><button id="selfTestBtn" class="btn ok" type="button">Auto-check</button></div>
+        <div class="analysis-status" id="downloadStatus" style="margin-top:8px">Pronto per esportare.</div>
+      </div>
+    </section>
+  </main>
+
+  <div class="bottom-action"><div class="status"><strong id="statusTitle">Pronto</strong><span id="statusSub">5 livelli · 350 × 350 mm · 3 mm</span></div><button id="quickGenerate" class="btn secondary" type="button">Genera</button><button id="quick3D" class="btn primary" type="button">Vista 3D</button></div>
+
+  <div id="svgMeasureHost" aria-hidden="true" style="position:fixed;left:-10000px;top:-10000px;width:1px;height:1px;overflow:hidden"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
