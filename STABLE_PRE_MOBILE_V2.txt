@@ -1,0 +1,1 @@
+Exact rollback commit for the collapsible-dashboard + rectification build: bc5c469b0d4f295fa2135d0eb5be6bca7b954a22
