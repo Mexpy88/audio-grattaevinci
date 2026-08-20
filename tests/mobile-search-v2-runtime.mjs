@@ -8,6 +8,7 @@ const document={
   getElementById(id){if(!els.has(id))els.set(id,dummy(id));return els.get(id)},
   querySelectorAll(sel){if(sel==='.screen.on')return [{id:'home'}];return []},
   createElement(tag){const e=dummy();e.tagName=tag.toUpperCase();e.showModal=()=>{};e.close=()=>{};return e},
+  addEventListener(){},
 };
 class MO{observe(){}}
 const context={window:null,document,MutationObserver:MO,console,setTimeout(){return 1},clearTimeout(){},decodeURIComponent,encodeURIComponent,
