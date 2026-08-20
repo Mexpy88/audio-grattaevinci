@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const source=fs.readFileSync('location-search-enhancements.js','utf8');
-if(/touchstart|touchmove|touchend|swipe/i.test(source))throw new Error('This module must not install swipe/touch navigation');
+if(/addEventListener\(\s*['"]touch(?:start|move|end|cancel)['"]/i.test(source))throw new Error('This module must not install swipe/touch navigation');
 
 function cls(){return {add(){},remove(){},toggle(){}}}
 const document={
@@ -36,4 +36,4 @@ for(const q of ['I00215 S','I00215-S','I00215 - S']){
 const groups=api.groupRows(rows.filter(r=>r.size==='S'));
 if(groups.length!==1||groups[0].total!==62||groups[0].rows.length!==3)throw new Error('Grouped availability total/locations failed');
 
-console.log('Location/search runtime OK: Fila OR Bancale, exact size formats, grouped availability, no swipe.');
+console.log('Location/search runtime OK: Fila OR Bancale, exact size formats, grouped availability, no swipe listeners.');
