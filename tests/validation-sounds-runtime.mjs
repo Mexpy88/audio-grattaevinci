@@ -5,44 +5,22 @@ const source=fs.readFileSync('validation-sounds.js','utf8');
 for(const forbidden of ['window.alert=','window.alert =','window.confirm=','window.confirm =','window.show=','window.show =','MutationObserver','audioSession.type']){
   if(source.includes(forbidden))throw new Error(`Unsafe global/audio hook found: ${forbidden}`);
 }
-for(const required of ['WarehouseValidationSounds','confirmOperation','submitLogin','confirmPicking','importMappedMaster','pointerdown','AudioContext']){
+for(const required of ['WarehouseValidationSounds','confirmOperation','submitLogin','confirmPicking','importMappedMaster','pointerdown','AudioContext','isTapControl','tap']){
   if(!source.includes(required))throw new Error(`Required safe sound feature missing: ${required}`);
 }
 
 let ticks=0,oscillators=0;
-class FakeParam{
-  setValueAtTime(){}
-  exponentialRampToValueAtTime(){}
-}
-class FakeOscillator{
-  constructor(){this.frequency=new FakeParam()}
-  connect(){}
-  start(){oscillators++}
-  stop(){}
-}
-class FakeGain{
-  constructor(){this.gain=new FakeParam()}
-  connect(){}
-}
-class FakeAudioContext{
-  constructor(){this.state='running';this.currentTime=1;this.destination={}}
-  createOscillator(){return new FakeOscillator()}
-  createGain(){return new FakeGain()}
-  resume(){this.state='running';return Promise.resolve()}
-}
+class FakeParam{setValueAtTime(){} exponentialRampToValueAtTime(){}}
+class FakeOscillator{constructor(){this.frequency=new FakeParam()} connect(){} start(){oscillators++} stop(){}}
+class FakeGain{constructor(){this.gain=new FakeParam()} connect(){}}
+class FakeAudioContext{constructor(){this.state='running';this.currentTime=1;this.destination={}} createOscillator(){return new FakeOscillator()} createGain(){return new FakeGain()} resume(){this.state='running';return Promise.resolve()}}
 const store=new Map();
 const listeners=[];
 const loginError={classList:{contains:()=>true}};
 const deleteMasterError={classList:{contains:()=>true}};
-const document={
-  visibilityState:'visible',
-  addEventListener:(name,fn)=>listeners.push([name,fn]),
-  getElementById:id=>id==='loginError'?loginError:id==='deleteMasterError'?deleteMasterError:null
-};
+const document={visibilityState:'visible',addEventListener:(name,fn)=>listeners.push([name,fn]),getElementById:id=>id==='loginError'?loginError:id==='deleteMasterError'?deleteMasterError:null};
 const context={
-  window:null,
-  console,
-  document,
+  window:null,console,document,
   performance:{now:()=>{ticks+=500;return ticks}},
   localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,String(v))},
   AudioContext:FakeAudioContext,
@@ -63,7 +41,19 @@ vm.createContext(context);
 vm.runInContext(source,context,{filename:'validation-sounds.js'});
 const api=context.WarehouseValidationSounds;
 if(!api)throw new Error('Validation sound API missing');
-if(!listeners.some(([n])=>n==='pointerdown'))throw new Error('Audio unlock is not tied to a user gesture');
+const pointer=listeners.find(([n])=>n==='pointerdown');
+if(!pointer)throw new Error('Pointer sound listener missing');
+
+const button={disabled:false,dataset:{},getAttribute:()=>null};
+const target={closest:()=>button};
+const beforeTap=oscillators;
+pointer[1]({target});
+if(oscillators-beforeTap!==1)throw new Error('Interactive button tap did not emit exactly one subtle click tone');
+
+const disabledButton={disabled:true,dataset:{},getAttribute:()=>null};
+const beforeDisabledTap=oscillators;
+pointer[1]({target:{closest:()=>disabledButton}});
+if(oscillators!==beforeDisabledTap)throw new Error('Disabled button emitted a tap sound');
 
 const beforeOperation=oscillators;
 context.confirmOperation();
@@ -98,4 +88,4 @@ const beforeError=oscillators;
 api.error();
 if(oscillators-beforeError!==2)throw new Error('Error cue is not a two-tone sound');
 
-console.log('Validation sounds runtime OK: no global UI overrides, verified state-change cues work, PIN success works, background/disabled states are silent.');
+console.log('Validation sounds runtime OK: subtle button taps, distinct success/error cues, no global UI overrides, background/disabled states stay silent.');
