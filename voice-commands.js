@@ -6,9 +6,8 @@
   'use strict';
   if(window.WarehouseVoiceCommands)return;
 
-  const VERSION='2026.08.24-voice4-contextual';
+  const VERSION='2026.08.24-voice5-contextual';
   const VALID_STATES=['NUOVO','SCARICATO','USATO'];
-  const SIZE_WORDS=new Set(['XXS','XS','S','M','L','XL','XXL','XXXL','2XL','3XL','4XL']);
   const RESULTS_BACK_DEFAULT="show('bridge')";
   let recognition=null;
   let listening=false;
@@ -33,13 +32,15 @@
   }
   function numberWord(v){
     const s=clean(v).replace(/\s+/g,'');
-    const map={zero:0,uno:1,una:1,due:2,tre:3,quattro:4,cinque:5,sei:6,sette:7,otto:8,nove:9,dieci:10,undici:11,dodici:12,tredici:13,quattordici:14,quindici:15,sedici:16,diciassette:17,diciotto:18,diciannove:19,venti:20,ventuno:21,ventidue:22,ventitre:23,ventiquattro:24,venticinque:25,ventisei:26,ventisette:27,ventotto:28,ventinove:29,trenta:30,trentuno:31,trentadue:32,trentatre:33,quaranta:40,cinquanta:50,sessanta:60,settanta:70,ottanta:80,novanta:90,cento:100,duecento:200,trecento:300,quattrocento:400,cinquecento:500,seicento:600,settecento:700,ottocento:800,novecento:900,mille:1000};
+    const map={zero:0,uno:1,una:1,due:2,tre:3,quattro:4,cinque:5,sei:6,sette:7,otto:8,nove:9,dieci:10,undici:11,dodici:12,tredici:13,quattordici:14,quindici:15,sedici:16,diciassette:17,diciotto:18,diciannove:19,venti:20,ventuno:21,ventidue:22,ventitre:23,ventiquattro:24,venticinque:25,ventisei:26,ventisette:27,ventotto:28,ventinove:29,trenta:30,trentuno:31,trentadue:32,trentatre:33,quaranta:40,cinquanta:50,sessanta:60,settant:70,settanta:70,ottanta:80,novanta:90,cento:100,duecento:200,trecento:300,quattrocento:400,cinquecento:500,seicento:600,settecento:700,ottocento:800,novecento:900,mille:1000};
     return Object.prototype.hasOwnProperty.call(map,s)?map[s]:null;
   }
   function parseQuantity(s){
     let m=s.match(/(?:quantita|qta|pezzi?|unita)\s+(?:di\s+)?(\d+(?:[.,]\d+)?)/i);if(m)return Number(m[1].replace(',','.'));
     m=s.match(/(\d+(?:[.,]\d+)?)\s*(?:pezzi?|unita)\b/i);if(m)return Number(m[1].replace(',','.'));
+    m=s.match(/(?:taglia|misura|size)\s+[a-z0-9\/.-]+\s+(\d+(?:[.,]\d+)?)/i);if(m)return Number(m[1].replace(',','.'));
     m=s.match(/(?:quantita|qta|pezzi?|unita)\s+(?:di\s+)?([a-z]+)/i);if(m){const n=numberWord(m[1]);if(n!==null)return n}
+    m=s.match(/(?:taglia|misura|size)\s+[a-z0-9\/.-]+\s+([a-z]+)/i);if(m){const n=numberWord(m[1]);if(n!==null)return n}
     return null;
   }
   function stockRows(){try{return typeof stockBuckets==='function'?stockBuckets():[]}catch{return []}}
@@ -51,7 +52,7 @@
     }catch{return ''}
   }
   function articleMarkers(s){
-    const out=[],re=/\b(?:articolo|codice|sku)\s+(?:i|1)(?=\s*\d)|\b(?:i|1)(?=\s*\d)/ig;let m;
+    const out=[],re=/\b(?:articolo|codice|sku)\s+(?:i(?=\s*\d)|1(?=(?:\s*\d){3,}))|\bi(?=\s*\d)|\b1(?=(?:\s*\d){3,})/ig;let m;
     while((m=re.exec(s)))out.push({index:m.index,end:re.lastIndex});
     return out;
   }
@@ -72,7 +73,7 @@
   }
   function parseItemSegment(segment,prefix=''){
     const s=clean(segment),known=knownArticleFromSpeech(s);
-    const marker=s.match(/(?:\barticolo\s+|\bcodice\s+|\bsku\s+)?\b(?:i|1)(?=\s*\d)/i);
+    const marker=s.match(/(?:\barticolo\s+|\bcodice\s+|\bsku\s+)?\b(?:i(?=\s*\d)|1(?=(?:\s*\d){3,}))/i);
     let tail=marker?s.slice((marker.index||0)+marker[0].length):s;
     const fields=bareTailFields(tail);
     let article=known;
