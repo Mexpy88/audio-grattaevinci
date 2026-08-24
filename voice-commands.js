@@ -4,7 +4,7 @@
   'use strict';
   if(window.WarehouseVoiceCommands)return;
 
-  const VERSION='2026.08.24-voice2-safe';
+  const VERSION='2026.08.24-voice3-safe';
   let recognition=null;
   let listening=false;
   let activeHint='AUTO';
@@ -24,7 +24,7 @@
   }
   function numberWord(v){
     const s=clean(v).replace(/\s+/g,'');
-    const map={zero:0,uno:1,una:1,due:2,tre:3,quattro:4,cinque:5,sei:6,sette:7,otto:8,nove:9,dieci:10,undici:11,dodici:12,tredici:13,quattordici:14,quindici:15,sedici:16,diciassette:17,diciotto:18,diciannove:19,venti:20,ventuno:21,ventidue:22,ventitre:23,ventiquattro:24,venticinque:25,ventisei:26,ventisette:27,ventotto:28,ventinove:29,trenta:30,trentuno:31,trentadue:32,trentatre:33,quaranta:40,cinquanta:50,sessanta:60,settantanta:70,settanta:70,ottanta:80,novanta:90,cento:100,duecento:200,trecento:300,quattrocento:400,cinquecento:500,seicento:600,settecento:700,ottocento:800,novecento:900,mille:1000};
+    const map={zero:0,uno:1,una:1,due:2,tre:3,quattro:4,cinque:5,sei:6,sette:7,otto:8,nove:9,dieci:10,undici:11,dodici:12,tredici:13,quattordici:14,quindici:15,sedici:16,diciassette:17,diciotto:18,diciannove:19,venti:20,ventuno:21,ventidue:22,ventitre:23,ventiquattro:24,venticinque:25,ventisei:26,ventisette:27,ventotto:28,ventinove:29,trenta:30,trentuno:31,trentadue:32,trentatre:33,quaranta:40,cinquanta:50,sessanta:60,settanta:70,ottanta:80,novanta:90,cento:100,duecento:200,trecento:300,quattrocento:400,cinquecento:500,seicento:600,settecento:700,ottocento:800,novecento:900,mille:1000};
     return Object.prototype.hasOwnProperty.call(map,s)?map[s]:null;
   }
   function parseQuantity(s){
@@ -59,11 +59,11 @@
     m=s.match(/da\s+(?:fila\s*\/?\s*scaffale|fila|scaffale|posizione)\s+([a-z0-9][a-z0-9\/-]*)/i);return m?norm(m[1]):'';
   }
   function parseTargetLocation(s){
-    let m=s.match(/(?:a|in|su)\s+fila\s+([a-z0-9-]+)\s+scaffale\s+([a-z0-9-]+)/i);if(m)return norm(`${m[1]}/${m[2]}`);
-    m=s.match(/(?:a|in|su)\s+(?:fila\s*\/?\s*scaffale|fila|scaffale|posizione)\s+([a-z0-9][a-z0-9\/-]*)/i);return m?norm(m[1]):'';
+    let m=s.match(/\b(?:a|in|su)\b\s+fila\s+([a-z0-9-]+)\s+scaffale\s+([a-z0-9-]+)/i);if(m)return norm(`${m[1]}/${m[2]}`);
+    m=s.match(/\b(?:a|in|su)\b\s+(?:fila\s*\/?\s*scaffale|fila|scaffale|posizione)\s+([a-z0-9][a-z0-9\/-]*)/i);return m?norm(m[1]):'';
   }
   function parseSourcePallet(s){const m=s.match(/da\s+(?:bancale|pallet)\s+([a-z0-9-]+)/i);return m?norm(m[1]):''}
-  function parseTargetPallet(s){const m=s.match(/(?:a|al|nel|sul|su)\s+(?:bancale|pallet)\s+([a-z0-9-]+)/i);return m?norm(m[1]):''}
+  function parseTargetPallet(s){const m=s.match(/\b(?:a|al|nel|sul|su)\b\s+(?:bancale|pallet)\s+([a-z0-9-]+)/i);return m?norm(m[1]):''}
   function parseDestination(s){
     const choices=[['CONTROLLO QUALITA','CONTROLLO QUALITÀ'],['SPEDIZIONI','SPEDIZIONI'],['PRODUZIONE','PRODUZIONE'],['LAVAGGIO','LAVAGGIO'],['LINA','LINA'],['ALTRO','ALTRO']];
     const u=norm(clean(s));for(const [key,value] of choices)if(u.includes(key))return value;return '';
