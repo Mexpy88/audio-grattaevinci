@@ -23,6 +23,7 @@ on:
       - 'excel-stock-search-sheet.js'
       - 'excel-stock-search-detail-fix.js'
       - 'clean-forms-default-new.js'
+      - 'master-import-ui-cleanup.js'
       - 'tests/ui-button-integrity.mjs'
       - 'tests/ui-hardening-runtime.mjs'
       - 'tests/super-ux-integrity.mjs'
@@ -38,6 +39,7 @@ on:
       - 'tests/excel-stock-search-sheet-runtime.mjs'
       - 'tests/excel-stock-search-detail-fix-runtime.mjs'
       - 'tests/clean-forms-default-new-runtime.mjs'
+      - 'tests/master-import-ui-cleanup-runtime.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
@@ -72,6 +74,7 @@ jobs:
           node --check excel-stock-search-sheet.js
           node --check excel-stock-search-detail-fix.js
           node --check clean-forms-default-new.js
+          node --check master-import-ui-cleanup.js
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
           node --check tests/super-ux-integrity.mjs
@@ -87,6 +90,7 @@ jobs:
           node --check tests/excel-stock-search-sheet-runtime.mjs
           node --check tests/excel-stock-search-detail-fix-runtime.mjs
           node --check tests/clean-forms-default-new-runtime.mjs
+          node --check tests/master-import-ui-cleanup-runtime.mjs
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
@@ -117,3 +121,5 @@ jobs:
         run: node tests/excel-stock-search-detail-fix-runtime.mjs
       - name: Run clean forms/manual NUOVO runtime
         run: node tests/clean-forms-default-new-runtime.mjs
+      - name: Run Master import UX cleanup runtime
+        run: node tests/master-import-ui-cleanup-runtime.mjs
