@@ -27,6 +27,7 @@ on:
       - 'session-cycle-fix.js'
       - 'validation-sounds.js'
       - 'voice-commands.js'
+      - 'voice-mic-runtime-fix.js'
       - 'voice-commands.css'
       - 'tests/ui-button-integrity.mjs'
       - 'tests/ui-hardening-runtime.mjs'
@@ -47,6 +48,7 @@ on:
       - 'tests/session-cycle-fix-runtime.mjs'
       - 'tests/validation-sounds-runtime.mjs'
       - 'tests/voice-commands-runtime.mjs'
+      - 'tests/voice-mic-runtime-fix.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
@@ -85,6 +87,7 @@ jobs:
           node --check session-cycle-fix.js
           node --check validation-sounds.js
           node --check voice-commands.js
+          node --check voice-mic-runtime-fix.js
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
           node --check tests/super-ux-integrity.mjs
@@ -104,6 +107,7 @@ jobs:
           node --check tests/session-cycle-fix-runtime.mjs
           node --check tests/validation-sounds-runtime.mjs
           node --check tests/voice-commands-runtime.mjs
+          node --check tests/voice-mic-runtime-fix.mjs
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
@@ -142,3 +146,5 @@ jobs:
         run: node tests/validation-sounds-runtime.mjs
       - name: Run warehouse voice command parser runtime
         run: node tests/voice-commands-runtime.mjs
+      - name: Run Android voice microphone startup runtime
+        run: node tests/voice-mic-runtime-fix.mjs
