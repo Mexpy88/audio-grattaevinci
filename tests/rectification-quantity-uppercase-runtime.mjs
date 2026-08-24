@@ -7,7 +7,7 @@ const fix=fs.readFileSync('rectification-uppercase-fix.js','utf8');
 // 1) Logical rectification semantics: 100 -> 50 must leave exactly one active 50 bucket.
 const ctx={
   window:null,console,structuredClone:globalThis.structuredClone,document:undefined,DOMParser:undefined,XMLSerializer:undefined,
-  db:{master:{imported_at:'2026-08-24T07:00:00.000Z',rows:[{article_base:'ITEST',size:'L',quantity:100,state:'NUOVO',fila_scaffale:'23',bancale:'38',master_note:''}]},movements:[],rectifications:[{registered_at:'2026-08-24T07:10:00.000Z',cancelled_at:null,before:{article_base:'I TEST',size:'L',quantity:100,state:'NUOVO',fila_scaffale:'23',bancale:'38',master_note:''},after:{article_base:'I TEST',size:'L',quantity:50,state:'NUOVO',fila_scaffale:'23',bancale:'38',master_note:''}}]}
+  db:{master:{imported_at:'2026-08-24T07:00:00.000Z',rows:[{article_base:'I00215',size:'L',quantity:100,state:'NUOVO',fila_scaffale:'23',bancale:'38',master_note:''}]},movements:[],rectifications:[{registered_at:'2026-08-24T07:10:00.000Z',cancelled_at:null,before:{article_base:'I00215',size:'L',quantity:100,state:'NUOVO',fila_scaffale:'23',bancale:'38',master_note:''},after:{article_base:'I00215',size:'L',quantity:50,state:'NUOVO',fila_scaffale:'23',bancale:'38',master_note:''}}]}
 };
 ctx.window=ctx;vm.createContext(ctx);vm.runInContext(v4,ctx,{filename:'warehouse-master-schema-v4.js'});
 const stock=ctx.WarehouseMasterSchemaV4.stockBuckets();
