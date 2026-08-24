@@ -1,7 +1,7 @@
 name: Warehouse JS Check
 on:
   push:
-    branches: [warehouse-ai-live]
+    branches: [warehouse-ai-live, warehouse-app-live]
     paths:
       - 'index.html'
       - 'base.html'
@@ -24,6 +24,9 @@ on:
       - 'excel-stock-search-detail-fix.js'
       - 'clean-forms-default-new.js'
       - 'master-import-ui-cleanup.js'
+      - 'm365-live.js'
+      - 'm365-live.css'
+      - 'auth-callback.html'
       - 'tests/ui-button-integrity.mjs'
       - 'tests/ui-hardening-runtime.mjs'
       - 'tests/super-ux-integrity.mjs'
@@ -40,11 +43,12 @@ on:
       - 'tests/excel-stock-search-detail-fix-runtime.mjs'
       - 'tests/clean-forms-default-new-runtime.mjs'
       - 'tests/master-import-ui-cleanup-runtime.mjs'
+      - 'tests/m365-live-runtime.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
   pull_request:
-    branches: [warehouse-ai-live]
+    branches: [warehouse-ai-live, warehouse-app-live]
   workflow_dispatch:
 jobs:
   syntax:
@@ -75,6 +79,7 @@ jobs:
           node --check excel-stock-search-detail-fix.js
           node --check clean-forms-default-new.js
           node --check master-import-ui-cleanup.js
+          if [ -f m365-live.js ]; then node --check m365-live.js; fi
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
           node --check tests/super-ux-integrity.mjs
@@ -91,6 +96,7 @@ jobs:
           node --check tests/excel-stock-search-detail-fix-runtime.mjs
           node --check tests/clean-forms-default-new-runtime.mjs
           node --check tests/master-import-ui-cleanup-runtime.mjs
+          if [ -f tests/m365-live-runtime.mjs ]; then node --check tests/m365-live-runtime.mjs; fi
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
@@ -123,3 +129,5 @@ jobs:
         run: node tests/clean-forms-default-new-runtime.mjs
       - name: Run Master import UX cleanup runtime
         run: node tests/master-import-ui-cleanup-runtime.mjs
+      - name: Run Microsoft 365 live runtime
+        run: if [ -f tests/m365-live-runtime.mjs ]; then node tests/m365-live-runtime.mjs; fi
