@@ -14,7 +14,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#edf3f8}
 <iframe id="warehouseApp" src="base.html?v=20260814-0727" title="Gestione Magazzino" allow="clipboard-read; clipboard-write; web-share; camera"></iframe>
 <script>
 (function(){
-  const VERSION='20260824-import-cleanup1';
+  const VERSION='20260824-session-cycle1';
   const frame=document.getElementById('warehouseApp');
   function addStyle(d,id,href){if(d.getElementById(id))return;const l=d.createElement('link');l.id=id;l.rel='stylesheet';l.href=href;d.head.appendChild(l)}
   function addScript(d,id,src){return new Promise((resolve,reject)=>{if(d.getElementById(id)){resolve();return}const s=d.createElement('script');s.id=id;s.src=src;s.async=false;s.onload=resolve;s.onerror=()=>reject(new Error('Impossibile caricare '+src));d.body.appendChild(s)})}
@@ -22,7 +22,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#edf3f8}
     try{
       const d=frame.contentDocument;if(!d)return;
       d.querySelectorAll('img[alt="Servizi Ospedalieri"]').forEach(img=>img.setAttribute('src','logo-full.svg?v=20260814-0756'));
-      if(!d.getElementById('logoFixStyles')){const style=d.createElement('style');style.id='logoFixStyles';style.textContent=`.logoButton{max-width:56vw;overflow:visible!important}.logoButton img{width:min(230px,56vw)!important;height:auto!important;max-width:none!important;object-fit:contain!important;object-position:left center!important}.heroLogo{width:min(100%,430px)!important;height:auto!important;object-fit:contain!important}@media(max-width:430px){.logoButton img{width:min(210px,55vw)!important;max-width:none!important}}@media(max-width:360px){.logoButton img{width:min(175px,52vw)!important;max-width:none!important}}`;d.head.appendChild(style)}
+      if(!d.getElementById('logoFixStyles')){const style=d.createElement('style');style.id='logoFixStyles';style.textContent=`.logoButton{max-width:56vw;overflow:visible!important}.logoButton img{width:min(230px,56vw)!important;height:auto!important;max-width:none!important;object-fit:contain!important;object-position:left center!important}.heroLogo{width:min(100%,430px)!important;height:auto!important;object-fit:contain!important;object-position:left center!important}.heroLogo{width:min(100%,430px)!important;height:auto!important;object-fit:contain!important}@media(max-width:430px){.logoButton img{width:min(210px,55vw)!important;max-width:none!important}}@media(max-width:360px){.logoButton img{width:min(175px,52vw)!important;max-width:none!important}}`;d.head.appendChild(style)}
       addStyle(d,'stockEditCss','modifica.css?v=20260814-0756');
       addStyle(d,'warehouseFixCss','fixes.css?v=20260814-0845');
       addStyle(d,'localMasterCss','local-master.css?v='+VERSION);
@@ -48,7 +48,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#edf3f8}
       await addScript(d,'excelStockSearchDetailFixJs','excel-stock-search-detail-fix.js?v='+VERSION);
       await addScript(d,'cleanFormsDefaultNewJs','clean-forms-default-new.js?v='+VERSION);
       await addScript(d,'masterImportUiCleanupJs','master-import-ui-cleanup.js?v='+VERSION);
-      setTimeout(()=>{try{frame.contentWindow?.WarehouseUIHealth?.run?.();frame.contentWindow?.WarehouseDashboardLinks?.decorate?.();frame.contentWindow?.WarehouseMasterCollapse?.install?.();frame.contentWindow?.WarehouseRectificationFlags?.install?.();frame.contentWindow?.WarehouseExcelStockSearch?.install?.();frame.contentWindow?.WarehouseExcelStockSearchDetailFix?.install?.();frame.contentWindow?.WarehouseCleanFormsDefaultNew?.install?.();frame.contentWindow?.WarehouseMasterImportUiCleanup?.install?.()}catch{}},100);
+      await addScript(d,'sessionCycleFixJs','session-cycle-fix.js?v='+VERSION);
+      setTimeout(()=>{try{frame.contentWindow?.WarehouseUIHealth?.run?.();frame.contentWindow?.WarehouseDashboardLinks?.decorate?.();frame.contentWindow?.WarehouseMasterCollapse?.install?.();frame.contentWindow?.WarehouseRectificationFlags?.install?.();frame.contentWindow?.WarehouseExcelStockSearch?.install?.();frame.contentWindow?.WarehouseExcelStockSearchDetailFix?.install?.();frame.contentWindow?.WarehouseCleanFormsDefaultNew?.install?.();frame.contentWindow?.WarehouseMasterImportUiCleanup?.install?.();frame.contentWindow?.WarehouseSessionCycleFix?.install?.()}catch{}},100);
     }catch(err){console.error('Estensione magazzino non caricata',err);try{frame.contentWindow?.warehouseToast?.('Errore caricamento moduli: '+(err.message||err),'error')}catch{}}
   });
 })();
