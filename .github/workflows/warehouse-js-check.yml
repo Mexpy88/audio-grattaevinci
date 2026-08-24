@@ -46,7 +46,7 @@ on:
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
   pull_request:
-    branches: [warehouse-ai-live]
+    branches: [warehouse-ai-live, warehouse-app-remoto]
   workflow_dispatch:
 jobs:
   syntax:
