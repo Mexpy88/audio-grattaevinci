@@ -1,7 +1,7 @@
 name: Warehouse JS Check
 on:
   push:
-    branches: [warehouse-ai-live, warehouse-app-remoto-session-counters-pin-eye-20260824]
+    branches: [warehouse-ai-live, warehouse-app-remoto]
     paths:
       - 'index.html'
       - 'base.html'
@@ -46,7 +46,7 @@ on:
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
   pull_request:
-    branches: [warehouse-ai-live]
+    branches: [warehouse-ai-live, warehouse-app-remoto]
   workflow_dispatch:
 jobs:
   syntax:
