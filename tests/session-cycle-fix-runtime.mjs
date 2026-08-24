@@ -5,12 +5,13 @@ const source=fs.readFileSync('session-cycle-fix.js','utf8');
 for(const forbidden of ['touchstart','touchmove','touchend','MutationObserver','window.show=','window.show =']){
   if(source.includes(forbidden))throw new Error(`Forbidden navigation hook: ${forbidden}`);
 }
-for(const required of ['sessionCounts','sessionDirtyCount','::-ms-reveal','lmStats','uxDirtyBar']){
-  if(!source.includes(required))throw new Error(`Required session-cycle feature missing: ${required}`);
+for(const required of ['sessionCounts','sessionDirtyCount','importBaselineMs','dirtyBaselineMs','pinRevealBtn','installPinEye','Mostra PIN','Nascondi PIN','::-ms-reveal','lmStats','uxDirtyBar']){
+  if(!source.includes(required))throw new Error(`Required session-cycle/PIN feature missing: ${required}`);
 }
 
 const importedAt='2026-08-24T11:09:00.000Z';
 const after='2026-08-24T11:10:00.000Z';
+const afterExport='2026-08-24T11:12:00.000Z';
 const before='2026-08-24T10:00:00.000Z';
 const store=new Map([['so_local_master_meta_v3',JSON.stringify({importedAt,lastExportAt:importedAt})]]);
 const oldMovements=Array.from({length:33},(_,i)=>({id:'OLD'+i,registered_at:before,operation_at:before}));
@@ -47,5 +48,13 @@ if(api.sessionDirtyCount()!==2)throw new Error(`Current dirty count wrong: ${api
 
 store.set('so_local_master_meta_v3',JSON.stringify({importedAt,lastExportAt:'2026-08-24T11:11:00.000Z'}));
 if(api.sessionDirtyCount()!==0)throw new Error('Export baseline did not reset dirty counter');
+c=api.sessionCounts();
+if(c.moves!==1||c.docs!==1||c.reqs!==1)throw new Error(`Export incorrectly reset Home session counters: ${JSON.stringify(c)}`);
 
-console.log('Session cycle runtime OK: imported history stays in Registro, Home counters start at 0, new activity counts, dirty bar resets after export, Edge PIN reveal is suppressed.');
+context.db.movements.unshift({id:'NEW2',registered_at:afterExport,operation_at:afterExport});
+context.db.audits.unshift({id:'ANEW3',action:'CREATE',at:afterExport});
+c=api.sessionCounts();
+if(c.moves!==2)throw new Error(`Post-export movement not retained in import-cycle counter: ${JSON.stringify(c)}`);
+if(api.sessionDirtyCount()!==1)throw new Error(`Post-export dirty count wrong: ${api.sessionDirtyCount()}`);
+
+console.log('Session cycle runtime OK: imported history stays in Registro, Home counters start at 0 and count from import, export only resets dirty state, explicit cross-browser PIN eye is present.');
