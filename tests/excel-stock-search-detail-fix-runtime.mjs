@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const source=fs.readFileSync('excel-stock-search-detail-fix.js','utf8');
-for(const forbidden of ['touchstart','touchmove','touchend','new MutationObserver','window.show=','window.show =']){
-  if(source.includes(forbidden))throw new Error(`Forbidden navigation hook: ${forbidden}`);
+for(const forbidden of ['touchstart','touchmove','touchend','new MutationObserver','window.show=','window.show =','JSZip.loadAsync(result)']){
+  if(source.includes(forbidden))throw new Error(`Forbidden/fragile Excel detail behavior: ${forbidden}`);
 }
 if(source.includes('_xlfn._xlws.FILTER'))throw new Error('Detail fix must not depend on FILTER dynamic-array spill');
 const ctx={window:null,console,document:undefined,DOMParser:undefined,XMLSerializer:undefined};ctx.window=ctx;
@@ -11,10 +11,10 @@ vm.createContext(ctx);vm.runInContext(source,ctx,{filename:'excel-stock-search-d
 const api=ctx.WarehouseExcelStockSearchDetailFix;if(!api)throw new Error('Detail fix API missing');
 
 const rows=[
-  {article:'I62470LUNUHF',size:'M'},
-  {article:'I62470LUNUHF',size:'M'},
-  {article:'I62470LUNUHF',size:'M'},
-  {article:'I62470LUNUHF',size:'L'},
+  {article:'I30872MUHF',size:'M'},
+  {article:'I30872MUHF',size:'M'},
+  {article:'I30872MUHF',size:'M'},
+  {article:'I30872MUHF',size:'L'},
   {article:'I00215',size:'S'},
   {article:'I00215',size:'S'}
 ];
@@ -31,7 +31,7 @@ for(const [i,letter] of ['A','B','C','D','E','F','G'].entries()){
 }
 const second=api.detailFormula(1,16,500);if(!second.includes('ROWS($A$15:A16)'))throw new Error('Second detail row must request the second matching position');
 
-for(const required of ['patchDetailSheet','CERCA_GIACENZE','GIACENZE_RICERCA_DATI','INDEX(','AGGREGATE(15,6']){
+for(const required of ['patchDetailSheet','patchSearchAndDetailSamePackage','patchWorkbookSearchSheets','CERCA_GIACENZE','GIACENZE_RICERCA_DATI','INDEX(','AGGREGATE(15,6']){
   if(!source.includes(required))throw new Error(`Missing detail compatibility guard: ${required}`);
 }
-console.log('Excel search detail fix OK: all 7 columns use deterministic INDEX+AGGREGATE nth-match formulas; no FILTER spill dependency.');
+console.log('Excel search detail fix OK: every visible cell uses deterministic nth-match formulas and search+detail are patched in one workbook package before download.');
