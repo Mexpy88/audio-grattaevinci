@@ -31,6 +31,7 @@ on:
       - 'top-level-speech-broker.js'
       - 'voice-top-broker-client.js'
       - 'optional-pallet-fix.js'
+      - 'flex-position-v2.js'
       - 'voice-commands.css'
       - 'tests/ui-button-integrity.mjs'
       - 'tests/ui-hardening-runtime.mjs'
@@ -54,6 +55,8 @@ on:
       - 'tests/voice-mic-runtime-fix.mjs'
       - 'tests/top-level-speech-broker-runtime.mjs'
       - 'tests/optional-pallet-runtime.mjs'
+      - 'tests/flex-position-v2-runtime.mjs'
+      - 'tests/live-text-dictation-ux.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
@@ -96,6 +99,7 @@ jobs:
           node --check top-level-speech-broker.js
           node --check voice-top-broker-client.js
           node --check optional-pallet-fix.js
+          node --check flex-position-v2.js
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
           node --check tests/super-ux-integrity.mjs
@@ -118,6 +122,8 @@ jobs:
           node --check tests/voice-mic-runtime-fix.mjs
           node --check tests/top-level-speech-broker-runtime.mjs
           node --check tests/optional-pallet-runtime.mjs
+          node --check tests/flex-position-v2-runtime.mjs
+          node --check tests/live-text-dictation-ux.mjs
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
@@ -162,3 +168,7 @@ jobs:
         run: node tests/top-level-speech-broker-runtime.mjs
       - name: Run optional pallet/shelf-only runtime
         run: node tests/optional-pallet-runtime.mjs
+      - name: Run flexible position runtime
+        run: node tests/flex-position-v2-runtime.mjs
+      - name: Run live text dictation UX checks
+        run: node tests/live-text-dictation-ux.mjs
