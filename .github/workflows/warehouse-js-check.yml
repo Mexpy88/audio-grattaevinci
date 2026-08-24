@@ -19,6 +19,7 @@ on:
       - 'stock-rectifications.js'
       - 'warehouse-master-schema-v4.js'
       - 'rectification-uppercase-fix.js'
+      - 'rectification-flags.js'
       - 'tests/ui-button-integrity.mjs'
       - 'tests/ui-hardening-runtime.mjs'
       - 'tests/super-ux-integrity.mjs'
@@ -30,6 +31,7 @@ on:
       - 'tests/stock-rectifications-runtime.mjs'
       - 'tests/master-schema-v4-runtime.mjs'
       - 'tests/rectification-quantity-uppercase-runtime.mjs'
+      - 'tests/rectification-flags-runtime.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
@@ -60,6 +62,7 @@ jobs:
           node --check stock-rectifications.js
           node --check warehouse-master-schema-v4.js
           node --check rectification-uppercase-fix.js
+          node --check rectification-flags.js
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
           node --check tests/super-ux-integrity.mjs
@@ -71,6 +74,7 @@ jobs:
           node --check tests/stock-rectifications-runtime.mjs
           node --check tests/master-schema-v4-runtime.mjs
           node --check tests/rectification-quantity-uppercase-runtime.mjs
+          node --check tests/rectification-flags-runtime.mjs
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
@@ -93,3 +97,5 @@ jobs:
         run: node tests/master-schema-v4-runtime.mjs
       - name: Run rectification quantity and uppercase runtime
         run: node tests/rectification-quantity-uppercase-runtime.mjs
+      - name: Run rectification checklist flags runtime
+        run: node tests/rectification-flags-runtime.mjs
