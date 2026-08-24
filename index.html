@@ -14,7 +14,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#edf3f8}
 <iframe id="warehouseApp" src="base.html?v=20260814-0727" title="Gestione Magazzino" allow="clipboard-read; clipboard-write; web-share; camera; microphone"></iframe>
 <script>
 (function(){
-  const VERSION='20260824-voice-context4-excelfix2';
+  const VERSION='20260824-voice-micfix1';
   const frame=document.getElementById('warehouseApp');
   function addStyle(d,id,href){if(d.getElementById(id))return;const l=d.createElement('link');l.id=id;l.rel='stylesheet';l.href=href;d.head.appendChild(l)}
   function addScript(d,id,src){return new Promise((resolve,reject)=>{if(d.getElementById(id)){resolve();return}const s=d.createElement('script');s.id=id;s.src=src;s.async=false;s.onload=resolve;s.onerror=()=>reject(new Error('Impossibile caricare '+src));d.body.appendChild(s)})}
@@ -52,7 +52,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#edf3f8}
       await addScript(d,'sessionCycleFixJs','session-cycle-fix.js?v='+VERSION);
       await addScript(d,'validationSoundsJs','validation-sounds.js?v='+VERSION);
       await addScript(d,'voiceCommandsJs','voice-commands.js?v='+VERSION);
-      setTimeout(()=>{try{frame.contentWindow?.WarehouseUIHealth?.run?.();frame.contentWindow?.WarehouseDashboardLinks?.decorate?.();frame.contentWindow?.WarehouseMasterCollapse?.install?.();frame.contentWindow?.WarehouseRectificationFlags?.install?.();frame.contentWindow?.WarehouseExcelStockSearch?.install?.();frame.contentWindow?.WarehouseExcelStockSearchDetailFix?.install?.();frame.contentWindow?.WarehouseCleanFormsDefaultNew?.install?.();frame.contentWindow?.WarehouseMasterImportUiCleanup?.install?.();frame.contentWindow?.WarehouseSessionCycleFix?.install?.();frame.contentWindow?.WarehouseValidationSounds?.install?.();frame.contentWindow?.WarehouseVoiceCommands?.installUi?.()}catch{}},100);
+      await addScript(d,'voiceMicRuntimeFixJs','voice-mic-runtime-fix.js?v='+VERSION);
+      setTimeout(()=>{try{frame.contentWindow?.WarehouseUIHealth?.run?.();frame.contentWindow?.WarehouseDashboardLinks?.decorate?.();frame.contentWindow?.WarehouseMasterCollapse?.install?.();frame.contentWindow?.WarehouseRectificationFlags?.install?.();frame.contentWindow?.WarehouseExcelStockSearch?.install?.();frame.contentWindow?.WarehouseExcelStockSearchDetailFix?.install?.();frame.contentWindow?.WarehouseCleanFormsDefaultNew?.install?.();frame.contentWindow?.WarehouseMasterImportUiCleanup?.install?.();frame.contentWindow?.WarehouseSessionCycleFix?.install?.();frame.contentWindow?.WarehouseValidationSounds?.install?.();frame.contentWindow?.WarehouseVoiceCommands?.installUi?.();frame.contentWindow?.WarehouseVoiceMicRuntimeFix?.install?.()}catch{}},100);
     }catch(err){console.error('Estensione magazzino non caricata',err);try{frame.contentWindow?.warehouseToast?.('Errore caricamento moduli: '+(err.message||err),'error')}catch{}}
   });
 })();
