@@ -1,11 +1,11 @@
-/* REMOTO validation sounds — isolated, non-invasive feedback.
+/* REMOTO UI sounds — isolated, non-invasive feedback.
    Does not replace alert/confirm/navigation and does not force an audio-session mode.
-   Success sounds are emitted only after a verified state change; PIN errors get a short error cue. */
+   Provides a very short tap cue for interactive controls plus distinct success/error cues. */
 (function installWarehouseValidationSounds(){
   'use strict';
   if(window.WarehouseValidationSounds)return;
 
-  const VERSION='2026.08.24-safe-sounds1';
+  const VERSION='2026.08.24-safe-sounds2-taps';
   const PREF_KEY='so_validation_sounds_enabled';
   let ctx=null;
   let installed=false;
@@ -29,22 +29,24 @@
     try{if(c.state==='suspended')c.resume?.().catch?.(()=>{})}catch{}
     return true;
   }
-  function tone(c,freq,start,duration,volume){
+  function tone(c,freq,start,duration,volume,type='sine'){
     const o=c.createOscillator(),g=c.createGain();
-    o.type='sine';o.frequency.setValueAtTime(freq,start);
+    o.type=type;o.frequency.setValueAtTime(freq,start);
     g.gain.setValueAtTime(0.0001,start);
-    g.gain.exponentialRampToValueAtTime(volume,start+0.012);
+    g.gain.exponentialRampToValueAtTime(volume,start+Math.min(0.01,duration/3));
     g.gain.exponentialRampToValueAtTime(0.0001,start+duration);
-    o.connect(g);g.connect(c.destination);o.start(start);o.stop(start+duration+0.015);
+    o.connect(g);g.connect(c.destination);o.start(start);o.stop(start+duration+0.012);
   }
   function play(kind='success'){
     if(!enabled()||!visible())return false;
-    const t=now();if(kind===lastKind&&t-lastAt<180)return false;lastKind=kind;lastAt=t;
+    const t=now(),gap=kind==='tap'?45:180;if(kind===lastKind&&t-lastAt<gap)return false;lastKind=kind;lastAt=t;
     const c=getContext();if(!c)return false;
     try{
       if(c.state==='suspended')c.resume?.().catch?.(()=>{});
-      const s=c.currentTime+0.008;
-      if(kind==='error'){
+      const s=c.currentTime+0.006;
+      if(kind==='tap'){
+        tone(c,760,s,0.028,0.012,'sine');
+      }else if(kind==='error'){
         tone(c,330,s,0.075,0.035);tone(c,245,s+0.095,0.105,0.03);
       }else{
         tone(c,660,s,0.065,0.03);tone(c,880,s+0.082,0.09,0.032);
@@ -52,6 +54,7 @@
       return true;
     }catch{return false}
   }
+  const tap=()=>play('tap');
   const success=()=>play('success');
   const error=()=>play('error');
 
@@ -66,6 +69,7 @@
       const snap=before();
       try{
         const out=base.apply(this,arguments);
+        if(out&&typeof out.then==='function')return out.then(value=>{if(changed(snap))success();return value},e=>{error();throw e});
         if(changed(snap))success();
         return out;
       }catch(e){error();throw e}
@@ -102,17 +106,27 @@
       else if(byId('deleteMasterError')&&!byId('deleteMasterError').classList.contains('hidden'))error();
     });
   }
+  function isTapControl(target){
+    if(!target||typeof target.closest!=='function')return false;
+    const el=target.closest('button,[role="button"],.fileBtn,.lmBtn');
+    if(!el||el.disabled||el.getAttribute?.('aria-disabled')==='true'||el.dataset?.noTapSound==='1')return false;
+    return true;
+  }
+  function onPointerDown(e){
+    unlock();
+    if(isTapControl(e.target))tap();
+  }
   function install(){
     if(installed)return true;installed=true;
     installWrappers();
     if(typeof document!=='undefined'){
-      document.addEventListener('pointerdown',unlock,{capture:true,passive:true});
+      document.addEventListener('pointerdown',onPointerDown,{capture:true,passive:true});
       document.addEventListener('keydown',unlock,{capture:true});
       document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')unlock()});
     }
     return true;
   }
 
-  window.WarehouseValidationSounds={version:VERSION,enabled,setEnabled,unlock,play,success,error,installWrappers,install};
+  window.WarehouseValidationSounds={version:VERSION,enabled,setEnabled,unlock,play,tap,success,error,isTapControl,installWrappers,install};
   install();
 })();
