@@ -5,15 +5,15 @@ const source=fs.readFileSync('validation-sounds.js','utf8');
 for(const forbidden of ['window.alert=','window.alert =','window.confirm=','window.confirm =','window.show=','window.show =','MutationObserver','audioSession.type']){
   if(source.includes(forbidden))throw new Error(`Unsafe global/audio hook found: ${forbidden}`);
 }
-for(const required of ['WarehouseValidationSounds','confirmOperation','submitLogin','confirmPicking','importMappedMaster','pointerdown','AudioContext','isTapControl','tap']){
+for(const required of ['WarehouseValidationSounds','confirmOperation','submitLogin','confirmPicking','importMappedMaster','pointerdown','AudioContext','isTapControl','isVoiceControl','tap']){
   if(!source.includes(required))throw new Error(`Required safe sound feature missing: ${required}`);
 }
 
-let ticks=0,oscillators=0;
+let ticks=0,oscillators=0,contexts=0;
 class FakeParam{setValueAtTime(){} exponentialRampToValueAtTime(){}}
 class FakeOscillator{constructor(){this.frequency=new FakeParam()} connect(){} start(){oscillators++} stop(){}}
 class FakeGain{constructor(){this.gain=new FakeParam()} connect(){}}
-class FakeAudioContext{constructor(){this.state='running';this.currentTime=1;this.destination={}} createOscillator(){return new FakeOscillator()} createGain(){return new FakeGain()} resume(){this.state='running';return Promise.resolve()}}
+class FakeAudioContext{constructor(){contexts++;this.state='running';this.currentTime=1;this.destination={}} createOscillator(){return new FakeOscillator()} createGain(){return new FakeGain()} resume(){this.state='running';return Promise.resolve()}}
 const store=new Map();
 const listeners=[];
 const loginError={classList:{contains:()=>true}};
@@ -44,15 +44,27 @@ if(!api)throw new Error('Validation sound API missing');
 const pointer=listeners.find(([n])=>n==='pointerdown');
 if(!pointer)throw new Error('Pointer sound listener missing');
 
+function targetFor(button,{voice=false}={}){
+  return {closest(selector){
+    if(selector.includes('.voiceBtn')||selector.includes('#voiceSpeakMore')||selector.includes('[data-no-tap-sound'))return voice?button:null;
+    if(selector.includes('button')||selector.includes('[role="button"]')||selector.includes('.fileBtn')||selector.includes('.lmBtn'))return button;
+    return null;
+  }};
+}
+
+const voiceButton={disabled:false,dataset:{},getAttribute:()=>null};
+const beforeVoiceCtx=contexts,beforeVoiceTone=oscillators;
+pointer[1]({target:targetFor(voiceButton,{voice:true})});
+if(contexts!==beforeVoiceCtx||oscillators!==beforeVoiceTone)throw new Error('Voice control touched WebAudio before microphone startup');
+
 const button={disabled:false,dataset:{},getAttribute:()=>null};
-const target={closest:()=>button};
 const beforeTap=oscillators;
-pointer[1]({target});
+pointer[1]({target:targetFor(button)});
 if(oscillators-beforeTap!==1)throw new Error('Interactive button tap did not emit exactly one subtle click tone');
 
 const disabledButton={disabled:true,dataset:{},getAttribute:()=>null};
 const beforeDisabledTap=oscillators;
-pointer[1]({target:{closest:()=>disabledButton}});
+pointer[1]({target:targetFor(disabledButton)});
 if(oscillators!==beforeDisabledTap)throw new Error('Disabled button emitted a tap sound');
 
 const beforeOperation=oscillators;
@@ -88,4 +100,4 @@ const beforeError=oscillators;
 api.error();
 if(oscillators-beforeError!==2)throw new Error('Error cue is not a two-tone sound');
 
-console.log('Validation sounds runtime OK: subtle button taps, distinct success/error cues, no global UI overrides, background/disabled states stay silent.');
+console.log('Validation sounds runtime OK: normal controls keep tap/success/error cues; voice controls do not touch WebAudio before microphone capture.');
