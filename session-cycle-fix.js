@@ -6,7 +6,7 @@
   'use strict';
   if(window.WarehouseSessionCycleFix)return;
 
-  const VERSION='2026.08.24-session-cycle2-safe';
+  const VERSION='2026.08.24-session-cycle3-home-stable';
   const META_KEY='so_local_master_meta_v3';
   let installed=false;
 
@@ -58,6 +58,7 @@
   }
   function patchAll(){patchMasterStats();patchDirtyBar();return {counts:sessionCounts(),dirty:sessionDirtyCount()}}
   function schedulePatch(delay=70){setTimeout(()=>{try{patchAll()}catch(e){console.warn('Session cycle patch',e)}},delay)}
+  function scheduleHomePatch(){[25,90,220,450].forEach(schedulePatch)}
 
   function eyeSvg(hidden){
     return hidden
@@ -105,13 +106,18 @@
     const wrapped=async function(){const out=await base.apply(this,arguments);patchAll();schedulePatch(60);return out};
     wrapped.__sessionCycleWrapped=true;lm.renderPanel=wrapped;
   }
+  function wrapShow(){
+    const base=window.show;if(typeof base!=='function'||base.__sessionCycleWrapped)return;
+    const wrapped=function(id){const out=base.apply(this,arguments);if(id==='home')scheduleHomePatch();return out};
+    wrapped.__sessionCycleWrapped=true;window.show=wrapped;
+  }
   function install(){
     if(installed||typeof document==='undefined')return false;installed=true;
-    installPinEyes();wrapSaveDb();wrapRenderPanel();patchAll();schedulePatch(120);
-    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){installPinEyes();schedulePatch(80)}});
+    installPinEyes();wrapSaveDb();wrapRenderPanel();wrapShow();patchAll();scheduleHomePatch();
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){installPinEyes();scheduleHomePatch()}});
     return true;
   }
 
-  window.WarehouseSessionCycleFix={version:VERSION,importBaselineMs,dirtyBaselineMs,movementTime,documentTime,requestTime,sessionCounts,sessionDirtyCount,patchMasterStats,patchDirtyBar,patchAll,installPinEye,installPinEyes,install};
+  window.WarehouseSessionCycleFix={version:VERSION,importBaselineMs,dirtyBaselineMs,movementTime,documentTime,requestTime,sessionCounts,sessionDirtyCount,patchMasterStats,patchDirtyBar,patchAll,scheduleHomePatch,installPinEye,installPinEyes,wrapShow,install};
   if(typeof document!=='undefined')install();
 })();
