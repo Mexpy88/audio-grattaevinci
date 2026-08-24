@@ -5,7 +5,7 @@
   'use strict';
   if(window.WarehouseValidationSounds)return;
 
-  const VERSION='2026.08.24-safe-sounds2-taps';
+  const VERSION='2026.08.24-safe-sounds3-voice-safe';
   const PREF_KEY='so_validation_sounds_enabled';
   let ctx=null;
   let installed=false;
@@ -106,13 +106,17 @@
       else if(byId('deleteMasterError')&&!byId('deleteMasterError').classList.contains('hidden'))error();
     });
   }
+  function isVoiceControl(target){return !!target?.closest?.('.voiceBtn,#voiceSpeakMore,[data-no-tap-sound="1"]')}
   function isTapControl(target){
     if(!target||typeof target.closest!=='function')return false;
     const el=target.closest('button,[role="button"],.fileBtn,.lmBtn');
-    if(!el||el.disabled||el.getAttribute?.('aria-disabled')==='true'||el.dataset?.noTapSound==='1')return false;
+    if(!el||el.disabled||el.getAttribute?.('aria-disabled')==='true'||el.dataset?.noTapSound==='1'||isVoiceControl(target))return false;
     return true;
   }
   function onPointerDown(e){
+    /* Do not even resume WebAudio on microphone controls: on some Android Chromium
+       builds audio focus changes immediately before SpeechRecognition can abort capture. */
+    if(isVoiceControl(e.target))return;
     unlock();
     if(isTapControl(e.target))tap();
   }
@@ -127,6 +131,6 @@
     return true;
   }
 
-  window.WarehouseValidationSounds={version:VERSION,enabled,setEnabled,unlock,play,tap,success,error,isTapControl,installWrappers,install};
+  window.WarehouseValidationSounds={version:VERSION,enabled,setEnabled,unlock,play,tap,success,error,isVoiceControl,isTapControl,installWrappers,install};
   install();
 })();
