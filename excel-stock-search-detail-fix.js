@@ -1,23 +1,21 @@
 /* Excel CERCA_GIACENZE detail compatibility fix.
-   Replaces the multi-column FILTER spill with one formula per visible cell, using
-   INDEX + AGGREGATE. This avoids the OOXML dynamic-array anchor issue where some
-   Excel builds display only the first returned column (FILA / SCAFFALE). */
+   Replaces FILTER spill with deterministic INDEX + AGGREGATE formulas in every
+   visible cell and every matching row. The search sheet and the detail formulas
+   are now patched in the SAME workbook package before the final download. */
 (function installExcelStockSearchDetailFix(){
   'use strict';
   if(window.WarehouseExcelStockSearchDetailFix)return;
 
-  const VERSION='2026.08.24-search-detail-fix1';
+  const VERSION='2026.08.24-search-detail-fix2';
   const SEARCH_SHEET='CERCA_GIACENZE';
   const DATA_SHEET='GIACENZE_RICERCA_DATI';
   const MAIN='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
   const DOCREL='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
   const parser=typeof DOMParser!=='undefined'?new DOMParser():null;
   const serializer=typeof XMLSerializer!=='undefined'?new XMLSerializer():null;
-  let regenerating=false;
 
   const text=v=>String(v??'');
   const norm=v=>text(v).trim().toUpperCase();
-  const xmlEsc=v=>text(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
   function local(n){return n?.localName||n?.nodeName?.split(':').pop()||''}
   function kids(n,name){return [...(n?.childNodes||[])].filter(x=>x.nodeType===1&&(!name||local(x)===name))}
   function first(n,name){return kids(n,name)[0]||null}
@@ -45,7 +43,6 @@
     for(const r of rows||[]){const a=norm(r?.article),s=norm(r?.size);if(!a)continue;const k=a+'|'+s,n=(counts.get(k)||0)+1;counts.set(k,n);if(n>max)max=n}
     return max;
   }
-
   function detailIndexFormula(row,lastDataRow){
     const n=Math.max(2,Number(lastDataRow)||2),ds=`'${DATA_SHEET}'`;
     return `AGGREGATE(15,6,(ROW(${ds}!$C$2:$C$${n})-ROW(${ds}!$C$2)+1)/((${ds}!$C$2:$C$${n}=TRIM($B$3))*(${ds}!$D$2:$D$${n}=TRIM($B$4))),ROWS($A$15:A${row}))`;
@@ -75,17 +72,29 @@
     zip.file(search.path,xmlText(searchDoc));return true;
   }
 
+  async function patchSearchAndDetailSamePackage(zip){
+    const searchApi=window.WarehouseExcelStockSearch;
+    if(!searchApi?.patchWorkbookSearchSheets)return false;
+    await searchApi.patchWorkbookSearchSheets(zip);
+    return await patchDetailSheet(zip);
+  }
+
   function install(){
     if(!window.JSZip?.prototype?.generateAsync||!parser||!serializer)return false;
-    const base=JSZip.prototype.generateAsync;if(base.__warehouseExcelStockSearchDetailFix)return true;const regenerateBase=base.__warehousePrevious||base;
+    const base=JSZip.prototype.generateAsync;if(base.__warehouseExcelStockSearchDetailFix)return true;
+    const previous=base.__warehousePrevious||base;
     const wrapped=async function(options,onUpdate){
-      const result=await base.call(this,options,onUpdate);if(regenerating||String(options?.type||'').toLowerCase()!=='blob')return result;
-      try{const zip=await JSZip.loadAsync(result),changed=await patchDetailSheet(zip);if(!changed)return result;regenerating=true;try{return await regenerateBase.call(zip,options,onUpdate)}finally{regenerating=false}}
-      catch(e){console.error('Correzione dettaglio CERCA_GIACENZE',e);return result}
+      if(String(options?.type||'').toLowerCase()==='blob'&&this.file?.('xl/workbook.xml')){
+        try{
+          const changed=await patchSearchAndDetailSamePackage(this);
+          if(changed)return await previous.call(this,options,onUpdate);
+        }catch(e){console.error('Correzione dettaglio CERCA_GIACENZE',e)}
+      }
+      return base.call(this,options,onUpdate);
     };
     wrapped.__warehouseExcelStockSearchDetailFix=true;wrapped.__warehousePrevious=base;JSZip.prototype.generateAsync=wrapped;return true;
   }
 
-  window.WarehouseExcelStockSearchDetailFix={version:VERSION,maxMatchesFromHelperRows,detailIndexFormula,detailFormula,patchDetailSheet,install};
+  window.WarehouseExcelStockSearchDetailFix={version:VERSION,maxMatchesFromHelperRows,detailIndexFormula,detailFormula,patchDetailSheet,patchSearchAndDetailSamePackage,install};
   if(typeof document!=='undefined')install();
 })();
