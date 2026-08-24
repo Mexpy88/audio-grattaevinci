@@ -28,6 +28,9 @@ on:
       - 'validation-sounds.js'
       - 'voice-commands.js'
       - 'voice-mic-runtime-fix.js'
+      - 'top-level-speech-broker.js'
+      - 'voice-top-broker-client.js'
+      - 'optional-pallet-fix.js'
       - 'voice-commands.css'
       - 'tests/ui-button-integrity.mjs'
       - 'tests/ui-hardening-runtime.mjs'
@@ -49,6 +52,8 @@ on:
       - 'tests/validation-sounds-runtime.mjs'
       - 'tests/voice-commands-runtime.mjs'
       - 'tests/voice-mic-runtime-fix.mjs'
+      - 'tests/top-level-speech-broker-runtime.mjs'
+      - 'tests/optional-pallet-runtime.mjs'
       - 'modifica.js'
       - 'fixes.js'
       - '.github/workflows/warehouse-js-check.yml'
@@ -88,6 +93,9 @@ jobs:
           node --check validation-sounds.js
           node --check voice-commands.js
           node --check voice-mic-runtime-fix.js
+          node --check top-level-speech-broker.js
+          node --check voice-top-broker-client.js
+          node --check optional-pallet-fix.js
           node --check tests/ui-button-integrity.mjs
           node --check tests/ui-hardening-runtime.mjs
           node --check tests/super-ux-integrity.mjs
@@ -108,6 +116,8 @@ jobs:
           node --check tests/validation-sounds-runtime.mjs
           node --check tests/voice-commands-runtime.mjs
           node --check tests/voice-mic-runtime-fix.mjs
+          node --check tests/top-level-speech-broker-runtime.mjs
+          node --check tests/optional-pallet-runtime.mjs
       - name: Check UI button handlers
         run: node tests/ui-button-integrity.mjs
       - name: Check hardened master import runtime
@@ -148,3 +158,7 @@ jobs:
         run: node tests/voice-commands-runtime.mjs
       - name: Run Android voice microphone startup runtime
         run: node tests/voice-mic-runtime-fix.mjs
+      - name: Run top-level speech broker runtime
+        run: node tests/top-level-speech-broker-runtime.mjs
+      - name: Run optional pallet/shelf-only runtime
+        run: node tests/optional-pallet-runtime.mjs
