@@ -1,6 +1,6 @@
 /* Android/Chromium microphone handoff fix for contextual warehouse voice entry.
    Intercepts only voice-button clicks. SpeechRecognition owns the microphone directly:
-   no getUserMedia preflight, no competing audio playback, one guarded retry on an
+   no separate capture preflight, no competing audio playback, one guarded retry on an
    immediate Chromium 'aborted' startup race. */
 (function installWarehouseVoiceMicRuntimeFix(){
   'use strict';
@@ -90,8 +90,9 @@
         if(retryAfterEnd){setTimeout(()=>start(hint,1),280);return}
         if(!gotResult&&!errorCode)notify('Non ho sentito una frase. Tocca PARLA e riprova.','warn');
       };
-      /* IMPORTANT: call start synchronously from the user click. Do not open/close
-         getUserMedia first; Chromium/Android can abort SpeechRecognition during that handoff. */
+      /* IMPORTANT: start speech recognition synchronously from the user click.
+         Do not open and close a separate capture stream first; Chromium/Android
+         can abort speech recognition during that handoff. */
       rec.start();return true;
     }catch(e){
       if(recognition===rec)recognition=null;setListening(false);
