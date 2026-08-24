@@ -1,0 +1,1 @@
+REMOTO safe validation branch derived from frozen commit 21b1b0b949a9caca26ca99ba16d38f5777b0347e. Do not merge until manual verification is complete.
