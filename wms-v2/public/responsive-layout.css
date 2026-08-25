@@ -1,0 +1,66 @@
+/* WMS V2 adaptive layout: desktop, tablet and smartphone are intentionally different. */
+
+:root{--desktop-rail:94px}
+html[data-device="desktop"] body{font-size:15px}
+html[data-device="tablet"] body{font-size:16px}
+html[data-device="phone"] body{font-size:16px}
+
+/* Desktop: information-dense WMS console with a left navigation rail. */
+@media (min-width:1100px){
+  .app{padding:0 0 0 var(--desktop-rail)}
+  .topbar{height:66px;margin-left:calc(-1 * var(--desktop-rail));padding:10px 24px 10px calc(var(--desktop-rail) + 24px)}
+  .miniLogo{width:40px;height:40px}
+  .brandBtn b{font-size:15px}.brandBtn small{font-size:10px}.userTop>span:first-child{font-size:14px}.roleBadge{font-size:11px;max-width:220px}
+  .bottomNav{top:66px;bottom:0;left:0;right:auto;width:var(--desktop-rail);display:grid;grid-auto-flow:row;grid-auto-columns:unset;grid-template-columns:1fr;grid-auto-rows:74px;align-content:start;gap:6px;padding:12px 8px;border-top:0;border-right:1px solid var(--border);box-shadow:8px 0 30px rgba(25,60,90,.06)}
+  .bottomNav button{border-radius:16px;padding:9px 5px;font-size:11px;transition:.15s}.bottomNav button span{font-size:25px}.bottomNav button:hover{background:#f2f6f9}.bottomNav button.active{background:#e9f1f8}
+  main{width:min(1480px,calc(100% - 42px));padding:28px 22px 48px}
+  .hero{margin:4px 0 20px}.hero h1{font-size:38px}.hero p{font-size:14px}
+  .grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.stat{padding:20px}.stat b{font-size:31px}
+  .quickGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.quick{min-height:128px;padding:20px}.quick b{font-size:18px}.quick .ico{font-size:30px}
+  .card{padding:22px;border-radius:22px}.sectionTitle{margin:24px 0 11px}.sectionTitle h2{font-size:20px}
+  .btn{min-height:46px;padding:12px 18px}.field{padding:13px 15px}
+  .stockRow{grid-template-columns:1.7fr .55fr .8fr 1.15fr .55fr;font-size:13px}.stockRow b{font-size:14px}
+  .requestLine{grid-template-columns:1.8fr .75fr .75fr 1.2fr}.auditRow{grid-template-columns:1.3fr .7fr .8fr 2.2fr .2fr}
+  .requestCard{padding:18px}.reqHead h3{font-size:18px}.status{font-size:11px;padding:7px 12px}
+  .loginCard{width:min(460px,100%);padding:34px}.loginCard h1{font-size:34px}.brandMark{width:80px;height:80px;font-size:31px}
+}
+
+/* Tablet: touch-first interface, two-column cards and larger controls. */
+@media (min-width:600px) and (max-width:1099px){
+  .app{padding-bottom:86px}.topbar{padding:11px 16px}.miniLogo{width:42px;height:42px}.brandBtn b{font-size:15px}.userTop>span:first-child{font-size:14px}
+  main{width:min(100%,980px);padding:22px 18px 34px}.hero h1{font-size:32px}.hero p{font-size:14px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.stat{min-height:94px;padding:18px}.stat b{font-size:29px}
+  .quickGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.quick{min-height:124px;padding:19px}.quick b{font-size:18px}.quick span{font-size:13px}.quick .ico{font-size:30px}
+  .card{padding:19px}.btn{min-height:54px;padding:14px 17px;font-size:15px}.field{min-height:52px;font-size:17px}
+  .bottomNav{padding:7px 12px calc(7px + env(safe-area-inset-bottom));}.bottomNav button{min-height:62px;font-size:11px}.bottomNav button span{font-size:24px}
+  .requestCard{padding:17px}.status{min-height:31px}.pickPanel{padding:15px}
+  .loginCard{width:min(520px,82vw);padding:34px}.loginCard h1{font-size:34px}.pinWrap input{font-size:28px;padding:17px 18px}.pinWrap{grid-template-columns:1fr 60px}
+}
+
+/* Smartphone: one-hand layout, stacked forms and thumb-friendly actions. */
+@media (max-width:599px){
+  .app{padding-bottom:82px}.topbar{padding:9px 10px;gap:8px}.miniLogo{width:38px;height:38px}.brandBtn{gap:8px}.brandBtn b{font-size:13px}.brandBtn small{font-size:9px}.userTop>span:first-child{font-size:12px;max-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.roleBadge{display:none}.iconBtn{width:42px;height:42px}
+  main{width:100%;padding:15px 10px 28px}.hero{gap:10px;margin:2px 0 14px}.hero h1{font-size:27px;line-height:1.08}.hero p{font-size:13px;line-height:1.35}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.stat{min-height:84px;padding:13px;border-radius:17px}.stat b{font-size:24px}.stat span{font-size:11px;line-height:1.2}
+  .quickGrid{grid-template-columns:1fr;gap:9px}.quick{min-height:96px;padding:15px;border-radius:17px;display:grid;grid-template-columns:42px 1fr;grid-template-rows:auto auto;column-gap:9px;align-items:center}.quick .ico{grid-row:1/3;font-size:28px}.quick b{font-size:16px;margin:0}.quick span:not(.ico){font-size:12px}
+  .card{padding:14px;border-radius:18px}.sectionTitle{margin:18px 0 9px}.sectionTitle h2{font-size:18px}
+  .btn{min-height:54px;padding:14px 14px;font-size:14px;border-radius:14px}.actions>.btn{flex:1 1 145px}.field{min-height:52px;padding:13px 13px;font-size:16px}
+  .two,.three{grid-template-columns:1fr}.lineEditor{padding:10px}.lineEditor .row{grid-template-columns:1fr 82px 42px}.lineEditor .row .articleField{grid-column:1/-1}.lineEditor .row .sizeField{grid-column:1/2}
+  .requestCard{padding:14px;margin-bottom:9px}.reqHead{align-items:center}.reqHead h3{font-size:16px}.status{font-size:10px;line-height:1.15;padding:7px 9px;max-width:44%}.meta{font-size:11px;margin:8px 0}
+  .requestLine{grid-template-columns:1fr 1fr;gap:7px;padding:12px 0}.requestLine>*:first-child{grid-column:1/-1}.requestLine>*:nth-child(4){grid-column:1/-1}
+  .pickPanel .pickRow{grid-template-columns:1fr 1fr}.pickPanel .pickRow>*:first-child{grid-column:1/-1}
+  .stockRow{grid-template-columns:1.45fr .55fr .75fr;font-size:12px}.stockRow span:nth-child(4),.stockRow span:nth-child(5){display:none}
+  .auditRow{display:block;padding:12px 0}.auditRow>span{display:block;margin-top:4px}
+  .bottomNav{padding:5px max(5px,env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left))}.bottomNav button{min-height:58px;padding:5px 2px;font-size:9px}.bottomNav button span{font-size:21px}
+  .loginShell{padding:14px}.loginCard{width:100%;padding:22px 18px;border-radius:23px}.loginCard h1{font-size:29px}.brandMark{width:68px;height:68px}.pinWrap{grid-template-columns:1fr 54px}.pinWrap input{font-size:25px;padding:15px;letter-spacing:7px}.demoPins{font-size:11px}
+  .networkGrid{grid-template-columns:1fr!important}
+}
+
+@media (max-width:350px){.grid{grid-template-columns:1fr}.userTop>span:first-child{display:none}}
+
+/* Touch hardware receives larger hit targets even when the viewport is wide. */
+@media (pointer:coarse){
+  button,.btn,.iconBtn{touch-action:manipulation}.btn{min-height:52px}.iconBtn{min-width:44px;min-height:44px}.bottomNav button{touch-action:manipulation}
+}
+
+.networkPanel{display:grid;gap:12px}.networkGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.networkBox{border:1px solid var(--border);background:#f7fafc;border-radius:16px;padding:13px}.networkBox b{display:block;margin-bottom:5px}.networkBox code{font-size:12px;word-break:break-all}.networkPrimary{border-color:#b8d8c7;background:#f0faf5}.networkInterfaces{display:grid;gap:7px}.networkInterface{display:flex;justify-content:space-between;gap:10px;align-items:center;border-top:1px solid #e2eaf0;padding-top:8px;font-size:12px}.networkInterface:first-child{border-top:0;padding-top:0}.deviceBadge{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:#e8f0f7;color:var(--primary);padding:6px 9px;font-size:11px;font-weight:900}.copyNetwork{margin-top:9px;width:100%}
