@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const client=fs.readFileSync('voice-top-broker-client.js','utf8');
 const top=fs.readFileSync('top-level-live-dictation.js','utf8');
+const scrollFix=fs.readFileSync('top-level-dialog-scroll-fix.js','utf8');
 const index=fs.readFileSync('index.html','utf8');
 const gboard=fs.readFileSync('gboard-voice-normalizer.js','utf8');
 const gboardUx=fs.readFileSync('top-level-gboard-ux.js','utf8');
@@ -15,11 +16,12 @@ if(/readonly|type="password"/i.test(top))throw new Error('Top-level dictation ed
 if(!client.includes('window.parent')||!client.includes('WarehouseTopLevelDictation.open'))throw new Error('Iframe voice client must delegate capture to top-level editor');
 if(index.includes('top-level-speech-broker.js'))throw new Error('Browser SpeechRecognition broker must not be loaded anymore');
 if(index.includes('optional-pallet-fix.js'))throw new Error('Obsolete optional-pallet layer must not be loaded');
-for(const required of ['top-level-live-dictation.js','top-level-gboard-ux.js','gboard-voice-normalizer.js','flex-position-v2.js','voice-top-broker-client.js'])if(!index.includes(required))throw new Error(`Required dictation module not loaded: ${required}`);
+for(const required of ['top-level-live-dictation.js','top-level-gboard-ux.js','top-level-dialog-scroll-fix.js','gboard-voice-normalizer.js','flex-position-v2.js','voice-top-broker-client.js'])if(!index.includes(required))throw new Error(`Required dictation module not loaded: ${required}`);
 if(!client.includes("if(!p.location&&!p.pallet)return 'Inserisci Fila/Scaffale oppure Bancale/Carrello.'"))throw new Error('Voice context must accept either shelf or pallet');
-new vm.Script(gboard);new vm.Script(gboardUx);
+new vm.Script(gboard);new vm.Script(gboardUx);new vm.Script(scrollFix);
 for(const required of ['INTERPRETAZIONE LIVE','WarehouseGboardNormalizer','compositionend','gboardLivePreview'])if(!gboardUx.includes(required))throw new Error(`Gboard live UX missing ${required}`);
 if(/\.value\s*=\s*[^;]*normalized/.test(gboardUx))throw new Error('Gboard UX must not rewrite the live textarea with normalized text');
+for(const required of ['#wtldDialog[open]','display:flex','flex-direction:column','min-height:0','overflow-y:auto','touch-action:pan-y','-webkit-overflow-scrolling:touch','.wtldActions','pointer-events:auto'])if(!scrollFix.includes(required))throw new Error(`Mobile dialog scroll fix missing: ${required}`);
 
 let forwarded='';
 const sandbox={window:{WarehouseVoiceCommands:{executeTranscript(raw){forwarded=raw;return raw}}},db:{master:{rows:[{article_base:'I30872MUHF'},{article_base:'I30871AGUHF'}]}},stockBuckets(){return []},normalizeArticle(v){return String(v||'').toUpperCase()}};
@@ -35,4 +37,4 @@ const cases=[
 for(const [raw,expected] of cases){const got=api.normalize(raw);if(got!==expected)throw new Error(`Gboard normalization failed: ${raw} -> ${got}; expected ${expected}`)}
 const preview=api.preview('I30872 m u HF');if(preview.normalized!=='I30872MUHF'||!preview.knownCodes.includes('I30872MUHF'))throw new Error('Live interpretation must identify known Master code');
 sandbox.window.WarehouseVoiceCommands.executeTranscript('I30872 m u HF taglia L 50 nuovo','CARICA');if(!forwarded.startsWith('I30872MUHF'))throw new Error('Normalized Gboard text was not forwarded to warehouse parser');
-console.log('Top-level live/Gboard UX OK: non-destructive realtime interpretation and Master-aware article normalization verified.');
+console.log('Top-level live/Gboard UX OK: realtime Master-aware interpretation plus touch-scrollable mobile dialog verified.');
