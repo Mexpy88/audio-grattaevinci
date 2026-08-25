@@ -15,6 +15,7 @@ on:
       - 'request-cartons.js'
       - 'request-cartons.css'
       - 'request-interaction-performance-fix.js'
+      - 'request-completion-workflow.js'
       - 'dashboard-links.js'
       - 'dashboard-collapse.js'
       - 'xlsx-download-fix.js'
@@ -42,6 +43,7 @@ on:
       - 'tests/super-ux-integrity.mjs'
       - 'tests/request-cartons-integrity.mjs'
       - 'tests/request-interaction-performance-runtime.mjs'
+      - 'tests/request-completion-workflow-runtime.mjs'
       - 'tests/dashboard-shortcuts.mjs'
       - 'tests/dashboard-collapse-integrity.mjs'
       - 'tests/xlsx-download-integrity.mjs'
@@ -89,6 +91,7 @@ jobs:
           node --check super-ux.js
           node --check request-cartons.js
           node --check request-interaction-performance-fix.js
+          node --check request-completion-workflow.js
           node --check dashboard-links.js
           node --check dashboard-collapse.js
           node --check xlsx-download-fix.js
@@ -115,6 +118,7 @@ jobs:
           node --check tests/super-ux-integrity.mjs
           node --check tests/request-cartons-integrity.mjs
           node --check tests/request-interaction-performance-runtime.mjs
+          node --check tests/request-completion-workflow-runtime.mjs
           node --check tests/dashboard-shortcuts.mjs
           node --check tests/dashboard-collapse-integrity.mjs
           node --check tests/xlsx-download-integrity.mjs
@@ -146,6 +150,8 @@ jobs:
         run: node tests/request-cartons-integrity.mjs
       - name: Run instant request interaction runtime
         run: node tests/request-interaction-performance-runtime.mjs
+      - name: Run request completion workflow runtime
+        run: node tests/request-completion-workflow-runtime.mjs
       - name: Check dashboard shortcuts
         run: node tests/dashboard-shortcuts.mjs
       - name: Check dashboard collapse
