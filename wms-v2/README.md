@@ -38,6 +38,8 @@ I PIN non sono salvati in chiaro: vengono derivati con `scrypt` e salt individua
 - frontend responsive PC/tablet/telefono;
 - manifest e service worker PWA predisposti.
 
+Il vertical slice viene validato dalla workflow dedicata `WMS V2 Check` e da un test di dominio che riproduce il caso 47 cartoni richiesti / 5 prelevati / richiesta completata.
+
 ## Avvio sul PC personale
 
 Prerequisito per questa fase di sviluppo: Node.js 20+ (consigliato Node 22 LTS).
