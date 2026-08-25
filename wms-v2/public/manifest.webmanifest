@@ -1,0 +1,9 @@
+{
+  "name":"Magazzino SO WMS",
+  "short_name":"Magazzino SO",
+  "start_url":"/",
+  "display":"standalone",
+  "background_color":"#edf3f8",
+  "theme_color":"#245b9d",
+  "description":"WMS locale multi-dispositivo per il magazzino SO"
+}
