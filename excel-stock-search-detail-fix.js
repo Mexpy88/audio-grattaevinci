@@ -1,23 +1,22 @@
-/* Excel CERCA_GIACENZE detail compatibility fix.
-   Replaces the multi-column FILTER spill with one formula per visible cell, using
-   INDEX + AGGREGATE. This avoids the OOXML dynamic-array anchor issue where some
-   Excel builds display only the first returned column (FILA / SCAFFALE). */
+/* Excel CERCA_GIACENZE scalar detail compatibility fix.
+   Rebuilds the helper sheet first, assigns a deterministic scalar lookup key to
+   every article+size occurrence, then fills A:G with plain INDEX + MATCH formulas.
+   No FILTER, AGGREGATE or array arithmetic is used, so desktop Excel cannot turn
+   the lookup into implicit-intersection @ formulas. */
 (function installExcelStockSearchDetailFix(){
   'use strict';
   if(window.WarehouseExcelStockSearchDetailFix)return;
 
-  const VERSION='2026.08.24-search-detail-fix1';
+  const VERSION='2026.08.25-search-detail-scalar2';
   const SEARCH_SHEET='CERCA_GIACENZE';
   const DATA_SHEET='GIACENZE_RICERCA_DATI';
   const MAIN='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
   const DOCREL='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
   const parser=typeof DOMParser!=='undefined'?new DOMParser():null;
   const serializer=typeof XMLSerializer!=='undefined'?new XMLSerializer():null;
-  let regenerating=false;
 
   const text=v=>String(v??'');
   const norm=v=>text(v).trim().toUpperCase();
-  const xmlEsc=v=>text(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
   function local(n){return n?.localName||n?.nodeName?.split(':').pop()||''}
   function kids(n,name){return [...(n?.childNodes||[])].filter(x=>x.nodeType===1&&(!name||local(x)===name))}
   function first(n,name){return kids(n,name)[0]||null}
@@ -31,6 +30,7 @@
   function ensureCell(doc,row,col,rowNum){let c=cellIn(row,col);if(c)return c;c=doc.createElementNS(MAIN,'c');c.setAttribute('r',`${colName(col)}${rowNum}`);const next=kids(row,'c').find(x=>colIndex(x.getAttribute('r'))>col);if(next)row.insertBefore(c,next);else row.appendChild(c);return c}
   function ensureRow(doc,data,rowNum){let row=kids(data,'row').find(r=>Number(r.getAttribute('r')||0)===rowNum);if(row)return row;row=doc.createElementNS(MAIN,'row');row.setAttribute('r',String(rowNum));const next=kids(data,'row').find(r=>Number(r.getAttribute('r')||0)>rowNum);if(next)data.insertBefore(row,next);else data.appendChild(row);return row}
   function setFormula(doc,row,col,rowNum,formula,style=''){const c=ensureCell(doc,row,col,rowNum);clearCell(c);c.setAttribute('r',`${colName(col)}${rowNum}`);if(style)c.setAttribute('s',style);const f=doc.createElementNS(MAIN,'f');f.textContent=formula;c.appendChild(f)}
+  function setInline(doc,row,col,rowNum,value,style=''){const c=ensureCell(doc,row,col,rowNum);clearCell(c);c.setAttribute('r',`${colName(col)}${rowNum}`);if(style)c.setAttribute('s',style);c.setAttribute('t','inlineStr');const is=doc.createElementNS(MAIN,'is'),t=doc.createElementNS(MAIN,'t');t.textContent=text(value);is.appendChild(t);c.appendChild(is)}
   function cellText(row,col){const c=cellIn(row,col);if(!c)return '';const t=c.getAttribute('t')||'';if(t==='inlineStr')return first(c,'is')?.textContent||'';return first(c,'v')?.textContent||''}
 
   function workbookSheets(workbookDoc,relsDoc){
@@ -45,14 +45,23 @@
     for(const r of rows||[]){const a=norm(r?.article),s=norm(r?.size);if(!a)continue;const k=a+'|'+s,n=(counts.get(k)||0)+1;counts.set(k,n);if(n>max)max=n}
     return max;
   }
-
-  function detailIndexFormula(row,lastDataRow){
-    const n=Math.max(2,Number(lastDataRow)||2),ds=`'${DATA_SHEET}'`;
-    return `AGGREGATE(15,6,(ROW(${ds}!$C$2:$C$${n})-ROW(${ds}!$C$2)+1)/((${ds}!$C$2:$C$${n}=TRIM($B$3))*(${ds}!$D$2:$D$${n}=TRIM($B$4))),ROWS($A$15:A${row}))`;
-  }
+  function detailOrdinal(row){return Math.max(1,Math.trunc(Number(row)||15)-14)}
+  function lookupKeyFormula(row){return `TRIM($B$3)&"|"&TRIM($B$4)&"|${detailOrdinal(row)}"`}
   function detailFormula(sourceCol,row,lastDataRow){
-    const n=Math.max(2,Number(lastDataRow)||2),ds=`'${DATA_SHEET}'`,letter=colName(Number(sourceCol)||0),idx=detailIndexFormula(row,n);
-    return `IF(OR($B$3="",$B$4=""),"",IFERROR(INDEX(${ds}!$${letter}$2:$${letter}$${n},${idx}),""))`;
+    const n=Math.max(2,Number(lastDataRow)||2),ds=`'${DATA_SHEET}'`,letter=colName(Number(sourceCol)||0),key=lookupKeyFormula(row);
+    return `IF(OR($B$3="",$B$4=""),"",IFERROR(INDEX(${ds}!$${letter}$2:$${letter}$${n},MATCH(${key},${ds}!$H$2:$H$${n},0)),""))`;
+  }
+
+  function addScalarHelperKeys(helperDoc,helperData){
+    const rows=kids(helperData,'row').filter(r=>Number(r.getAttribute('r')||0)>=2),counts=new Map();
+    const header=ensureRow(helperDoc,helperData,1);setInline(helperDoc,header,7,1,'CHIAVE_RICERCA',cellIn(header,6)?.getAttribute('s')||'');
+    for(const row of rows){
+      const rn=Number(row.getAttribute('r')||0),article=norm(cellText(row,2)),size=norm(cellText(row,3));
+      if(!article){setInline(helperDoc,row,7,rn,'');continue}
+      const base=article+'|'+size,ordinal=(counts.get(base)||0)+1;counts.set(base,ordinal);setInline(helperDoc,row,7,rn,`${base}|${ordinal}`,cellIn(row,6)?.getAttribute('s')||'');
+    }
+    const last=Math.max(1,...kids(helperData,'row').map(r=>Number(r.getAttribute('r')||0))),dim=first(helperDoc.documentElement,'dimension');if(dim)dim.setAttribute('ref',`A1:H${last}`);
+    return {rows,max:Math.max(0,...counts.values())};
   }
 
   async function patchDetailSheet(zip){
@@ -62,8 +71,8 @@
     const sf=zip.file(search.path),hf=zip.file(helper.path);if(!sf||!hf)return false;
     const searchDoc=parseXml(await sf.async('string')),helperDoc=parseXml(await hf.async('string')),searchData=first(searchDoc.documentElement,'sheetData'),helperData=first(helperDoc.documentElement,'sheetData');if(!searchData||!helperData)return false;
 
-    const helperRows=kids(helperData,'row').filter(r=>Number(r.getAttribute('r')||0)>=2),helperLast=Math.max(2,...helperRows.map(r=>Number(r.getAttribute('r')||0)));
-    const parsed=helperRows.map(r=>({article:cellText(r,2),size:cellText(r,3)})),detailCount=Math.max(1,maxMatchesFromHelperRows(parsed)),lastDetail=14+detailCount;
+    const keyed=addScalarHelperKeys(helperDoc,helperData),helperRows=kids(helperData,'row').filter(r=>Number(r.getAttribute('r')||0)>=2),helperLast=Math.max(2,...helperRows.map(r=>Number(r.getAttribute('r')||0)));
+    const parsed=helperRows.map(r=>({article:cellText(r,2),size:cellText(r,3)})),detailCount=Math.max(1,keyed.max||maxMatchesFromHelperRows(parsed)),lastDetail=14+detailCount;
     const templateRow=kids(searchData,'row').find(r=>Number(r.getAttribute('r')||0)===15),bodyStyle=cellIn(templateRow,0)?.getAttribute('s')||'',headerRow=kids(searchData,'row').find(r=>Number(r.getAttribute('r')||0)===14),numberStyle=cellIn(headerRow,5)?.getAttribute('s')||bodyStyle;
 
     for(let rn=15;rn<=lastDetail;rn++){
@@ -72,20 +81,29 @@
     }
     for(const row of [...kids(searchData,'row')]){const rn=Number(row.getAttribute('r')||0);if(rn>lastDetail)searchData.removeChild(row)}
     const dim=first(searchDoc.documentElement,'dimension');if(dim)dim.setAttribute('ref',`A1:G${lastDetail}`);
-    zip.file(search.path,xmlText(searchDoc));return true;
+    zip.file(helper.path,xmlText(helperDoc));zip.file(search.path,xmlText(searchDoc));return true;
+  }
+
+  async function patchSearchAndDetailSamePackage(zip){
+    const searchApi=window.WarehouseExcelStockSearch;
+    if(!searchApi?.patchWorkbookSearchSheets)return false;
+    await searchApi.patchWorkbookSearchSheets(zip);
+    return await patchDetailSheet(zip);
   }
 
   function install(){
     if(!window.JSZip?.prototype?.generateAsync||!parser||!serializer)return false;
-    const base=JSZip.prototype.generateAsync;if(base.__warehouseExcelStockSearchDetailFix)return true;const regenerateBase=base.__warehousePrevious||base;
+    const base=JSZip.prototype.generateAsync;if(base.__warehouseExcelStockSearchDetailFix)return true;
+    const previous=base.__warehousePrevious||base;
     const wrapped=async function(options,onUpdate){
-      const result=await base.call(this,options,onUpdate);if(regenerating||String(options?.type||'').toLowerCase()!=='blob')return result;
-      try{const zip=await JSZip.loadAsync(result),changed=await patchDetailSheet(zip);if(!changed)return result;regenerating=true;try{return await regenerateBase.call(zip,options,onUpdate)}finally{regenerating=false}}
-      catch(e){console.error('Correzione dettaglio CERCA_GIACENZE',e);return result}
+      if(String(options?.type||'').toLowerCase()==='blob'&&this.file?.('xl/workbook.xml')){
+        try{const changed=await patchSearchAndDetailSamePackage(this);if(changed)return await previous.call(this,options,onUpdate)}catch(e){console.error('Correzione dettaglio CERCA_GIACENZE',e)}
+      }
+      return base.call(this,options,onUpdate);
     };
     wrapped.__warehouseExcelStockSearchDetailFix=true;wrapped.__warehousePrevious=base;JSZip.prototype.generateAsync=wrapped;return true;
   }
 
-  window.WarehouseExcelStockSearchDetailFix={version:VERSION,maxMatchesFromHelperRows,detailIndexFormula,detailFormula,patchDetailSheet,install};
+  window.WarehouseExcelStockSearchDetailFix={version:VERSION,maxMatchesFromHelperRows,detailOrdinal,lookupKeyFormula,detailFormula,addScalarHelperKeys,patchDetailSheet,patchSearchAndDetailSamePackage,install};
   if(typeof document!=='undefined')install();
 })();
