@@ -4,7 +4,16 @@ Nuova architettura separata dalla V1 Excel-backed. La V1 resta congelata e non v
 
 ## Obiettivo della demo
 
-Un solo PC personale ospita il database e il server locale. Tablet e telefono personali, collegati alla stessa rete Wi‑Fi, usano lo stesso database in tempo reale.
+Un solo PC personale ospita il database e il server locale. Tablet e telefono personali usano lo stesso database in tempo reale quando sono collegati alla stessa rete locale.
+
+La rete può essere:
+
+- Wi‑Fi di casa;
+- hotspot del telefono;
+- hotspot/rete locale creata dal PC;
+- altra LAN privata.
+
+Il server ascolta su `0.0.0.0` e ricalcola dinamicamente le interfacce IPv4 disponibili. Non esiste quindi un IP fisso nel database: passando da casa all’hotspot cambierà soltanto l’indirizzo LAN da usare per collegare tablet/telefono.
 
 ### Utenti demo
 
@@ -17,6 +26,17 @@ Un solo PC personale ospita il database e il server locale. Tablet e telefono pe
 | 5555 | Luca | GLOBAL_READONLY — supervisione globale sola lettura |
 
 I PIN non sono salvati in chiaro: vengono derivati con `scrypt` e salt individuale.
+
+## UX adattiva
+
+La V2 non usa semplicemente la stessa pagina rimpicciolita.
+
+- **Desktop (>=1100 px)**: console WMS più densa, navigazione laterale, tabelle complete, 4 colonne dashboard/azioni quando opportuno.
+- **Tablet (600–1099 px)**: touch-first, 2 colonne, pulsanti e campi più grandi, navigazione compatta inferiore.
+- **Smartphone (<600 px)**: layout a una colonna per le azioni, form impilati, pulsanti alti, controlli raggiungibili col pollice e dati secondari compressi.
+- I dispositivi con puntatore `coarse` ricevono target touch maggiorati indipendentemente dalla larghezza.
+
+La classificazione viene applicata anche a runtime (`desktop`, `tablet`, `phone`) per diagnostica e componenti specifici.
 
 ## Primo vertical slice già implementato
 
@@ -36,9 +56,9 @@ I PIN non sono salvati in chiaro: vengono derivati con `scrypt` e salt individua
 - audit delle operazioni;
 - reset della demo disponibile solo a Mattia/Admin;
 - frontend responsive PC/tablet/telefono;
-- manifest e service worker PWA predisposti.
-
-Il vertical slice viene validato dalla workflow dedicata `WMS V2 Check` e da un test di dominio che riproduce il caso 47 cartoni richiesti / 5 prelevati / richiesta completata.
+- manifest e service worker PWA predisposti;
+- rilevamento dinamico LAN/hotspot tramite `/api/network`;
+- pannello amministratore con indirizzo consigliato e copia rapida.
 
 ## Avvio sul PC personale
 
@@ -54,10 +74,10 @@ Il terminale mostra automaticamente:
 
 ```text
 PC: http://localhost:8787
-Tablet/Telefono: http://192.168.x.x:8787
+Tablet/Telefono: http://192.168.x.x:8787  [interfaccia preferita]
 ```
 
-Aprire sul tablet e sul telefono l'indirizzo LAN stampato dal server. Tutti i dispositivi devono essere sulla stessa rete Wi‑Fi.
+Se esistono più interfacce vengono mostrate anche le alternative. L’endpoint `/api/network` ricalcola l’elenco mentre il server è in esecuzione, quindi il passaggio Wi‑Fi di casa → hotspot non richiede modifiche al database o reinstallazioni.
 
 ## Scenario demo consigliato
 
