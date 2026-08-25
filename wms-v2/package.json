@@ -1,15 +1,48 @@
 {
   "name": "magazzino-so-wms-v2-demo",
-  "version": "0.2.0",
+  "productName": "Magazzino SO Demo",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
+  "main": "desktop-main.cjs",
   "engines": {"node": ">=20"},
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node --check public/network-ui.js && node tests/smoke.mjs && node tests/network-responsive.mjs"
+    "test": "node --check public/network-ui.js && node tests/smoke.mjs && node tests/network-responsive.mjs",
+    "dist:win": "electron-builder --win nsis --x64"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1"
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "it.magazzinoso.demo",
+    "productName": "Magazzino SO Demo",
+    "asar": false,
+    "files": [
+      "desktop-main.cjs",
+      "server.js",
+      "db.js",
+      "public/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "directories": {"output": "dist"},
+    "win": {
+      "target": [{"target": "nsis", "arch": ["x64"]}],
+      "artifactName": "Magazzino-SO-Demo-Setup-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Magazzino SO Demo"
+    }
   }
 }
