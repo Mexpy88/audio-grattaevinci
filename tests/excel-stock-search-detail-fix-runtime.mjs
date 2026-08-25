@@ -19,6 +19,7 @@ const rows=[
   {article:'I00215',size:'S'}
 ];
 if(api.maxMatchesFromHelperRows(rows)!==3)throw new Error('Expected maximum 3 positions for one article+size');
+if(api.detailOrdinal(15)!==1||api.detailOrdinal(16)!==2||api.detailOrdinal(34)!==20)throw new Error('Visible detail row must map to literal nth-match ordinal');
 
 const formulas=[];
 for(let col=0;col<7;col++)formulas.push(api.detailFormula(col,15,500));
@@ -28,10 +29,15 @@ for(const [i,letter] of ['A','B','C','D','E','F','G'].entries()){
   if(!f.includes('AGGREGATE(15,6'))throw new Error(`Column ${letter} does not use robust nth-match lookup`);
   if(!f.includes("'GIACENZE_RICERCA_DATI'!$C$2:$C$500=TRIM($B$3)"))throw new Error('Article criterion missing');
   if(!f.includes("'GIACENZE_RICERCA_DATI'!$D$2:$D$500=TRIM($B$4)"))throw new Error('Size criterion missing');
+  if(/ROWS\(\$A\$15:A15\)/i.test(f)||f.includes('$A$15:A15'))throw new Error('Row 15 formula must not reference A15 itself');
+  if(!f.includes(',1)'))throw new Error('First detail row must request literal match #1');
 }
-const second=api.detailFormula(1,16,500);if(!second.includes('ROWS($A$15:A16)'))throw new Error('Second detail row must request the second matching position');
+const second=api.detailFormula(1,16,500);
+if(!second.includes(',2)'))throw new Error('Second detail row must request literal match #2');
+if(/ROWS\(\$A\$15:A16\)/i.test(second)||second.includes('$A$15:A16'))throw new Error('Second detail formula must not depend on visible detail cells');
+const twentieth=api.detailFormula(5,34,500);if(!twentieth.includes(',20)'))throw new Error('Row 34 must request literal match #20');
 
-for(const required of ['patchDetailSheet','patchSearchAndDetailSamePackage','patchWorkbookSearchSheets','CERCA_GIACENZE','GIACENZE_RICERCA_DATI','INDEX(','AGGREGATE(15,6']){
+for(const required of ['patchDetailSheet','patchSearchAndDetailSamePackage','patchWorkbookSearchSheets','CERCA_GIACENZE','GIACENZE_RICERCA_DATI','INDEX(','AGGREGATE(15,6','detailOrdinal']){
   if(!source.includes(required))throw new Error(`Missing detail compatibility guard: ${required}`);
 }
-console.log('Excel search detail fix OK: every visible cell uses deterministic nth-match formulas and search+detail are patched in one workbook package before download.');
+console.log('Excel search detail fix OK: nth-match formulas are deterministic, non-circular, and search+detail are patched in one workbook package before download.');
