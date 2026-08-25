@@ -1,0 +1,35 @@
+name: WMS V2 Check
+on:
+  push:
+    branches: [magazzino-so-wms-v2-demo]
+    paths:
+      - 'wms-v2/**'
+      - '.github/workflows/wms-v2-check.yml'
+  pull_request:
+    paths:
+      - 'wms-v2/**'
+      - '.github/workflows/wms-v2-check.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: wms-v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Syntax checks
+        run: |
+          node --check server.js
+          node --check db.js
+          node --check public/app.js
+          node --check public/sw.js
+          node --check tests/smoke.mjs
+      - name: Domain smoke test
+        run: npm test
