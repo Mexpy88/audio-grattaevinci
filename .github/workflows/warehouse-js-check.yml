@@ -5,6 +5,7 @@ on:
     paths:
       - 'index.html'
       - 'base.html'
+      - 'early-pin-eye.js'
       - 'local-master.js'
       - 'local-master-ooxml.js'
       - 'local-master-ux.js'
@@ -80,6 +81,7 @@ jobs:
         run: |
           node --check modifica.js
           node --check fixes.js
+          node --check early-pin-eye.js
           node --check local-master.js
           node --check local-master-ooxml.js
           node --check local-master-ux.js
