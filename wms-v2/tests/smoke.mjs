@@ -29,12 +29,12 @@ try{
 
   const stock=store.availability('I30872MUHF','M','TERAMO');
   const before=stock[0].quantity;
-  const picked=store.pickRequestLine(massimo,req.id,{lineId:req.lines[0].id,stockId:stock[0].id,cartons:5,pieces:201});
+  const picked=store.pickRequestLine(massimo,req.id,{lineId:req.lines[0].id,stockId:stock[0].id,cartons:5,pieces:100});
   assert.equal(picked.status,'IN_PREPARAZIONE');
   assert.equal(picked.lines[0].cartonsPicked,5);
-  assert.equal(picked.lines[0].piecesPicked,201);
+  assert.equal(picked.lines[0].piecesPicked,100);
   const after=store.availability('I30872MUHF','M','TERAMO').find(x=>x.id===stock[0].id)?.quantity ?? 0;
-  assert.equal(after,before-201);
+  assert.equal(after,before-100);
 
   const completed=store.completeRequest(massimo,req.id,{});
   assert.equal(completed.status,'COMPLETATA');
@@ -46,7 +46,7 @@ try{
   assert.equal(linaList.length,1);
   assert.equal(linaList[0].status,'COMPLETATA');
   assert.ok(store.listAudit(50).some(a=>a.action==='COMPLETE'));
-  console.log('WMS V2 smoke OK: roles, request, realtime domain flow, stock discharge and partial closure semantics are valid.');
+  console.log('WMS V2 smoke OK: roles, request, stock discharge and 47 requested / 5 picked completion semantics are valid.');
 } finally {
   store.close();
   fs.rmSync(dir,{recursive:true,force:true});
