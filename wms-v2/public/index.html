@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#245b9d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Magazzino SO</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div id="toast" class="toast" aria-live="polite"></div>
+<section id="login" class="loginShell">
+  <div class="loginCard">
+    <div class="brandMark">SO</div>
+    <h1>Magazzino SO</h1>
+    <p>WMS locale · Demo multi-dispositivo</p>
+    <label class="pinLabel">PIN operatore
+      <div class="pinWrap"><input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••"><button id="pinEye" type="button" aria-label="Mostra PIN">👁</button></div>
+    </label>
+    <button id="loginBtn" class="btn primary wide">ACCEDI</button>
+    <div class="demoPins"><b>Demo</b><span>1111 Mattia · 2222 Massimo · 3333 Alessandra · 4444 Lina · 5555 Luca</span></div>
+  </div>
+</section>
+
+<div id="app" class="app hidden">
+  <header class="topbar">
+    <button id="homeBtn" class="brandBtn"><span class="miniLogo">SO</span><span><b>Magazzino SO</b><small id="serverState">SERVER LOCALE</small></span></button>
+    <div class="userTop"><span id="userName"></span><span id="roleBadge" class="roleBadge"></span><button id="logoutBtn" class="iconBtn" title="Esci">⎋</button></div>
+  </header>
+  <main id="main"></main>
+  <nav id="bottomNav" class="bottomNav"></nav>
+</div>
+
+<template id="loadingTpl"><div class="loading"><span></span><p>Caricamento…</p></div></template>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
