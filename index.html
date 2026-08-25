@@ -12,9 +12,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#edf3f8}
 </head>
 <body>
 <iframe id="warehouseApp" src="base.html?v=20260814-0727" title="Gestione Magazzino" allow="clipboard-read; clipboard-write; web-share; camera; microphone"></iframe>
+<script src="top-level-live-dictation.js?v=20260825-topeditor1"></script>
 <script>
 (function(){
-  const VERSION='20260824-live-text2-flexpos2';
+  const VERSION='20260825-topeditor1-flexpos2';
   const frame=document.getElementById('warehouseApp');
   function addStyle(d,id,href){if(d.getElementById(id))return;const l=d.createElement('link');l.id=id;l.rel='stylesheet';l.href=href;d.head.appendChild(l)}
   function addScript(d,id,src){return new Promise((resolve,reject)=>{if(d.getElementById(id)){resolve();return}const s=d.createElement('script');s.id=id;s.src=src;s.async=false;s.onload=resolve;s.onerror=()=>reject(new Error('Impossibile caricare '+src));d.body.appendChild(s)})}
