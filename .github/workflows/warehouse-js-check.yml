@@ -29,6 +29,7 @@ on:
       - 'voice-commands.js'
       - 'voice-mic-runtime-fix.js'
       - 'top-level-speech-broker.js'
+      - 'top-level-live-dictation.js'
       - 'voice-top-broker-client.js'
       - 'optional-pallet-fix.js'
       - 'flex-position-v2.js'
@@ -97,6 +98,7 @@ jobs:
           node --check voice-commands.js
           node --check voice-mic-runtime-fix.js
           node --check top-level-speech-broker.js
+          node --check top-level-live-dictation.js
           node --check voice-top-broker-client.js
           node --check optional-pallet-fix.js
           node --check flex-position-v2.js
