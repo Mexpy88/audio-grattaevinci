@@ -29,7 +29,9 @@ jobs:
           node --check server.js
           node --check db.js
           node --check public/app.js
+          node --check public/network-ui.js
           node --check public/sw.js
           node --check tests/smoke.mjs
-      - name: Domain smoke test
+          node --check tests/network-responsive.mjs
+      - name: Domain and UX tests
         run: npm test
