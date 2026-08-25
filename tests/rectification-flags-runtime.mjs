@@ -9,6 +9,8 @@ for(const forbidden of ['touchstart','touchmove','touchend','window.show=','wind
 }
 if(!source.includes("const STORE='rectification_flags'"))throw new Error('Persistent flag store missing');
 if(!source.includes("['article_base','size','fila_scaffale','bancale']"))throw new Error('Identity migration guard missing');
+if(!source.includes("node.querySelectorAll('.rectFlagMeta').forEach(x=>x.remove())"))throw new Error('Decorator must remove all previous operator/date metadata before inserting one');
+if(!source.includes("head.querySelectorAll('.rectFlagWrap').forEach(x=>x.remove())"))throw new Error('Decorator must remove previous flag controls before inserting one');
 if(!index.includes("rectification-flags.js?v="))throw new Error('Rectification flags module is not loaded by index.html');
 if(index.indexOf('rectification-flags.js?v=')<index.indexOf('rectification-uppercase-fix.js?v='))throw new Error('Flags module must load after the stable rectification/uppercase fix');
 
@@ -46,4 +48,4 @@ if(!api.isFlagged(moved))throw new Error('Flag must follow an identity change');
 api.setFlag(moved,false);
 if(api.isFlagged(moved))throw new Error('Unchecking must remove the persistent flag');
 
-console.log('Rectification flags runtime OK: persistent manual checkbox, shared Master identity, counter, identity migration, no navigation hooks.');
+console.log('Rectification flags runtime OK: persistent checkbox, identity migration and idempotent single operator/date decoration.');
