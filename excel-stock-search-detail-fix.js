@@ -7,7 +7,7 @@
   'use strict';
   if(window.WarehouseExcelStockSearchDetailFix)return;
 
-  const VERSION='2026.08.25-search-detail-scalar1';
+  const VERSION='2026.08.25-search-detail-scalar2';
   const SEARCH_SHEET='CERCA_GIACENZE';
   const DATA_SHEET='GIACENZE_RICERCA_DATI';
   const MAIN='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
@@ -46,7 +46,7 @@
     return max;
   }
   function detailOrdinal(row){return Math.max(1,Math.trunc(Number(row)||15)-14)}
-  function lookupKeyFormula(row){return `TRIM($B$3)&"|"&TRIM($B$4)&"|${detailOrdinal(row)}`}
+  function lookupKeyFormula(row){return `TRIM($B$3)&"|"&TRIM($B$4)&"|${detailOrdinal(row)}"`}
   function detailFormula(sourceCol,row,lastDataRow){
     const n=Math.max(2,Number(lastDataRow)||2),ds=`'${DATA_SHEET}'`,letter=colName(Number(sourceCol)||0),key=lookupKeyFormula(row);
     return `IF(OR($B$3="",$B$4=""),"",IFERROR(INDEX(${ds}!$${letter}$2:$${letter}$${n},MATCH(${key},${ds}!$H$2:$H$${n},0)),""))`;
