@@ -1,12 +1,12 @@
 /* Excel CERCA_GIACENZE detail compatibility fix.
    Replaces FILTER spill with deterministic INDEX + AGGREGATE formulas in every
    visible cell and every matching row. The search sheet and the detail formulas
-   are now patched in the SAME workbook package before the final download. */
+   are patched in the SAME workbook package before the final download. */
 (function installExcelStockSearchDetailFix(){
   'use strict';
   if(window.WarehouseExcelStockSearchDetailFix)return;
 
-  const VERSION='2026.08.24-search-detail-fix2';
+  const VERSION='2026.08.25-search-detail-fix3';
   const SEARCH_SHEET='CERCA_GIACENZE';
   const DATA_SHEET='GIACENZE_RICERCA_DATI';
   const MAIN='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
@@ -43,9 +43,13 @@
     for(const r of rows||[]){const a=norm(r?.article),s=norm(r?.size);if(!a)continue;const k=a+'|'+s,n=(counts.get(k)||0)+1;counts.set(k,n);if(n>max)max=n}
     return max;
   }
+  function detailOrdinal(row){return Math.max(1,Math.trunc(Number(row)||15)-14)}
   function detailIndexFormula(row,lastDataRow){
-    const n=Math.max(2,Number(lastDataRow)||2),ds=`'${DATA_SHEET}'`;
-    return `AGGREGATE(15,6,(ROW(${ds}!$C$2:$C$${n})-ROW(${ds}!$C$2)+1)/((${ds}!$C$2:$C$${n}=TRIM($B$3))*(${ds}!$D$2:$D$${n}=TRIM($B$4))),ROWS($A$15:A${row}))`;
+    const n=Math.max(2,Number(lastDataRow)||2),ds=`'${DATA_SHEET}'`,k=detailOrdinal(row);
+    /* IMPORTANT: k is emitted as a literal number. Never use ROWS($A$15:A15)
+       here: in column A that would reference the formula cell itself and create
+       a circular reference which IFERROR would hide as an apparently empty row. */
+    return `AGGREGATE(15,6,(ROW(${ds}!$C$2:$C$${n})-ROW(${ds}!$C$2)+1)/((${ds}!$C$2:$C$${n}=TRIM($B$3))*(${ds}!$D$2:$D$${n}=TRIM($B$4))),${k})`;
   }
   function detailFormula(sourceCol,row,lastDataRow){
     const n=Math.max(2,Number(lastDataRow)||2),ds=`'${DATA_SHEET}'`,letter=colName(Number(sourceCol)||0),idx=detailIndexFormula(row,n);
@@ -95,6 +99,6 @@
     wrapped.__warehouseExcelStockSearchDetailFix=true;wrapped.__warehousePrevious=base;JSZip.prototype.generateAsync=wrapped;return true;
   }
 
-  window.WarehouseExcelStockSearchDetailFix={version:VERSION,maxMatchesFromHelperRows,detailIndexFormula,detailFormula,patchDetailSheet,patchSearchAndDetailSamePackage,install};
+  window.WarehouseExcelStockSearchDetailFix={version:VERSION,maxMatchesFromHelperRows,detailOrdinal,detailIndexFormula,detailFormula,patchDetailSheet,patchSearchAndDetailSamePackage,install};
   if(typeof document!=='undefined')install();
 })();
