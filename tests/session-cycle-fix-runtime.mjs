@@ -2,12 +2,23 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const source=fs.readFileSync('session-cycle-fix.js','utf8');
+const early=fs.readFileSync('early-pin-eye.js','utf8');
+const index=fs.readFileSync('index.html','utf8');
 for(const forbidden of ['touchstart','touchmove','touchend','MutationObserver']){
   if(source.includes(forbidden))throw new Error(`Forbidden navigation hook: ${forbidden}`);
 }
 for(const required of ['sessionCounts','sessionDirtyCount','importBaselineMs','dirtyBaselineMs','pinRevealBtn','installPinEye','Mostra PIN','Nascondi PIN','::-ms-reveal','lmStats','uxDirtyBar','wrapShow','scheduleHomePatch']){
   if(!source.includes(required))throw new Error(`Required session-cycle/PIN feature missing: ${required}`);
 }
+for(const required of ['WarehouseEarlyPinEye','pinRevealBtn','pinEyeInstalled','pinInput','deleteMasterPin','Mostra PIN','Nascondi PIN','sessionCyclePinStyle']){
+  if(!early.includes(required))throw new Error(`Required early PIN-eye feature missing: ${required}`);
+}
+const earlyPos=index.indexOf('early-pin-eye.js?v=');
+const stackPos=index.indexOf('top-level-live-dictation.js?v=');
+const sessionPos=index.indexOf("await addScript(d,'sessionCycleFixJs'");
+if(earlyPos<0||stackPos<0||sessionPos<0)throw new Error('PIN-eye/script ordering markers missing from index.html');
+if(!(earlyPos<stackPos&&earlyPos<sessionPos))throw new Error('PIN eye must load before the rest of the extension stack');
+if(!index.includes('WarehouseEarlyPinEye?.install?.()'))throw new Error('Iframe load must synchronously ensure the early PIN eye before awaiting modules');
 
 const importedAt='2026-08-24T11:09:00.000Z';
 const after='2026-08-24T11:10:00.000Z';
@@ -64,4 +75,4 @@ c=api.sessionCounts();
 if(c.moves!==2)throw new Error(`Post-export movement not retained in import-cycle counter: ${JSON.stringify(c)}`);
 if(api.sessionDirtyCount()!==1)throw new Error(`Post-export dirty count wrong: ${api.sessionDirtyCount()}`);
 
-console.log('Session cycle runtime OK: 44 imported movements stay historical, Home stays tied to the import cycle after navigation, export only resets dirty state, PIN eye remains available.');
+console.log('Session cycle runtime OK: imported history stays historical, Home keeps the import-cycle baseline, export only resets dirty state, and the PIN eye is preloaded before the extension stack.');
