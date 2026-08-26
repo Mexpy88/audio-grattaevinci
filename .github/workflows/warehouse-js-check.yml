@@ -1,7 +1,7 @@
 name: Warehouse JS Check
 on:
   push:
-    branches: [warehouse-ai-live, warehouse-app-remoto-dev-safe-20260824]
+    branches: [warehouse-ai-live, warehouse-app-remoto-dev-safe-20260824, warehouse-app-remoto-dev-master-generation-20260826]
     paths:
       - 'index.html'
       - 'base.html'
@@ -9,6 +9,7 @@ on:
       - 'local-master.js'
       - 'local-master-ooxml.js'
       - 'local-master-ux.js'
+      - 'master-generation-guard-v2.js'
       - 'ui-hardening.js'
       - 'super-ux.js'
       - 'super-ux.css'
@@ -44,6 +45,7 @@ on:
       - 'tests/request-cartons-integrity.mjs'
       - 'tests/request-interaction-performance-runtime.mjs'
       - 'tests/request-completion-workflow-runtime.mjs'
+      - 'tests/master-generation-guard-runtime.mjs'
       - 'tests/dashboard-shortcuts.mjs'
       - 'tests/dashboard-collapse-integrity.mjs'
       - 'tests/xlsx-download-integrity.mjs'
@@ -87,6 +89,7 @@ jobs:
           node --check local-master.js
           node --check local-master-ooxml.js
           node --check local-master-ux.js
+          node --check master-generation-guard-v2.js
           node --check ui-hardening.js
           node --check super-ux.js
           node --check request-cartons.js
@@ -119,6 +122,7 @@ jobs:
           node --check tests/request-cartons-integrity.mjs
           node --check tests/request-interaction-performance-runtime.mjs
           node --check tests/request-completion-workflow-runtime.mjs
+          node --check tests/master-generation-guard-runtime.mjs
           node --check tests/dashboard-shortcuts.mjs
           node --check tests/dashboard-collapse-integrity.mjs
           node --check tests/xlsx-download-integrity.mjs
@@ -152,6 +156,8 @@ jobs:
         run: node tests/request-interaction-performance-runtime.mjs
       - name: Run request completion workflow runtime
         run: node tests/request-completion-workflow-runtime.mjs
+      - name: Run master generation rollback guard runtime
+        run: node tests/master-generation-guard-runtime.mjs
       - name: Check dashboard shortcuts
         run: node tests/dashboard-shortcuts.mjs
       - name: Check dashboard collapse
