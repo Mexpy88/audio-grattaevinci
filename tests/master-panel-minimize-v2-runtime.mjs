@@ -11,7 +11,7 @@ assert.match(src,/setMinimized\(true/);
 assert.match(src,/DA ESPORTARE/);
 assert.match(index,/master-panel-minimize-v2\.js/);
 assert.match(index,/managerial-v2-polish\.js/);
-assert.match(index,/logo-backnav1/);
+assert.match(index,/fastboot1/);
 
 // Regression guard: refresh must not rewrite text/classes on every observer callback.
 assert.match(src,/if\(el&&el\.textContent!==next\)el\.textContent=next/);
