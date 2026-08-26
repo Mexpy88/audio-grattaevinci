@@ -5,7 +5,7 @@
   'use strict';
   if(window.WarehouseMasterPanelMinimize)return;
 
-  const VERSION='2026.08.26-master-panel-min1';
+  const VERSION='2026.08.26-master-panel-min2';
   const PREF_KEY='so_master_panel_minimized_v1';
   const META_KEY='so_local_master_meta_v3';
   const GUARD_KEY='so_master_generation_guard_v1';
@@ -16,6 +16,7 @@
   const pad=n=>String(Math.max(0,Math.floor(Number(n)||0))).padStart(4,'0');
   const loaded=()=>{try{return !!(db?.master?.rows?.length&&db?.master?.filename)}catch{return false}};
   const dirtyCount=()=>{try{const m=readJson(META_KEY),base=m.lastExportAt||m.importedAt;if(!base)return (db?.audits||[]).length;const t=new Date(base).getTime();return (db?.audits||[]).filter(a=>new Date(a.at||0).getTime()>t).length}catch{return 0}};
+  const setText=(el,value)=>{const v=txt(value);if(el&&el.textContent!==v)el.textContent=v};
 
   function injectCss(){
     if(document.getElementById('masterPanelMinimizeCss'))return;
@@ -71,17 +72,18 @@
       return true;
     }
     const s=miniStatus(),name=bar.querySelector('[data-mini-name]'),sub=bar.querySelector('[data-mini-sub]'),badge=bar.querySelector('[data-mini-badge]');
-    if(name)name.textContent='MASTER EXCEL · PRONTO';
-    if(sub){sub.textContent=s.subtitle;sub.title=s.name}
-    if(badge){badge.textContent=s.dirty?`${s.dirty} DA ESPORTARE`:'OK';badge.classList.toggle('warn',!!s.dirty)}
+    setText(name,'MASTER EXCEL · PRONTO');
+    if(sub){setText(sub,s.subtitle);if(sub.title!==s.name)sub.title=s.name}
+    if(badge){setText(badge,s.dirty?`${s.dirty} DA ESPORTARE`:'OK');badge.classList.toggle('warn',!!s.dirty)}
     return true;
   }
 
   function setMinimized(value,persist=true){
     const panel=document.getElementById('localMasterPanel');if(!panel)return false;
     if(!loaded())value=false;
-    panel.classList.toggle('lmMinimized',!!value);
-    if(persist&&loaded())localStorage.setItem(PREF_KEY,value?'1':'0');
+    const next=!!value;
+    if(panel.classList.contains('lmMinimized')!==next)panel.classList.toggle('lmMinimized',next);
+    if(persist&&loaded())localStorage.setItem(PREF_KEY,next?'1':'0');
     refreshMini();
     return true;
   }
@@ -110,7 +112,12 @@
     const lm=window.LocalMaster;if(!lm||typeof lm.renderPanel!=='function')return false;
     if(lm.renderPanel.__masterPanelMinimized)return true;
     baseRenderPanel=lm.renderPanel;
-    const wrapped=async function(){const out=await baseRenderPanel.apply(this,arguments);ensureUi();refreshMini();if(!loaded())setMinimized(false,false);return out};
+    const wrapped=async function(){
+      const out=await baseRenderPanel.apply(this,arguments);ensureUi();
+      if(!loaded())setMinimized(false,false);
+      else if(localStorage.getItem(PREF_KEY)===null)setMinimized(true,false);
+      refreshMini();return out;
+    };
     wrapped.__masterPanelMinimized=true;wrapped.__previous=baseRenderPanel;lm.renderPanel=wrapped;return true;
   }
 
