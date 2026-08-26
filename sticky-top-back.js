@@ -1,10 +1,11 @@
 /* Sticky top-bar navigation for REMOTO.
-   Keeps BACK always reachable while preserving each screen's existing back logic. */
+   Passive implementation: never wraps/replaces show(), login(), logout() or auth state.
+   It only mirrors the currently active screen and reuses each screen's native BACK button. */
 (function installWarehouseStickyTopBack(){
   'use strict';
   if(window.WarehouseStickyTopBack)return;
-  const VERSION='2026.08.26-sticky-top-back1';
-  let installed=false,baseShow=null,observer=null;
+  const VERSION='2026.08.26-sticky-top-back2-passive';
+  let installed=false,pollTimer=null,clickBound=false,lastScreenId='';
 
   function currentScreen(){return document.querySelector('main .screen.on')}
 
@@ -30,20 +31,25 @@
     let back=document.getElementById('stickyTopBack');
     if(!back){
       back=document.createElement('button');back.id='stickyTopBack';back.type='button';back.className='hidden';back.setAttribute('aria-label','Torna indietro');back.title='Indietro';back.textContent='‹';
-      back.onclick=goBack;wrap.insertBefore(back,logo);
+      back.addEventListener('click',goBack);wrap.insertBefore(back,logo);
     }
     document.body.classList.add('stickyTopBackReady');return true;
   }
 
-  function sync(){
+  function sync(force=false){
     const back=document.getElementById('stickyTopBack');if(!back)return false;
-    const screen=currentScreen(),isHome=!screen||screen.id==='home';
+    const screen=currentScreen(),screenId=screen?.id||'';
+    if(!force&&screenId===lastScreenId)return true;
+    lastScreenId=screenId;
+    const isHome=!screen||screenId==='home';
     back.classList.toggle('hidden',isHome);
     if(!isHome){
       const nativeBack=screen.querySelector(':scope > .back');
       const label=(nativeBack?.textContent||'INDIETRO').replace(/^\s*[←‹]\s*/,'').trim();
       back.setAttribute('aria-label',label?`Indietro: ${label}`:'Torna indietro');
       back.title=label||'Indietro';
+    }else{
+      back.setAttribute('aria-label','Torna indietro');back.title='Indietro';
     }
     return true;
   }
@@ -51,25 +57,25 @@
   function goBack(){
     const screen=currentScreen();if(!screen||screen.id==='home')return;
     const nativeBack=screen.querySelector(':scope > .back');
-    if(nativeBack){nativeBack.click();setTimeout(sync,0);return}
-    if(typeof window.show==='function'){window.show('home');setTimeout(sync,0)}
+    if(nativeBack){nativeBack.click();setTimeout(()=>sync(true),0);return}
+    if(typeof window.show==='function')window.show('home');
+    setTimeout(()=>sync(true),0);
   }
 
-  function wrapShow(){
-    if(typeof window.show!=='function'||window.show.__stickyTopBack)return false;
-    baseShow=window.show;
-    const wrapped=function(){const out=baseShow.apply(this,arguments);setTimeout(sync,0);return out};
-    wrapped.__stickyTopBack=true;wrapped.__previous=baseShow;window.show=wrapped;return true;
-  }
-
-  function watchScreens(){
-    const main=document.querySelector('main');if(!main||typeof MutationObserver!=='function'||observer)return;
-    observer=new MutationObserver(sync);observer.observe(main,{attributes:true,subtree:true,attributeFilter:['class']});
+  function bindPassiveSync(){
+    if(!clickBound){
+      clickBound=true;
+      document.addEventListener('click',()=>setTimeout(()=>sync(true),0),true);
+      document.addEventListener('submit',()=>setTimeout(()=>sync(true),0),true);
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync(true)});
+      window.addEventListener('pageshow',()=>sync(true));
+    }
+    if(!pollTimer)pollTimer=setInterval(()=>sync(false),250);
   }
 
   function install(){
     if(typeof document==='undefined')return false;
-    injectCss();if(!ensureButton())return false;wrapShow();watchScreens();sync();installed=true;return true;
+    injectCss();if(!ensureButton())return false;bindPassiveSync();sync(true);installed=true;return true;
   }
 
   window.WarehouseStickyTopBack={version:VERSION,install,sync,goBack};
