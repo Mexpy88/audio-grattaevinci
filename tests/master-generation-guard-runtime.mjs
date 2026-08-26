@@ -2,23 +2,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const source=fs.readFileSync('master-generation-guard.js','utf8');
+const source=fs.readFileSync('master-generation-guard-v2.js','utf8');
 const index=fs.readFileSync('index.html','utf8');
 
 const storage=new Map();
-const localStorage={
-  getItem:k=>storage.has(k)?storage.get(k):null,
-  setItem:(k,v)=>storage.set(k,String(v)),
-  removeItem:k=>storage.delete(k)
-};
+const localStorage={getItem:k=>storage.has(k)?storage.get(k):null,setItem:(k,v)=>storage.set(k,String(v)),removeItem:k=>storage.delete(k)};
 const body={appendChild(){}};
-const document={
-  body,
-  addEventListener(){},
-  getElementById(){return null},
-  createElement(){return {style:{},querySelector(){return null},appendChild(){},addEventListener(){},showModal(){},close(){}}},
-  querySelector(){return null}
-};
+const document={body,addEventListener(){},getElementById(){return null},createElement(){return {style:{},querySelector(){return null},appendChild(){},addEventListener(){},showModal(){},close(){}}},querySelector(){return null}};
 class MutationObserver{constructor(){} observe(){} disconnect(){}}
 class HTMLAnchorElement{}
 HTMLAnchorElement.prototype.click=function(){};
@@ -27,9 +17,10 @@ const LocalMaster={exportUpdatedMaster:async()=>true};
 const sandbox={console,TextEncoder,Uint8Array,Uint32Array,DataView,Math,Date,JSON,String,Number,Object,Array,RegExp,Error,Map,Set,setInterval(){return 1},clearInterval(){},setTimeout(){},alert(){},crypto:{getRandomValues(a){a.fill(7);return a}},localStorage,document,MutationObserver,HTMLAnchorElement,XLSX,LocalMaster,importMappedMaster:async()=>true,warehouseToast(){}};
 sandbox.window=sandbox;
 vm.createContext(sandbox);
-vm.runInContext(source,sandbox,{filename:'master-generation-guard.js'});
+vm.runInContext(source,sandbox,{filename:'master-generation-guard-v2.js'});
 const g=sandbox.WarehouseMasterGenerationGuard;
 assert.ok(g,'guard API not exposed');
+assert.equal(g.version,'2026.08.26-master-generation2');
 assert.equal(g.sha256('abc'),'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad','SHA-256 implementation is incorrect');
 
 localStorage.setItem('so_master_generation_guard_v1',JSON.stringify({lineageId:'SO-TEST',maxGeneration:128,maxHash:'hash128',lastExportAt:'2026-08-26T06:57:00.000Z'}));
@@ -57,7 +48,9 @@ assert.match(source,/Master obsoleto/);
 assert.match(source,/MAGAZZINO_SO_MASTER_G/);
 assert.match(source,/HTMLAnchorElement\.prototype\.click/,'export filename interception missing');
 assert.match(source,/window\.importMappedMaster=wrapped/,'import guard must wrap final mapped import');
-const reqPos=index.indexOf("request-completion-workflow.js");
-const guardPos=index.indexOf("master-generation-guard.js");
-assert.ok(reqPos>=0&&guardPos>reqPos,'master generation guard must load as final protection after request workflow');
-console.log('Master generation guard OK: rollback, legacy, lineage, integrity, same-generation and filename rules validated.');
+assert.match(source,/masterImportedAt\(\)/,'global lexical db import tracking missing');
+const reqPos=index.indexOf('request-completion-workflow.js');
+const guardPos=index.indexOf('master-generation-guard-v2.js');
+assert.ok(reqPos>=0&&guardPos>reqPos,'master generation guard v2 must load as final protection after request workflow');
+assert.equal(index.includes('master-generation-guard.js?v='),false,'obsolete v1 guard must not be loaded');
+console.log('Master generation guard v2 OK: rollback, legacy, lineage, integrity, same-generation and filename rules validated.');
