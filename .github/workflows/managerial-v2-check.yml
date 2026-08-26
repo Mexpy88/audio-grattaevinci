@@ -1,7 +1,7 @@
 name: Managerial V2 Full Check
 on:
   push:
-    branches: [warehouse-app-remoto-dev-managerial-v2-20260826, warehouse-app-remoto-dev-master-panel-freeze-fix-20260826, warehouse-app-remoto-dev-ux-polish-20260826]
+    branches: [warehouse-app-remoto-dev-managerial-v2-20260826, warehouse-app-remoto-dev-master-panel-freeze-fix-20260826, warehouse-app-remoto-dev-ux-polish-20260826, warehouse-app-remoto-dev-logo-backnav-20260826]
   workflow_dispatch:
 jobs:
   full-regression:
@@ -17,6 +17,7 @@ jobs:
           node --check managerial-v2-polish.js
           node --check master-panel-minimize-v2.js
           node --check ux-polish-v3.js
+          node --check sticky-top-back.js
           node --check modifica.js
           node --check fixes.js
           node --check early-pin-eye.js
@@ -50,6 +51,7 @@ jobs:
           node --check tests/master-panel-minimize-v2-runtime.mjs
           node --check tests/ux-polish-v3-runtime.mjs
           node --check tests/boot-splash-runtime.mjs
+          node --check tests/sticky-top-back-logo-runtime.mjs
       - name: Run managerial V2 and UX tests
         run: |
           node tests/managerial-v2-runtime.mjs
@@ -57,6 +59,7 @@ jobs:
           node tests/master-panel-minimize-v2-runtime.mjs
           node tests/ux-polish-v3-runtime.mjs
           node tests/boot-splash-runtime.mjs
+          node tests/sticky-top-back-logo-runtime.mjs
       - name: Run V1 regression tests
         run: |
           node tests/ui-button-integrity.mjs
