@@ -4,13 +4,13 @@ on:
     branches: [warehouse-app-remoto-dev-master-generation-20260826]
     paths:
       - 'index.html'
-      - 'master-generation-guard.js'
+      - 'master-generation-guard-v2.js'
       - 'tests/master-generation-guard-runtime.mjs'
       - '.github/workflows/master-generation-guard-check.yml'
   pull_request:
     paths:
       - 'index.html'
-      - 'master-generation-guard.js'
+      - 'master-generation-guard-v2.js'
       - 'tests/master-generation-guard-runtime.mjs'
       - '.github/workflows/master-generation-guard-check.yml'
   workflow_dispatch:
@@ -25,7 +25,7 @@ jobs:
           node-version: '22'
       - name: Syntax
         run: |
-          node --check master-generation-guard.js
+          node --check master-generation-guard-v2.js
           node --check tests/master-generation-guard-runtime.mjs
       - name: Rollback and generation runtime
         run: node tests/master-generation-guard-runtime.mjs
