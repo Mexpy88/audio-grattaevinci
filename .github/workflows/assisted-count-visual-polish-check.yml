@@ -1,7 +1,7 @@
 name: Assisted Count Visual Polish Check
 on:
   push:
-    branches: [warehouse-app-remoto-dev-assisted-count-visual-polish-20260826]
+    branches: [warehouse-app-remoto-dev-assisted-count-visual-polish-20260826, warehouse-app-remoto-dev-assisted-count-header-sound-20260826]
   workflow_dispatch:
 jobs:
   full-regression:
@@ -50,6 +50,7 @@ jobs:
           node --check flex-position-v2.js
           node --check manual-edit-request-refresh-fix.js
           node --check tests/stock-control-assisted-ux-v5-runtime.mjs
+          node --check tests/validation-sounds-volume-runtime.mjs
       - name: Run managerial and visual tests
         run: |
           node tests/managerial-v2-runtime.mjs
@@ -57,6 +58,7 @@ jobs:
           node tests/stock-control-assisted-v3-runtime.mjs
           node tests/stock-control-assisted-ux-v4-runtime.mjs
           node tests/stock-control-assisted-ux-v5-runtime.mjs
+          node tests/validation-sounds-volume-runtime.mjs
           node tests/master-panel-minimize-v2-runtime.mjs
           node tests/ux-polish-v3-runtime.mjs
           node tests/boot-splash-runtime.mjs
