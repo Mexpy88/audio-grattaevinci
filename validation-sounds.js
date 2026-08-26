@@ -5,7 +5,7 @@
   'use strict';
   if(window.WarehouseValidationSounds)return;
 
-  const VERSION='2026.08.24-safe-sounds3-voice-safe';
+  const VERSION='2026.08.26-safe-sounds4-louder-success';
   const PREF_KEY='so_validation_sounds_enabled';
   let ctx=null;
   let installed=false;
@@ -45,11 +45,12 @@
       if(c.state==='suspended')c.resume?.().catch?.(()=>{});
       const s=c.currentTime+0.006;
       if(kind==='tap'){
-        tone(c,760,s,0.028,0.012,'sine');
+        tone(c,760,s,0.028,0.014,'sine');
       }else if(kind==='error'){
         tone(c,330,s,0.075,0.035);tone(c,245,s+0.095,0.105,0.03);
       }else{
-        tone(c,660,s,0.065,0.03);tone(c,880,s+0.082,0.09,0.032);
+        /* Stronger success cue for PIN acceptance and confirmed warehouse actions. */
+        tone(c,660,s,0.07,0.07);tone(c,880,s+0.082,0.095,0.075);
       }
       return true;
     }catch{return false}
