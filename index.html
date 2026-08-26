@@ -12,7 +12,7 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
 #bootSplash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#edf3f8;padding:24px;transition:opacity .18s ease}
 #bootSplash.bootLeaving{opacity:0;pointer-events:none}
 .bootCard{width:min(88vw,430px);background:linear-gradient(145deg,#fff,#e8f1f7);border:1px solid #d9e5ee;border-radius:30px;padding:32px 26px 28px;text-align:center;box-shadow:0 18px 48px #17314d18}
-.bootLogo{display:block;width:min(100%,330px);height:auto;margin:0 auto 22px;object-fit:contain}
+.bootLogo{display:block;width:min(100%,330px);height:auto;margin:0 auto 22px;object-fit:contain;background:transparent}
 .bootTitle{font:900 27px/1.08 system-ui,-apple-system,"Segoe UI",sans-serif;color:#2c60aa;margin:0 0 9px}
 .bootStatus{font:750 14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#65788c;min-height:20px}
 .bootDots{display:flex;justify-content:center;gap:7px;margin-top:20px}
@@ -25,7 +25,7 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
 <body>
 <div id="bootSplash" role="status" aria-live="polite">
   <div class="bootCard">
-    <img src="logo-full.svg?v=20260814-0756" alt="Servizi Ospedalieri" class="bootLogo">
+    <img src="logo-transparent.png?v=20260826-1" alt="Servizi Ospedalieri" class="bootLogo">
     <div class="bootTitle">Gestione Magazzino</div>
     <div id="bootStatus" class="bootStatus">Caricamento in corso…</div>
     <div class="bootDots" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -38,7 +38,7 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
 <script src="top-level-dialog-scroll-fix.js?v=20260825-scrollfix1"></script>
 <script>
 (function(){
-  const VERSION='20260826-ux-polish3-boot1';
+  const VERSION='20260826-logo-backnav1';
   const frame=document.getElementById('warehouseApp');
   const splash=document.getElementById('bootSplash');
   const bootStatus=document.getElementById('bootStatus');
@@ -65,8 +65,8 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
       const d=frame.contentDocument;if(!d)throw new Error('Interfaccia non disponibile');
       setBootStatus('Preparazione interfaccia…');
       window.WarehouseEarlyPinEye?.install?.();
-      d.querySelectorAll('img[alt="Servizi Ospedalieri"]').forEach(img=>img.setAttribute('src','logo-full.svg?v=20260814-0756'));
-      if(!d.getElementById('logoFixStyles')){const style=d.createElement('style');style.id='logoFixStyles';style.textContent=`.logoButton{max-width:56vw;overflow:visible!important}.logoButton img{width:min(230px,56vw)!important;height:auto!important;max-width:none!important;object-fit:contain!important;object-position:left center!important}.heroLogo{width:min(100%,430px)!important;height:auto!important;object-fit:contain!important}@media(max-width:430px){.logoButton img{width:min(210px,55vw)!important;max-width:none!important}}@media(max-width:360px){.logoButton img{width:min(175px,52vw)!important;max-width:none!important}}`;d.head.appendChild(style)}
+      d.querySelectorAll('img[alt="Servizi Ospedalieri"]').forEach(img=>img.setAttribute('src','logo-transparent.png?v='+VERSION));
+      if(!d.getElementById('logoFixStyles')){const style=d.createElement('style');style.id='logoFixStyles';style.textContent=`.logoButton{max-width:56vw;overflow:visible!important;background:transparent!important}.logoButton img{width:min(230px,56vw)!important;height:auto!important;max-width:none!important;object-fit:contain!important;object-position:left center!important;background:transparent!important}.heroLogo{width:min(100%,430px)!important;height:auto!important;object-fit:contain!important;background:transparent!important}.hero{overflow:hidden}@media(max-width:430px){.logoButton img{width:min(210px,55vw)!important;max-width:none!important}}@media(max-width:360px){.logoButton img{width:min(175px,52vw)!important;max-width:none!important}}`;d.head.appendChild(style)}
       addStyle(d,'stockEditCss','modifica.css?v=20260814-0756');
       addStyle(d,'warehouseFixCss','fixes.css?v=20260814-0845');
       addStyle(d,'localMasterCss','local-master.css?v='+VERSION);
@@ -109,6 +109,7 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
       await addScript(d,'managerialV2PolishJs','managerial-v2-polish.js?v='+VERSION);
       await addScript(d,'masterPanelMinimizeV2Js','master-panel-minimize-v2.js?v='+VERSION);
       await addScript(d,'uxPolishV3Js','ux-polish-v3.js?v='+VERSION);
+      await addScript(d,'stickyTopBackJs','sticky-top-back.js?v='+VERSION);
 
       setBootStatus('Finalizzazione…');
       await new Promise(resolve=>setTimeout(resolve,100));
@@ -135,6 +136,7 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
         frame.contentWindow?.WarehouseManagerialV2Polish?.install?.();
         frame.contentWindow?.WarehouseMasterPanelMinimizeV2?.install?.();
         frame.contentWindow?.WarehouseUxPolishV3?.install?.();
+        frame.contentWindow?.WarehouseStickyTopBack?.install?.();
       }catch(err){console.warn('Finalizzazione UI parziale',err)}
       await nextPaint();
       revealApp();
