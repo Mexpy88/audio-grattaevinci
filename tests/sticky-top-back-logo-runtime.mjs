@@ -18,9 +18,9 @@ assert.match(nav,/screen\.id==='home'/);
 assert.match(nav,/body\.stickyTopBackReady main>\.screen>\.back\{display:none!important\}/);
 
 // Critical regression guard: sticky navigation must never replace app/auth globals.
-assert.doesNotMatch(nav,/window\.show\s*=/);
-assert.doesNotMatch(nav,/window\.submitLogin\s*=/);
-assert.doesNotMatch(nav,/window\.logout\s*=/);
+assert.doesNotMatch(nav,/window\.show\s*=(?!=)/);
+assert.doesNotMatch(nav,/window\.submitLogin\s*=(?!=)/);
+assert.doesNotMatch(nav,/window\.logout\s*=(?!=)/);
 assert.doesNotMatch(nav,/MutationObserver/);
 assert.match(nav,/setInterval\(\(\)=>sync\(false\),250\)/);
 assert.match(nav,/document\.addEventListener\('click'/);
