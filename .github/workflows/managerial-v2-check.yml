@@ -1,7 +1,7 @@
 name: Managerial V2 Full Check
 on:
   push:
-    branches: [warehouse-app-remoto-dev-managerial-v2-20260826]
+    branches: [warehouse-app-remoto-dev-managerial-v2-20260826, warehouse-app-remoto-dev-master-panel-freeze-fix-20260826]
   workflow_dispatch:
 jobs:
   full-regression:
