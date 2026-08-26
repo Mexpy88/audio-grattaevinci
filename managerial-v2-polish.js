@@ -2,7 +2,7 @@
 (function installWarehouseManagerialV2Polish(){
   'use strict';
   if(window.WarehouseManagerialV2Polish)return;
-  const VERSION='2026.08.26-managerial-v2-polish4-assisted-ux5';
+  const VERSION='2026.08.26-managerial-v2-polish5-grouped-rect';
   const norm=v=>String(v??'').trim().toUpperCase();
   const article=v=>{try{return typeof normalizeArticle==='function'?normalizeArticle(v,true):norm(v)}catch{return norm(v)}};
   const locOf=r=>norm(typeof locationOf==='function'?locationOf(r):(r?.fila_scaffale||r?.fila||''));
@@ -27,6 +27,11 @@
     const existing=document.getElementById('stockControlAssistedV3Js');if(existing){existing.addEventListener('load',loadAssistedUxV4,{once:true});return true}
     const s=document.createElement('script');s.id='stockControlAssistedV3Js';s.src='stock-control-assisted-v3.js?v=20260826-assist3';s.async=false;s.onload=()=>{window.WarehouseStockControlAssistedV3?.install?.();loadAssistedUxV4()};s.onerror=()=>console.error('Impossibile caricare stock-control-assisted-v3.js');document.body.appendChild(s);return true;
   }
-  function install(){if(typeof document==='undefined')return false;wrapRenderStock();wrapCountConfirm();relabelSearch();loadAssistedStockControl();return true}
-  window.WarehouseManagerialV2Polish={version:VERSION,install,relabelSearch,loadAssistedStockControl,loadAssistedUxV4,loadAssistedUxV5};install();
+  function loadGroupedRectificationV1(){
+    if(window.WarehouseDirectRectificationGroupedV1){window.WarehouseDirectRectificationGroupedV1.install?.();return true}
+    if(document.getElementById('directRectificationGroupedV1Js'))return true;
+    const g=document.createElement('script');g.id='directRectificationGroupedV1Js';g.src='stock-rectification-grouped-ux-v1.js?v=20260826-direct-rect1';g.async=false;g.onload=()=>window.WarehouseDirectRectificationGroupedV1?.install?.();g.onerror=()=>console.error('Impossibile caricare stock-rectification-grouped-ux-v1.js');document.body.appendChild(g);return true;
+  }
+  function install(){if(typeof document==='undefined')return false;wrapRenderStock();wrapCountConfirm();relabelSearch();loadAssistedStockControl();loadGroupedRectificationV1();return true}
+  window.WarehouseManagerialV2Polish={version:VERSION,install,relabelSearch,loadAssistedStockControl,loadAssistedUxV4,loadAssistedUxV5,loadGroupedRectificationV1};install();
 })();
