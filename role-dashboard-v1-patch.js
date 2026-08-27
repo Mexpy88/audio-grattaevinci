@@ -3,11 +3,11 @@
 (function installWarehouseRoleDashboardPatchV1(){
   'use strict';
   if(window.WarehouseRoleDashboardPatchV1)return;
-  const VERSION='2026.08.27-role-dashboard-patch1.2-mobile-shell';
+  const VERSION='2026.08.27-role-dashboard-patch1.3-contextual-export';
   const $=id=>document.getElementById(id);
   const can=cap=>window.WarehouseRoleDashboardV1?.can?.(cap)??false;
   const deny=label=>window.WarehouseRoleDashboardV1?.deny?.(label);
-  let timer=null,observer=null;
+  let timer=null,observer=null,clickBound=false;
 
   function style(){
     if($('rdPatchCssV1'))return;
@@ -30,9 +30,9 @@
         body:not(.desktopMode) #stickyTopBack{width:34px!important;height:34px!important;min-width:34px!important;font-size:22px!important;margin-right:2px!important}
 
         body:not(.desktopMode) .uxDirtyBar.rdMobileDirtyCompact{left:50%!important;right:auto!important;bottom:max(10px,env(safe-area-inset-bottom))!important;width:auto!important;min-width:0!important;max-width:calc(100% - 24px)!important;transform:translateX(-50%)!important;display:flex!important;flex-direction:row!important;align-items:center!important;gap:6px!important;border-radius:16px!important;padding:6px!important;box-shadow:0 10px 28px #0c223b44!important}
-        body:not(.desktopMode) .uxDirtyBar.rdMobileDirtyCompact .uxDirtyText{flex:0 1 auto!important;min-width:0!important;font-size:0!important;line-height:1!important;white-space:nowrap!important}
-        body:not(.desktopMode) .uxDirtyBar.rdMobileDirtyCompact .uxDirtyText b{display:block!important;font-size:12px!important;line-height:1.1!important;white-space:nowrap!important;padding:0 3px!important}
-        body:not(.desktopMode) .uxDirtyBar.rdMobileDirtyCompact #uxDirtyExport{min-height:36px!important;border-radius:11px!important;padding:7px 10px!important;font-size:11px!important;line-height:1!important}
+        body:not(.desktopMode) .uxDirtyBar.rdMobileDirtyCompact .uxDirtyText{display:none!important}
+        body:not(.desktopMode) .uxDirtyBar.rdMobileDirtyCompact #uxDirtyExport{min-height:44px!important;border-radius:999px!important;padding:10px 20px!important;font-size:13px!important;line-height:1!important}
+        body:not(.desktopMode) .uxDirtyBar.rdMobileExportContextHidden{display:none!important}
       }
       #rdMobileExportDialog{width:min(92vw,430px);border:0;border-radius:22px;padding:0;color:#17314d;box-shadow:0 24px 70px rgba(8,28,47,.34)}
       #rdMobileExportDialog::backdrop{background:rgba(8,25,43,.62);backdrop-filter:blur(2px)}
@@ -95,27 +95,42 @@
   function dirtyCount(){
     try{const m=readMasterMeta(),base=m.lastExportAt||m.importedAt;if(!base)return Array.isArray(db?.audits)?db.audits.length:0;const t=new Date(base).getTime();return(db?.audits||[]).filter(a=>new Date(a.at||0).getTime()>t).length}catch{return 0}
   }
+  function mobileExportVisible(){
+    if(!smartphoneMode()||!can('EXPORT'))return false;
+    try{if(!(db?.master?.rows||[]).length)return false}catch{return false}
+    if(dirtyCount()<=0)return false;
+    return document.querySelector('.screen.on')?.id==='home';
+  }
   function ensureMobileExportDialog(){
     let d=$('rdMobileExportDialog');if(d)return d;
     d=document.createElement('dialog');d.id='rdMobileExportDialog';d.innerHTML='<div class="rdMobileExportHead"><h2>Esporta Master</h2><button type="button" class="rdMobileExportClose" aria-label="Chiudi">×</button></div><div id="rdMobileExportBody" class="rdMobileExportBody"></div>';
     document.body.appendChild(d);d.querySelector('.rdMobileExportClose').onclick=()=>d.close();d.addEventListener('cancel',e=>{e.preventDefault();d.close()});return d;
   }
   function openMobileExportDialog(){
-    if(!smartphoneMode())return false;
+    if(!mobileExportVisible())return false;
     const d=ensureMobileExportDialog(),body=$('rdMobileExportBody'),count=dirtyCount(),meta=readMasterMeta();
     body.innerHTML=`<div class="rdMobileExportCount">${count}</div><p><b>${count===1?'modifica da esportare':'modifiche da esportare'}</b><br>Ultimo export: ${formatWhen(meta.lastExportAt)}</p><p>Le modifiche sono già salvate nel browser. L’export genera il Master Excel aggiornato.</p><div class="rdMobileExportActions"><button type="button" class="rdMobileExportCancel">ANNULLA</button><button type="button" class="rdMobileExportGo">ESPORTA MASTER</button></div>`;
     body.querySelector('.rdMobileExportCancel').onclick=()=>d.close();body.querySelector('.rdMobileExportGo').onclick=async()=>{d.close();await window.LocalMaster?.exportUpdatedMaster?.()};d.showModal();return true;
   }
   function patchMobileExport(){
     const bar=$('uxDirtyBar'),btn=$('uxDirtyExport');if(!bar||!btn)return;
-    bar.classList.toggle('rdMobileDirtyCompact',smartphoneMode());
+    const mobile=smartphoneMode(),visible=mobileExportVisible();
+    bar.classList.toggle('rdMobileDirtyCompact',mobile);
+    bar.classList.toggle('rdMobileExportContextHidden',mobile&&!visible);
+    const dlg=$('rdMobileExportDialog');if(mobile&&!visible&&dlg?.open)dlg.close();
     if(btn.dataset.rdMobileExportBound==='1')return;
     btn.dataset.rdMobileExportBound='1';
     btn.addEventListener('click',e=>{if(!smartphoneMode())return;e.preventDefault();e.stopImmediatePropagation();openMobileExportDialog()},true);
   }
 
   function decorate(){style();applyLateGuards();relabelAbsence();patchRequestRoutes();patchMobileExport();window.WarehouseRoleDashboardV1?.syncViewIcons?.()}
-  function install(){style();decorate();if(!observer){observer=new MutationObserver(()=>requestAnimationFrame(decorate));observer.observe(document.body,{childList:true,subtree:true})}if(!timer)timer=setInterval(decorate,1000);window.addEventListener('resize',decorate,{passive:true});return true}
+  function install(){
+    style();decorate();
+    if(!observer){observer=new MutationObserver(()=>requestAnimationFrame(decorate));observer.observe(document.body,{childList:true,subtree:true})}
+    if(!timer)timer=setInterval(decorate,700);
+    if(!clickBound){clickBound=true;document.addEventListener('click',()=>setTimeout(patchMobileExport,0),true)}
+    window.addEventListener('resize',decorate,{passive:true});return true
+  }
 
-  window.WarehouseRoleDashboardPatchV1={version:VERSION,install,decorate,confirmAbsence,patchMobileExport,openMobileExportDialog};install();
+  window.WarehouseRoleDashboardPatchV1={version:VERSION,install,decorate,confirmAbsence,patchMobileExport,openMobileExportDialog,mobileExportVisible};install();
 })();
