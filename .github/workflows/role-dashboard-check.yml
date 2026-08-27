@@ -38,7 +38,7 @@ jobs:
           node tests/stock-control-assisted-v3-runtime.mjs
           node tests/stock-control-assisted-ux-v4-runtime.mjs
           node tests/stock-control-assisted-ux-v5-runtime.mjs
-          node tests/rectification-grouped-v2-runtime.mjs
+          node tests/rectification-grouped-splash-runtime.mjs
           node tests/request-completion-workflow-runtime.mjs
           node tests/manual-edit-request-refresh-runtime.mjs
           node tests/master-generation-guard-runtime.mjs
