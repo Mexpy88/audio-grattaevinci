@@ -9,7 +9,7 @@
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
 <script>
 (function fastBootPreload(){
-  const V='20260826-fastboot1';
+  const V='20260827-master-refactor2';
   const resources=[
     ['script','early-pin-eye.js?v=20260825-early1'],
     ['script','top-level-live-dictation.js?v=20260825-scrollfix1'],
@@ -26,7 +26,6 @@
     ['script','xlsx-download-fix.js?v='+V],
     ['script','local-master.js?v='+V],
     ['script','local-master-ooxml.js?v='+V],
-    ['script','local-master-ux.js?v='+V],
     ['script','ui-hardening.js?v='+V],
     ['script','super-ux.js?v='+V],
     ['script','stock-rectifications.js?v='+V],
@@ -34,12 +33,12 @@
     ['script','dashboard-links.js?v='+V],
     ['script','dashboard-collapse.js?v='+V],
     ['script','warehouse-master-schema-v4.js?v='+V],
+    ['script','master-controller-v2.js?v='+V],
     ['script','rectification-uppercase-fix.js?v='+V],
     ['script','rectification-flags.js?v='+V],
     ['script','excel-stock-search-sheet.js?v='+V],
     ['script','excel-stock-search-detail-fix.js?v='+V],
     ['script','clean-forms-default-new.js?v='+V],
-    ['script','master-import-ui-cleanup.js?v='+V],
     ['script','session-cycle-fix.js?v='+V],
     ['script','validation-sounds.js?v='+V],
     ['script','voice-commands.js?v='+V],
@@ -100,7 +99,7 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
 <script src="top-level-dialog-scroll-fix.js?v=20260825-scrollfix1"></script>
 <script>
 (function(){
-  const VERSION='20260826-fastboot1';
+  const VERSION='20260827-master-refactor2';
   const bootStarted=performance.now();
   const frame=document.getElementById('warehouseApp');
   const splash=document.getElementById('bootSplash');
@@ -145,7 +144,7 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
       await addScript(d,'xlsxDownloadFixJs','xlsx-download-fix.js?v='+VERSION);
       await addScript(d,'localMasterJs','local-master.js?v='+VERSION);
       await addScript(d,'localMasterOoxmlJs','local-master-ooxml.js?v='+VERSION);
-      await addScript(d,'localMasterUxJs','local-master-ux.js?v='+VERSION);
+      /* local-master-ux.js retired: V4 + MasterControllerV2 now own import UX. */
       await addScript(d,'uiHardeningJs','ui-hardening.js?v='+VERSION);
       await addScript(d,'superUxJs','super-ux.js?v='+VERSION);
       await addScript(d,'stockRectificationsJs','stock-rectifications.js?v='+VERSION);
@@ -153,12 +152,13 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
       await addScript(d,'dashboardLinksJs','dashboard-links.js?v='+VERSION);
       await addScript(d,'dashboardCollapseJs','dashboard-collapse.js?v='+VERSION);
       await addScript(d,'masterSchemaV4Js','warehouse-master-schema-v4.js?v='+VERSION);
+      await addScript(d,'masterControllerV2Js','master-controller-v2.js?v='+VERSION);
       await addScript(d,'rectUppercaseFixJs','rectification-uppercase-fix.js?v='+VERSION);
       await addScript(d,'rectificationFlagsJs','rectification-flags.js?v='+VERSION);
       await addScript(d,'excelStockSearchJs','excel-stock-search-sheet.js?v='+VERSION);
       await addScript(d,'excelStockSearchDetailFixJs','excel-stock-search-detail-fix.js?v='+VERSION);
       await addScript(d,'cleanFormsDefaultNewJs','clean-forms-default-new.js?v='+VERSION);
-      await addScript(d,'masterImportUiCleanupJs','master-import-ui-cleanup.js?v='+VERSION);
+      /* master-import-ui-cleanup.js retired: no global alert/confirm monkey-patching. */
       await addScript(d,'sessionCycleFixJs','session-cycle-fix.js?v='+VERSION);
       await addScript(d,'validationSoundsJs','validation-sounds.js?v='+VERSION);
       await addScript(d,'voiceCommandsJs','voice-commands.js?v='+VERSION);
@@ -185,7 +185,6 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
         frame.contentWindow?.WarehouseExcelStockSearch?.install?.();
         frame.contentWindow?.WarehouseExcelStockSearchDetailFix?.install?.();
         frame.contentWindow?.WarehouseCleanFormsDefaultNew?.install?.();
-        frame.contentWindow?.WarehouseMasterImportUiCleanup?.install?.();
         frame.contentWindow?.WarehouseSessionCycleFix?.install?.();
         frame.contentWindow?.WarehouseValidationSounds?.install?.();
         frame.contentWindow?.WarehouseVoiceCommands?.installUi?.();
@@ -196,6 +195,7 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
         frame.contentWindow?.WarehouseRequestInteractionPerformanceFix?.install?.();
         frame.contentWindow?.WarehouseRequestCompletionWorkflow?.install?.();
         frame.contentWindow?.WarehouseMasterGenerationGuard?.install?.();
+        frame.contentWindow?.WarehouseMasterControllerV2?.install?.();
         frame.contentWindow?.WarehouseManagerialV2?.install?.();
         frame.contentWindow?.WarehouseManagerialV2Polish?.install?.();
         frame.contentWindow?.WarehouseDirectRectificationGroupedV1?.install?.();
