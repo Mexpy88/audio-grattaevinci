@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 const files=[
-  'base.html','modifica.js','fixes.js','local-master.js','local-master-ooxml.js','local-master-ux.js','ui-hardening.js','super-ux.js','request-cartons.js'
+  'base.html','modifica.js','fixes.js','local-master.js','local-master-ooxml.js','ui-hardening.js','super-ux.js','request-cartons.js','master-controller-v2.js'
 ];
 const sources=Object.fromEntries(files.map(f=>[f,fs.readFileSync(f,'utf8')]));
 const combined=Object.values(sources).join('\n');
@@ -35,10 +35,12 @@ const critical=['show','openLogin','submitLogin','logout','openOperation','openS
 for(const name of critical)if(!defined(name))unresolved.push({name,code:'CRITICAL_HANDLER'});
 
 const hard=sources['ui-hardening.js'];
-if(!/removeAttribute\(['"]onclick['"]\)/.test(hard))unresolved.push({name:'master import hardening',code:'onclick attribute not removed'});
-if(!/addEventListener\(['"]click['"],execute,true\)/.test(hard))unresolved.push({name:'master import hardening',code:'capture click listener missing'});
-if(!/window\.importMappedMaster=execute/.test(hard))unresolved.push({name:'master import hardening',code:'global import fallback missing'});
-if(!/WarehouseUX\?\.beforeMasterImport/.test(hard))unresolved.push({name:'master import preflight',code:'preflight hook missing'});
+const master=sources['master-controller-v2.js'];
+if(/window\.importMappedMaster\s*=/.test(hard))unresolved.push({name:'master ownership',code:'ui-hardening still replaces importMappedMaster'});
+if(!/directImportV4/.test(master))unresolved.push({name:'master controller',code:'direct V4 importer missing'});
+if(!/masterControllerV2/.test(master))unresolved.push({name:'master controller',code:'single confirm binding missing'});
+if(!/addEventListener\('click',event=>executeImport\(event,button\),true\)/.test(master))unresolved.push({name:'master controller',code:'capture click listener missing'});
+if(!/WarehouseUX\?\.beforeMasterImport/.test(master))unresolved.push({name:'master import preflight',code:'Super UX preflight hook missing from controller'});
 
 const unique=[];const seen=new Set();for(const x of unresolved){const k=x.name+'|'+x.code;if(!seen.has(k)){seen.add(k);unique.push(x)}}
 if(unique.length){
@@ -46,4 +48,4 @@ if(unique.length){
   for(const x of unique)console.error('-',x.name,'=>',x.code);
   process.exit(1);
 }
-console.log(`UI integrity OK: ${handlers} inline handlers scanned; ${critical.length} critical actions verified; master import has explicit capture binding and preflight.`);
+console.log(`UI integrity OK: ${handlers} inline handlers scanned; ${critical.length} critical actions verified; Master import has one controller-owned capture binding and preflight.`);
