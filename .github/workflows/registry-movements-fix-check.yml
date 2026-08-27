@@ -25,7 +25,7 @@ jobs:
       - name: Validate registry and premium UX
         run: |
           node tests/registry-movements-fix-runtime.mjs
-          node tests/request-floating-confirm-runtime.mjs
+          node tests/request-floating-confirm-v1-runtime.mjs
           node tests/premium-dashboard-v2-runtime.mjs
           node tests/role-dashboard-v1-runtime.mjs
           node tests/sticky-top-back-logo-runtime.mjs
