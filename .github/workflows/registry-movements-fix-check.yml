@@ -24,6 +24,7 @@ jobs:
           node --check ui-hardening.js
           node --check registry-movements-fix-v1.js
           node --check goods-receipt-v1.js
+          node --check goods-receipt-v2-fix.js
           node --check ux-polish-v3.js
           node --check request-floating-confirm-v1.js
           node --check premium-dashboard-v2.js
@@ -37,6 +38,7 @@ jobs:
           node tests/master-controller-v2-runtime.mjs
           node tests/registry-movements-fix-runtime.mjs
           node tests/goods-receipt-v1-runtime.mjs
+          node tests/goods-receipt-v2-fix-runtime.mjs
           node tests/mobile-export-context-runtime.mjs
           node tests/request-floating-confirm-v1-runtime.mjs
           node tests/premium-dashboard-v2-runtime.mjs
