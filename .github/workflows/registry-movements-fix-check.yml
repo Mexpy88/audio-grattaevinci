@@ -7,6 +7,7 @@ on:
       - warehouse-app-remoto-dev-contextual-mobile-export-20260827
       - warehouse-app-remoto-dev-master-refactor-clean-20260827
       - warehouse-app-remoto-dev-teramo-title-master-plus-20260827
+      - warehouse-app-remoto-dev-registry-premium-ux-20260827
   workflow_dispatch:
 jobs:
   full-regression:
