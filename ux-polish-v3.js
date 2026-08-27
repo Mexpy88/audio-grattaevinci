@@ -1,13 +1,13 @@
 /* Final UX polish for REMOTO V1 managerial interface.
    - semantic pastel action cards
    - Registry keeps operational history only; duplicate Master controls stay in DOM but hidden
-   - bootstraps Role Dashboard V1 as the final responsive/auth layer
+   - bootstraps Role Dashboard V1 + final Premium Dashboard V2
 */
 (function installWarehouseUxPolishV3(){
   'use strict';
   if(window.WarehouseUxPolishV3)return;
 
-  const VERSION='2026.08.27-ux-polish-v3-role-dashboard1-patch1';
+  const VERSION='2026.08.27-ux-polish-v3-premium2';
   let installed=false,baseRenderRegistry=null;
 
   function injectCss(){
@@ -49,10 +49,16 @@
     wrapped.__uxPolishV3=true;wrapped.__previous=baseRenderRegistry;window.renderRegistry=wrapped;return true;
   }
 
+  function loadPremiumDashboard(){
+    if(window.WarehousePremiumDashboardV2){window.WarehousePremiumDashboardV2.install?.();return true}
+    if(!document.getElementById('premiumDashboardV2Css')){const l=document.createElement('link');l.id='premiumDashboardV2Css';l.rel='stylesheet';l.href='premium-dashboard-v2.css?v=20260827-premium2';document.head.appendChild(l)}
+    if(document.getElementById('premiumDashboardV2Js'))return true;
+    const p=document.createElement('script');p.id='premiumDashboardV2Js';p.src='premium-dashboard-v2.js?v=20260827-premium2';p.async=false;p.onload=()=>window.WarehousePremiumDashboardV2?.install?.();p.onerror=()=>console.error('Impossibile caricare premium-dashboard-v2.js');document.body.appendChild(p);return true;
+  }
   function loadRolePatch(){
-    if(window.WarehouseRoleDashboardPatchV1){window.WarehouseRoleDashboardPatchV1.install?.();return true}
-    if(document.getElementById('roleDashboardPatchV1Js'))return true;
-    const p=document.createElement('script');p.id='roleDashboardPatchV1Js';p.src='role-dashboard-v1-patch.js?v=20260827-role-dashboard-patch1';p.async=false;p.onload=()=>window.WarehouseRoleDashboardPatchV1?.install?.();p.onerror=()=>console.error('Impossibile caricare role-dashboard-v1-patch.js');document.body.appendChild(p);return true;
+    if(window.WarehouseRoleDashboardPatchV1){window.WarehouseRoleDashboardPatchV1.install?.();loadPremiumDashboard();return true}
+    const existing=document.getElementById('roleDashboardPatchV1Js');if(existing){existing.addEventListener('load',loadPremiumDashboard,{once:true});return true}
+    const p=document.createElement('script');p.id='roleDashboardPatchV1Js';p.src='role-dashboard-v1-patch.js?v=20260827-role-dashboard-patch1';p.async=false;p.onload=()=>{window.WarehouseRoleDashboardPatchV1?.install?.();loadPremiumDashboard()};p.onerror=()=>console.error('Impossibile caricare role-dashboard-v1-patch.js');document.body.appendChild(p);return true;
   }
   function loadRoleDashboard(){
     if(window.WarehouseRoleDashboardV1){window.WarehouseRoleDashboardV1.install?.();loadRolePatch();return true}
@@ -63,6 +69,6 @@
 
   function install(){if(typeof document==='undefined')return false;injectCss();hideRegistryMaster();wrapRegistry();loadRoleDashboard();installed=true;return true}
 
-  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch};
+  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard};
   install();
 })();
