@@ -6,6 +6,7 @@ on:
       - warehouse-app-remoto-dev-surgical-registry-export-20260827
       - warehouse-app-remoto-dev-contextual-mobile-export-20260827
       - warehouse-app-remoto-dev-master-refactor-clean-20260827
+      - warehouse-app-remoto-dev-teramo-title-master-plus-20260827
   workflow_dispatch:
 jobs:
   full-regression:
@@ -35,6 +36,7 @@ jobs:
           node tests/mobile-export-context-runtime.mjs
           node tests/request-floating-confirm-v1-runtime.mjs
           node tests/premium-dashboard-v2-runtime.mjs
+          node tests/teramo-mobile-polish-runtime.mjs
           node tests/role-dashboard-v1-runtime.mjs
           node tests/sticky-top-back-logo-runtime.mjs
       - name: Validate requests and stock workflows
