@@ -1,7 +1,9 @@
 name: Registry Movimenti Fix Check
 on:
   push:
-    branches: [warehouse-app-remoto-dev-registry-movements-fix-20260827]
+    branches:
+      - warehouse-app-remoto-dev-registry-movements-fix-20260827
+      - warehouse-app-remoto-dev-surgical-registry-export-20260827
   workflow_dispatch:
 jobs:
   full-regression:
