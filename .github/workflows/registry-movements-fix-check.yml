@@ -49,19 +49,27 @@ jobs:
           node tests/stock-control-assisted-ux-v5-runtime.mjs
           node tests/rectification-grouped-splash-runtime.mjs
           node tests/master-generation-guard-runtime.mjs
-      - name: Run V1 regression
+      - name: V1 UI core
         run: |
           node tests/ui-button-integrity.mjs
           node tests/ui-hardening-runtime.mjs
           node tests/super-ux-integrity.mjs
+      - name: V1 dashboard and xlsx
+        run: |
           node tests/dashboard-shortcuts.mjs
           node tests/dashboard-collapse-integrity.mjs
           node tests/xlsx-download-integrity.mjs
+      - name: V1 stock rectifications
+        run: |
           node tests/stock-rectifications-integrity.mjs
           node tests/stock-rectifications-runtime.mjs
+      - name: V1 Master and search
+        run: |
           node tests/master-schema-v4-runtime.mjs
           node tests/excel-stock-search-sheet-runtime.mjs
           node tests/excel-stock-search-detail-fix-runtime.mjs
+      - name: V1 session and devices
+        run: |
           node tests/session-cycle-fix-runtime.mjs
           node tests/validation-sounds-runtime.mjs
           node tests/flex-position-v2-runtime.mjs
