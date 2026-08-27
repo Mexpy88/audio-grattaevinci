@@ -1,0 +1,28 @@
+name: Desktop Dashboard Polish Check
+on:
+  push:
+    branches: [warehouse-app-remoto-dev-desktop-polish-20260827]
+  workflow_dispatch:
+
+jobs:
+  desktop-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate desktop-only layout
+        run: node tests/desktop-polish-runtime.mjs
+      - name: Run core V1 UI regressions
+        run: |
+          node tests/ui-button-integrity.mjs
+          node tests/managerial-v2-runtime.mjs
+          node tests/managerial-v2-polish-runtime.mjs
+          node tests/stock-control-assisted-v3-runtime.mjs
+          node tests/stock-control-assisted-ux-v4-runtime.mjs
+          node tests/stock-control-assisted-ux-v5-runtime.mjs
+          node tests/rectification-grouped-splash-runtime.mjs
+          node tests/master-panel-minimize-v2-runtime.mjs
+          node tests/sticky-top-back-logo-runtime.mjs
+          node tests/fastboot-runtime.mjs
