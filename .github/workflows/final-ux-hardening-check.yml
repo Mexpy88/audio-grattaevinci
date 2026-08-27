@@ -36,18 +36,26 @@ jobs:
           node tests/role-dashboard-v1-runtime.mjs
           node tests/request-floating-confirm-v1-runtime.mjs
           node tests/sticky-top-back-logo-runtime.mjs
-      - name: Validate warehouse workflows
-        run: |
-          node tests/request-cartons-integrity.mjs
-          node tests/request-completion-workflow-runtime.mjs
-          node tests/request-interaction-performance-runtime.mjs
-          node tests/managerial-v2-runtime.mjs
-          node tests/managerial-v2-polish-runtime.mjs
-          node tests/stock-control-assisted-v3-runtime.mjs
-          node tests/stock-control-assisted-ux-v4-runtime.mjs
-          node tests/stock-control-assisted-ux-v5-runtime.mjs
-          node tests/rectification-grouped-splash-runtime.mjs
-          node tests/master-generation-guard-runtime.mjs
+      - name: Request cartons
+        run: node tests/request-cartons-integrity.mjs
+      - name: Request completion
+        run: node tests/request-completion-workflow-runtime.mjs
+      - name: Request interaction performance
+        run: node tests/request-interaction-performance-runtime.mjs
+      - name: Managerial V2
+        run: node tests/managerial-v2-runtime.mjs
+      - name: Managerial V2 polish
+        run: node tests/managerial-v2-polish-runtime.mjs
+      - name: Assisted count V3
+        run: node tests/stock-control-assisted-v3-runtime.mjs
+      - name: Assisted count UX V4
+        run: node tests/stock-control-assisted-ux-v4-runtime.mjs
+      - name: Assisted count UX V5
+        run: node tests/stock-control-assisted-ux-v5-runtime.mjs
+      - name: Grouped rectification
+        run: node tests/rectification-grouped-splash-runtime.mjs
+      - name: Master generation guard
+        run: node tests/master-generation-guard-runtime.mjs
       - name: Run V1 regression
         run: |
           node tests/ui-button-integrity.mjs
