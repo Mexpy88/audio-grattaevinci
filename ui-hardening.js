@@ -1,4 +1,6 @@
-/* Robustezza UI: rende affidabili le azioni critiche e segnala subito eventuali handler mancanti. */
+/* Robustezza UI generale.
+   IMPORTANTE: il flusso Master Excel è gestito da WarehouseMasterControllerV2.
+   Questo modulo non sostituisce più importMappedMaster e non aggiunge wrapper di importazione. */
 (function installWarehouseUiHardening(){
   'use strict';
   const IGNORE_CALLEES=new Set(['if','for','while','switch','return','Math','JSON','String','Number','Date','Array','Object','Promise','console','setTimeout','setInterval']);
@@ -29,59 +31,14 @@
     return lastReport;
   }
 
+  /* Compatibilità con i moduli storici che chiamano ancora hardenMasterConfirm().
+     Da ora è intenzionalmente PASSIVO: il controller Master finale possiede l'unico
+     listener di conferma e l'unico percorso di importazione. */
   function hardenMasterConfirm(){
-    const dlg=document.getElementById('masterDialog');
-    const btn=dlg?.querySelector('.btn.success');
-    if(!btn||btn.dataset.hardImportBound==='1')return false;
-    const legacyImport=window.importMappedMaster;
-    if(typeof legacyImport!=='function'){
-      console.error('importMappedMaster non disponibile durante il binding robusto');
-      return false;
-    }
-    btn.dataset.hardImportBound='1';
-    btn.removeAttribute('onclick');
-    btn.onclick=null;
-
-    const execute=async function(event){
-      if(event){event.preventDefault();event.stopPropagation();event.stopImmediatePropagation()}
-      if(btn.dataset.running==='1')return;
-      btn.dataset.running='1';
-      const oldText=btn.textContent||'CONFERMA IMPORTAZIONE';
-      const info=document.getElementById('masterPreviewInfo');
-      let before='';
-      try{before=typeof db!=='undefined'?(db.master?.imported_at||''):''}catch{}
-      btn.disabled=true;btn.textContent='⏳ IMPORTAZIONE IN CORSO…';
-      const cancel=dlg.querySelector('.lmMasterCancel');const close=dlg.querySelector('.dialogHead button');
-      if(cancel)cancel.disabled=true;if(close)close.disabled=true;
-      if(info){info.className='status warn';info.textContent='Importazione del master in corso. Non chiudere questa schermata…'}
-      try{
-        if(typeof window.WarehouseUX?.beforeMasterImport==='function'){
-          const allowed=await window.WarehouseUX.beforeMasterImport();
-          if(allowed===false){if(info){info.className='status';info.textContent='Importazione annullata. Il master attuale non è stato modificato.'}return}
-        }
-        const result=legacyImport.call(window);
-        if(result&&typeof result.then==='function')await result;
-        let changed=false;
-        for(let i=0;i<40;i++){
-          try{changed=typeof db!=='undefined'&&!!db.master?.imported_at&&db.master.imported_at!==before&&Array.isArray(db.master?.rows)&&db.master.rows.length>0}catch{}
-          if(changed||!dlg.open)break;
-          await new Promise(r=>setTimeout(r,50));
-        }
-        try{changed=typeof db!=='undefined'&&!!db.master?.imported_at&&db.master.imported_at!==before&&Array.isArray(db.master?.rows)&&db.master.rows.length>0}catch{}
-        if(!changed&&dlg.open)throw new Error('Il comando di importazione è stato eseguito, ma il master non è stato salvato.');
-      }catch(err){
-        console.error('Importazione master - errore intercettato',err);
-        const msg=String(err?.message||err||'Errore sconosciuto');
-        if(info){info.className='status error';info.textContent='Importazione non riuscita: '+msg}
-        toast('Importazione master non riuscita.','error');
-        try{alert('Importazione non riuscita:\n\n'+msg)}catch{}
-      }finally{
-        btn.disabled=false;btn.textContent=oldText;delete btn.dataset.running;
-        if(cancel)cancel.disabled=false;if(close)close.disabled=false;
-      }
-    };
-    btn.addEventListener('click',execute,true);
-    window.importMappedMaster=execute;
+    const btn=document.querySelector('#masterDialog .btn.success');
+    if(!btn)return false;
+    btn.type='button';
+    btn.dataset.masterConfirmPassive='1';
     return true;
   }
 
@@ -102,7 +59,8 @@
       });
       window.__warehouseUiObserver.observe(document.body,{childList:true,subtree:true});
     }
+    return true;
   }
-  window.WarehouseUIHealth={run:()=>auditButtons(document),getReport:()=>lastReport,hardenMasterConfirm};
+  window.WarehouseUIHealth={run:()=>auditButtons(document),getReport:()=>lastReport,hardenMasterConfirm,install};
   install();
 })();
