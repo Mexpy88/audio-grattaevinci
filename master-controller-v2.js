@@ -1,7 +1,7 @@
 /* Master Controller V2 — single authoritative import path for REMOTO V1.
    Goals:
    - one click handler, one direct V4 importer, no wrapper chain
-   - generation/high-water validation preserved
+   - Super UX version preflight + generation/high-water validation preserved
    - no native browser alert/confirm during import
    - no Registry/legacy-panel render during the critical transaction
    - compact MASTER_IMPORT audit after the transaction
@@ -14,7 +14,7 @@
   'use strict';
   if(window.WarehouseMasterControllerV2)return;
 
-  const VERSION='2026.08.27-master-controller-v2';
+  const VERSION='2026.08.27-master-controller-v2.1';
   const GUARD_KEY='so_master_generation_guard_v1';
   const META_KEY='so_local_master_meta_v3';
   const $=id=>document.getElementById(id);
@@ -43,6 +43,20 @@
     const g=readJson(GUARD_KEY),oldMax=Number(g.maxGeneration)||0,newMax=Math.max(oldMax,Number(inspection.generation)||0);
     writeJson(GUARD_KEY,{...g,lineageId:inspection.lineage,maxGeneration:newMax,maxHash:Number(inspection.generation)>=oldMax?inspection.stateHash:g.maxHash,lastKnownAt:inspection.exportedAt||new Date().toISOString(),lastKnownName:fileName||g.lastKnownName||'',version:1});
     patchMeta({sourceGeneration:Number(inspection.generation)||0,sourceLineage:inspection.lineage||'',sourceStateHash:inspection.stateHash||''});
+  }
+
+  async function uxPreflight(){
+    const preflight=window.WarehouseUX?.beforeMasterImport;
+    if(typeof preflight!=='function')return true;
+    try{
+      const allowed=await preflight();
+      if(allowed===false){setInfo('Importazione annullata. Il Master attuale non è stato modificato.','');return false}
+      return true;
+    }catch(err){
+      console.error('[MASTER V2] preflight',err);
+      setInfo('Non è stato possibile completare il controllo preliminare del Master. Riprova.','error');
+      return false;
+    }
   }
 
   async function generationCheck(){
@@ -114,11 +128,13 @@
     const beforeMaster=(()=>{try{return structuredClone(db?.master||{})}catch{return {...(db?.master||{})}}})();
     const beforeAt=db?.master?.imported_at||'';
     if(button){button.disabled=true;button.textContent='IMPORTAZIONE IN CORSO…'}if(cancel)cancel.disabled=true;if(close)close.disabled=true;
-    setInfo('Importazione del Master in corso. Non chiudere questa schermata…','warn');
+    setInfo('Verifica preliminare del Master…','warn');
 
     let inspection=null;
     try{
+      if(!await uxPreflight())return false;
       const guard=await generationCheck();if(!guard.ok)return false;inspection=guard.inspection;
+      setInfo('Importazione del Master in corso. Non chiudere questa schermata…','warn');
 
       /* Isolate the transaction from historical UI wrappers. The importer mutates/persists
          the warehouse data, while rendering is performed once after successful commit. */
@@ -241,6 +257,6 @@
     return true;
   }
 
-  window.WarehouseMasterControllerV2={version:VERSION,install,executeImport,chooseImport,decorate,masterLoaded,directImportV4};
+  window.WarehouseMasterControllerV2={version:VERSION,install,executeImport,chooseImport,decorate,masterLoaded,directImportV4,uxPreflight};
   install();
 })();
