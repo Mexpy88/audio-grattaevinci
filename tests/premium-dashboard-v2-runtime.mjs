@@ -19,7 +19,6 @@ assert.match(js,/Richiesta di prelievo · Lina/);
 assert.match(css,/\.topbar \.logoButton\{pointer-events:none!important;cursor:default!important/);
 assert.match(css,/#rdDashboardV1 \.rdMasterFile\{display:none!important/);
 assert.match(css,/rdFooterPremiumV2/);
-assert.match(css,/© 2026/); // literal footer text is in JS, CSS selector should still exist
 assert.match(js,/© 2026 Servizi Ospedalieri – Gestione Magazzino/);
 assert.match(js,/rdPremiumBgV2/);
 assert.match(css,/#rdPremiumBgV2/);
