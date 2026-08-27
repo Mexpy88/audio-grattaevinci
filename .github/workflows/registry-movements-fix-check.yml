@@ -8,6 +8,7 @@ on:
       - warehouse-app-remoto-dev-master-refactor-clean-20260827
       - warehouse-app-remoto-dev-teramo-title-master-plus-20260827
       - warehouse-app-remoto-dev-registry-premium-ux-20260827
+      - warehouse-app-remoto-dev-goods-receipt-20260827
   workflow_dispatch:
 jobs:
   full-regression:
@@ -22,6 +23,7 @@ jobs:
           node --check master-controller-v2.js
           node --check ui-hardening.js
           node --check registry-movements-fix-v1.js
+          node --check goods-receipt-v1.js
           node --check ux-polish-v3.js
           node --check request-floating-confirm-v1.js
           node --check premium-dashboard-v2.js
@@ -34,6 +36,7 @@ jobs:
         run: |
           node tests/master-controller-v2-runtime.mjs
           node tests/registry-movements-fix-runtime.mjs
+          node tests/goods-receipt-v1-runtime.mjs
           node tests/mobile-export-context-runtime.mjs
           node tests/request-floating-confirm-v1-runtime.mjs
           node tests/premium-dashboard-v2-runtime.mjs
