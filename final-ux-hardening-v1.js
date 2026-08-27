@@ -7,7 +7,7 @@
 (function installWarehouseFinalUxHardeningV1(){
   'use strict';
   if(window.WarehouseFinalUxHardeningV1)return;
-  const VERSION='2026.08.27-final-ux-hardening1';
+  const VERSION='2026.08.27-final-ux-hardening1.1';
   const META_KEY='so_local_master_meta_v3';
   const $=id=>document.getElementById(id);
   const txt=v=>String(v??'');
@@ -16,7 +16,7 @@
   const actor=()=>{try{return currentUser||''}catch{return ''}};
   const safeDb=()=>{try{return db||{}}catch{return {}}};
   const can=cap=>window.WarehouseRoleDashboardV1?.can?.(cap)??true;
-  let observer=null,scheduled=false,baseRoleRender=null;
+  let observer=null,scheduled=false,baseRoleRender=null,registryInstalled=false;
 
   function ensureCss(){if($('finalUxHardeningV1Css'))return;const l=document.createElement('link');l.id='finalUxHardeningV1Css';l.rel='stylesheet';l.href='final-ux-hardening-v1.css?v=20260827-final1';document.head.appendChild(l)}
   function readMeta(){try{return JSON.parse(localStorage.getItem(META_KEY)||'{}')}catch{return {}}}
@@ -73,8 +73,8 @@
   function ensureRegistryFilters(){
     const host=$('registryFilters');if(!host)return false;
     let box=$('uxRegBox');if(!box){box=document.createElement('div');box.id='uxRegBox';box.className='uxRegBox';box.innerHTML='<div class="uxRegGrid"><input id="uxRegSearch" class="field" placeholder="Cerca articolo, documento, bancale…"><select id="uxRegOperator" class="field"><option value="">TUTTI GLI OPERATORI</option></select><select id="uxRegType" class="field"><option value="">TUTTE LE OPERAZIONI</option></select><select id="uxRegState" class="field"><option value="">TUTTI GLI STATI</option><option>NUOVO</option><option>SCARICATO</option><option>USATO</option><option>DISMESSO</option></select></div><div id="uxRegCount" class="uxRegCount"></div>';host.appendChild(box)}
-    const type=$('uxRegType');if(type){const current=type.value;type.innerHTML='<option value="">TUTTE LE OPERAZIONI</option><option>CARICA</option><option>SCARICA</option><option>SPOSTA</option><option>RETTIFICA</option><option value="VERIFICA FISICA">VERIFICA FISICA</option>';if([...type.options].some(o=>o.value===current))type.value=current}
-    const ops=$('uxRegOperator');if(ops){const cur=ops.value,d=safeDb(),names=new Set();(d.movements||[]).forEach(x=>x.operator&&names.add(x.operator));(d.rectifications||[]).forEach(x=>x.operator&&names.add(x.operator));(d.stock_transfers||[]).forEach(x=>x.operator&&names.add(x.operator));(d.stock_verifications||[]).forEach(x=>x.operator&&names.add(x.operator));ops.innerHTML='<option value="">TUTTI GLI OPERATORI</option>'+[...names].sort().map(o=>`<option value="${h(o)}">${h(o)}</option>`).join('');if([...ops.options].some(o=>o.value===cur))ops.value=cur}
+    const type=$('uxRegType');if(type){const current=type.value,signature='CARICA|SCARICA|SPOSTA|RETTIFICA|VERIFICA FISICA';if(type.dataset.finalTypes!==signature){type.innerHTML='<option value="">TUTTE LE OPERAZIONI</option><option>CARICA</option><option>SCARICA</option><option>SPOSTA</option><option>RETTIFICA</option><option value="VERIFICA FISICA">VERIFICA FISICA</option>';type.dataset.finalTypes=signature;if([...type.options].some(o=>o.value===current))type.value=current}}
+    const ops=$('uxRegOperator');if(ops){const cur=ops.value,d=safeDb(),names=new Set();(d.movements||[]).forEach(x=>x.operator&&names.add(x.operator));(d.rectifications||[]).forEach(x=>x.operator&&names.add(x.operator));(d.stock_transfers||[]).forEach(x=>x.operator&&names.add(x.operator));(d.stock_verifications||[]).forEach(x=>x.operator&&names.add(x.operator));const signature=[...names].sort().join('|');if(ops.dataset.finalOps!==signature){ops.innerHTML='<option value="">TUTTI GLI OPERATORI</option>'+[...names].sort().map(o=>`<option value="${h(o)}">${h(o)}</option>`).join('');ops.dataset.finalOps=signature;if([...ops.options].some(o=>o.value===cur))ops.value=cur}}
     ['uxRegSearch','uxRegOperator','uxRegType','uxRegState','regFrom','regTo','regDest'].forEach(id=>{const el=$(id);if(!el||el.dataset.finalRegistryBound==='1')return;el.dataset.finalRegistryBound='1';el.addEventListener(el.tagName==='INPUT'&&el.type!=='date'?'input':'change',renderSafeRegistry)});
     return true;
   }
@@ -112,7 +112,10 @@
   function setSafeRegistryTab(tab){try{registryTab=tab}catch{}setTabs(tab);renderSafeRegistry()}
   function openMovements(){if(!can('REGISTRY_VIEW'))return window.WarehouseRoleDashboardV1?.deny?.('Registro movimenti');setSafeRegistryTab('MOVIMENTI');try{renderMasterStatus?.()}catch{}show('registryScreen');const s=$('registryScreen'),back=s?.querySelector(':scope>.back');if(back){back.textContent='← HOME';back.onclick=()=>show('home')}return true}
 
-  function installRegistry(){window.renderRegistry=renderSafeRegistry;window.setRegistryTab=setSafeRegistryTab;window.openRoleRegistryMovementsV1=openMovements;document.querySelectorAll('#rdDashboardV1 .rdAction').forEach(btn=>{if(norm(btn.querySelector('b')?.textContent)==='MOVIMENTI')btn.setAttribute('onclick','openRoleRegistryMovementsV1()')});renderSafeRegistry?.()}
+  function installRegistry(){
+    if(!registryInstalled){window.renderRegistry=renderSafeRegistry;window.setRegistryTab=setSafeRegistryTab;window.openRoleRegistryMovementsV1=openMovements;registryInstalled=true}
+    document.querySelectorAll('#rdDashboardV1 .rdAction').forEach(btn=>{if(norm(btn.querySelector('b')?.textContent)==='MOVIMENTI')btn.setAttribute('onclick','openRoleRegistryMovementsV1()')});
+  }
 
   function wrapRoleDashboard(){const api=window.WarehouseRoleDashboardV1,fn=api?.renderDashboard;if(!api||typeof fn!=='function'||fn.__finalHardening)return;if(!baseRoleRender)baseRoleRender=fn;const f=function(){const out=baseRoleRender.apply(this,arguments);requestAnimationFrame(()=>{decorateMaster();installRegistry();suppressPreloginOperationalNotices()});return out};f.__finalHardening=true;api.renderDashboard=f}
   function decorate(){ensureCss();suppressLegacyExportBar();suppressPreloginOperationalNotices();decorateMaster();installRegistry();wrapRoleDashboard()}
