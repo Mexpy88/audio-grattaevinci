@@ -7,7 +7,7 @@
   'use strict';
   if(window.WarehouseUxPolishV3)return;
 
-  const VERSION='2026.08.27-ux-polish-v3-premium2';
+  const VERSION='2026.08.27-ux-polish-v3-premium2-fix1';
   let installed=false,baseRenderRegistry=null;
 
   function injectCss(){
@@ -49,11 +49,16 @@
     wrapped.__uxPolishV3=true;wrapped.__previous=baseRenderRegistry;window.renderRegistry=wrapped;return true;
   }
 
+  function loadPremiumFix(){
+    if(window.WarehousePremiumDashboardV2Fix){window.WarehousePremiumDashboardV2Fix.install?.();return true}
+    if(document.getElementById('premiumDashboardV2FixJs'))return true;
+    const f=document.createElement('script');f.id='premiumDashboardV2FixJs';f.src='premium-dashboard-v2-fix.js?v=20260827-premium2-fix1';f.async=false;f.onload=()=>window.WarehousePremiumDashboardV2Fix?.install?.();f.onerror=()=>console.error('Impossibile caricare premium-dashboard-v2-fix.js');document.body.appendChild(f);return true;
+  }
   function loadPremiumDashboard(){
-    if(window.WarehousePremiumDashboardV2){window.WarehousePremiumDashboardV2.install?.();return true}
+    if(window.WarehousePremiumDashboardV2){window.WarehousePremiumDashboardV2.install?.();loadPremiumFix();return true}
     if(!document.getElementById('premiumDashboardV2Css')){const l=document.createElement('link');l.id='premiumDashboardV2Css';l.rel='stylesheet';l.href='premium-dashboard-v2.css?v=20260827-premium2';document.head.appendChild(l)}
-    if(document.getElementById('premiumDashboardV2Js'))return true;
-    const p=document.createElement('script');p.id='premiumDashboardV2Js';p.src='premium-dashboard-v2.js?v=20260827-premium2';p.async=false;p.onload=()=>window.WarehousePremiumDashboardV2?.install?.();p.onerror=()=>console.error('Impossibile caricare premium-dashboard-v2.js');document.body.appendChild(p);return true;
+    const existing=document.getElementById('premiumDashboardV2Js');if(existing){existing.addEventListener('load',loadPremiumFix,{once:true});return true}
+    const p=document.createElement('script');p.id='premiumDashboardV2Js';p.src='premium-dashboard-v2.js?v=20260827-premium2';p.async=false;p.onload=()=>{window.WarehousePremiumDashboardV2?.install?.();loadPremiumFix()};p.onerror=()=>console.error('Impossibile caricare premium-dashboard-v2.js');document.body.appendChild(p);return true;
   }
   function loadRolePatch(){
     if(window.WarehouseRoleDashboardPatchV1){window.WarehouseRoleDashboardPatchV1.install?.();loadPremiumDashboard();return true}
@@ -69,6 +74,6 @@
 
   function install(){if(typeof document==='undefined')return false;injectCss();hideRegistryMaster();wrapRegistry();loadRoleDashboard();installed=true;return true}
 
-  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard};
+  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard,loadPremiumFix};
   install();
 })();
