@@ -4,6 +4,7 @@ on:
     branches:
       - warehouse-app-remoto-dev-registry-movements-fix-20260827
       - warehouse-app-remoto-dev-surgical-registry-export-20260827
+      - warehouse-app-remoto-dev-contextual-mobile-export-20260827
   workflow_dispatch:
 jobs:
   full-regression:
@@ -27,6 +28,7 @@ jobs:
       - name: Validate registry and premium UX
         run: |
           node tests/registry-movements-fix-runtime.mjs
+          node tests/mobile-export-context-runtime.mjs
           node tests/request-floating-confirm-v1-runtime.mjs
           node tests/premium-dashboard-v2-runtime.mjs
           node tests/role-dashboard-v1-runtime.mjs
