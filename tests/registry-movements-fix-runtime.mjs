@@ -22,8 +22,8 @@ assert.match(polish,/loadRegistryFix/);
 assert.match(polish,/loadFloatingConfirm[\s\S]*loadRegistryFix/);
 
 // Repair must not replace registry data engine or persistence.
-assert.ok(!/window\.renderRegistry\s*=/.test(fix));
-assert.ok(!/window\.saveDb\s*=/.test(fix));
-assert.ok(!/window\.setRegistryTab\s*=/.test(fix));
+assert.ok(!/window\.renderRegistry\s*=(?!=)/.test(fix));
+assert.ok(!/window\.saveDb\s*=(?!=)/.test(fix));
+assert.ok(!/window\.setRegistryTab\s*=(?!=)/.test(fix));
 
 console.log('Registry Movimenti direct-opening fix OK');
