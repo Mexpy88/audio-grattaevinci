@@ -7,7 +7,7 @@
   'use strict';
   if(window.WarehouseUxPolishV3)return;
 
-  const VERSION='2026.08.27-ux-polish-v3-role-dashboard1';
+  const VERSION='2026.08.27-ux-polish-v3-role-dashboard1-patch1';
   let installed=false,baseRenderRegistry=null;
 
   function injectCss(){
@@ -49,18 +49,20 @@
     wrapped.__uxPolishV3=true;wrapped.__previous=baseRenderRegistry;window.renderRegistry=wrapped;return true;
   }
 
+  function loadRolePatch(){
+    if(window.WarehouseRoleDashboardPatchV1){window.WarehouseRoleDashboardPatchV1.install?.();return true}
+    if(document.getElementById('roleDashboardPatchV1Js'))return true;
+    const p=document.createElement('script');p.id='roleDashboardPatchV1Js';p.src='role-dashboard-v1-patch.js?v=20260827-role-dashboard-patch1';p.async=false;p.onload=()=>window.WarehouseRoleDashboardPatchV1?.install?.();p.onerror=()=>console.error('Impossibile caricare role-dashboard-v1-patch.js');document.body.appendChild(p);return true;
+  }
   function loadRoleDashboard(){
-    if(window.WarehouseRoleDashboardV1){window.WarehouseRoleDashboardV1.install?.();return true}
+    if(window.WarehouseRoleDashboardV1){window.WarehouseRoleDashboardV1.install?.();loadRolePatch();return true}
     if(!document.getElementById('roleDashboardV1Css')){const l=document.createElement('link');l.id='roleDashboardV1Css';l.rel='stylesheet';l.href='role-dashboard-v1.css?v=20260827-role-dashboard1';document.head.appendChild(l)}
-    const existing=document.getElementById('roleDashboardV1Js');if(existing)return true;
-    const s=document.createElement('script');s.id='roleDashboardV1Js';s.src='role-dashboard-v1.js?v=20260827-role-dashboard1';s.async=false;s.onload=()=>window.WarehouseRoleDashboardV1?.install?.();s.onerror=()=>console.error('Impossibile caricare role-dashboard-v1.js');document.body.appendChild(s);return true;
+    const existing=document.getElementById('roleDashboardV1Js');if(existing){existing.addEventListener('load',loadRolePatch,{once:true});return true}
+    const s=document.createElement('script');s.id='roleDashboardV1Js';s.src='role-dashboard-v1.js?v=20260827-role-dashboard1';s.async=false;s.onload=()=>{window.WarehouseRoleDashboardV1?.install?.();loadRolePatch()};s.onerror=()=>console.error('Impossibile caricare role-dashboard-v1.js');document.body.appendChild(s);return true;
   }
 
-  function install(){
-    if(typeof document==='undefined')return false;
-    injectCss();hideRegistryMaster();wrapRegistry();loadRoleDashboard();installed=true;return true;
-  }
+  function install(){if(typeof document==='undefined')return false;injectCss();hideRegistryMaster();wrapRegistry();loadRoleDashboard();installed=true;return true}
 
-  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard};
+  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch};
   install();
 })();
