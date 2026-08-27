@@ -3,7 +3,7 @@
 (function installWarehouseRoleDashboardPatchV1(){
   'use strict';
   if(window.WarehouseRoleDashboardPatchV1)return;
-  const VERSION='2026.08.27-role-dashboard-patch1';
+  const VERSION='2026.08.27-role-dashboard-patch1.1';
   const $=id=>document.getElementById(id);
   const can=cap=>window.WarehouseRoleDashboardV1?.can?.(cap)??false;
   const deny=label=>window.WarehouseRoleDashboardV1?.deny?.(label);
@@ -25,7 +25,6 @@
         #stickyTopBack{width:36px!important;height:36px!important;min-width:36px!important;font-size:24px!important}
       }
       #mgrCountAssistScreenV3 .scaZeroBtn{background:#fde9e5!important;color:#973a32!important;border:1px solid #f2d0cb!important;padding:9px 13px!important}
-      #mgrCountAssistScreenV3 .scaZeroBtn.rdAbsenceDone{background:#e8eef4!important;color:#526b82!important;border-color:#d7e1e9!important}
       #mgrCountAssistScreenV3 .scaUnverified{display:none!important}
       #mgrCountAssistScreenV3 #scaCountBody>.status.warn:first-child{display:none!important}
       #mgrStockControlHub .mgrModeHint,#stockEditScreen #mgrRectificationHint{display:none!important}
@@ -36,7 +35,7 @@
     document.querySelectorAll('#mgrCountAssistScreenV3 .scaZeroBtn').forEach(btn=>{
       if(btn.dataset.rdAbsenceBound==='1')return;
       const attr=btn.getAttribute('onclick')||'',m=attr.match(/markCountZeroV3\('([^']+)'\)/);if(!m)return;
-      const cid=m[1];btn.dataset.rdAbsenceBound='1';btn.textContent='NON PRESENTE';btn.removeAttribute('onclick');
+      const cid=m[1];btn.dataset.rdAbsenceBound='1';btn.dataset.rdCid=cid;btn.textContent='NON PRESENTE';btn.removeAttribute('onclick');
       btn.addEventListener('click',()=>confirmAbsence(cid,btn));
     });
   }
@@ -52,7 +51,6 @@
     if(!confirm(msg))return;
     const nativeConfirm=window.confirm;
     try{if(partials)window.confirm=()=>true;window.markCountZeroV3?.(cid)}finally{window.confirm=nativeConfirm}
-    setTimeout(()=>{relabelAbsence();const fresh=[...document.querySelectorAll('#mgrCountAssistScreenV3 .scaZeroBtn')].find(x=>(x.getAttribute('data-rd-cid')||'')===cid);if(fresh)fresh.classList.add('rdAbsenceDone')},0);
   }
 
   function guardLate(name,cap,label){
@@ -68,7 +66,7 @@
     guardLate('markCountZeroV3','COUNT','Conteggio assistito');
     guardLate('removeAssistExtraV3','COUNT','Conteggio assistito');
     const quick=window.openStockQuickFoundV3;if(typeof quick==='function'&&!quick.__rdLateGuard){const f=function(mode){const cap=mode==='direct'?'RECTIFY':'COUNT';if(!can(cap))return deny?.(mode==='direct'?'Rettifica':'Conteggio assistito');return quick.apply(this,arguments)};f.__rdLateGuard=true;f.__previous=quick;window.openStockQuickFoundV3=f}
-    guardLate('confirmStockQuickFoundV3',can('RECTIFY')?'RECTIFY':'COUNT','Aggiunta materiale');
+    const confirmQuick=window.confirmStockQuickFoundV3;if(typeof confirmQuick==='function'&&!confirmQuick.__rdLateGuard){const f=function(){if(!(can('RECTIFY')||can('COUNT')))return deny?.('Aggiunta materiale');return confirmQuick.apply(this,arguments)};f.__rdLateGuard=true;f.__previous=confirmQuick;window.confirmStockQuickFoundV3=f}
   }
 
   function patchRequestRoutes(){
