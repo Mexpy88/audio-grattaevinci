@@ -34,7 +34,8 @@ assert.match(css,/@media\(min-width:900px\)\{#requestFloatConfirmV1\{display:non
 assert.match(polish,/request-floating-confirm-v1\.js/);
 assert.match(polish,/request-floating-confirm-v1\.css/);
 assert.match(polish,/loadFloatingConfirm/);
-assert.match(polish,/premium2-floating-confirm1/);
+assert.match(polish,/premium-dashboard-v2\.js/);
+assert.match(polish,/loadPremiumDashboard/);
 
 // This layer delegates to existing engines; it must not replace stock/request storage primitives.
 assert.ok(!/window\.saveDb\s*=/.test(js));
