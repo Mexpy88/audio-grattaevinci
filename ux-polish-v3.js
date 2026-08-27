@@ -1,13 +1,13 @@
 /* Final UX polish for REMOTO V1 managerial interface.
    - semantic pastel action cards
    - Registry keeps operational history only; duplicate Master controls stay in DOM but hidden
-   - bootstraps Role Dashboard V1 + final Premium Dashboard V2
+   - bootstraps Role Dashboard V1 + Premium Dashboard V2 + mobile request confirmation
 */
 (function installWarehouseUxPolishV3(){
   'use strict';
   if(window.WarehouseUxPolishV3)return;
 
-  const VERSION='2026.08.27-ux-polish-v3-premium2-fix1';
+  const VERSION='2026.08.27-ux-polish-v3-premium2-floating-confirm1';
   let installed=false,baseRenderRegistry=null;
 
   function injectCss(){
@@ -49,10 +49,16 @@
     wrapped.__uxPolishV3=true;wrapped.__previous=baseRenderRegistry;window.renderRegistry=wrapped;return true;
   }
 
+  function loadFloatingConfirm(){
+    if(window.WarehouseRequestFloatingConfirmV1){window.WarehouseRequestFloatingConfirmV1.install?.();return true}
+    if(!document.getElementById('requestFloatingConfirmV1Css')){const l=document.createElement('link');l.id='requestFloatingConfirmV1Css';l.rel='stylesheet';l.href='request-floating-confirm-v1.css?v=20260827-rf1';document.head.appendChild(l)}
+    if(document.getElementById('requestFloatingConfirmV1Js'))return true;
+    const f=document.createElement('script');f.id='requestFloatingConfirmV1Js';f.src='request-floating-confirm-v1.js?v=20260827-rf1';f.async=false;f.onload=()=>window.WarehouseRequestFloatingConfirmV1?.install?.();f.onerror=()=>console.error('Impossibile caricare request-floating-confirm-v1.js');document.body.appendChild(f);return true;
+  }
   function loadPremiumFix(){
-    if(window.WarehousePremiumDashboardV2Fix){window.WarehousePremiumDashboardV2Fix.install?.();return true}
-    if(document.getElementById('premiumDashboardV2FixJs'))return true;
-    const f=document.createElement('script');f.id='premiumDashboardV2FixJs';f.src='premium-dashboard-v2-fix.js?v=20260827-premium2-fix1';f.async=false;f.onload=()=>window.WarehousePremiumDashboardV2Fix?.install?.();f.onerror=()=>console.error('Impossibile caricare premium-dashboard-v2-fix.js');document.body.appendChild(f);return true;
+    if(window.WarehousePremiumDashboardV2Fix){window.WarehousePremiumDashboardV2Fix.install?.();loadFloatingConfirm();return true}
+    const existing=document.getElementById('premiumDashboardV2FixJs');if(existing){existing.addEventListener('load',loadFloatingConfirm,{once:true});return true}
+    const f=document.createElement('script');f.id='premiumDashboardV2FixJs';f.src='premium-dashboard-v2-fix.js?v=20260827-premium2-fix1';f.async=false;f.onload=()=>{window.WarehousePremiumDashboardV2Fix?.install?.();loadFloatingConfirm()};f.onerror=()=>console.error('Impossibile caricare premium-dashboard-v2-fix.js');document.body.appendChild(f);return true;
   }
   function loadPremiumDashboard(){
     if(window.WarehousePremiumDashboardV2){window.WarehousePremiumDashboardV2.install?.();loadPremiumFix();return true}
@@ -74,6 +80,6 @@
 
   function install(){if(typeof document==='undefined')return false;injectCss();hideRegistryMaster();wrapRegistry();loadRoleDashboard();installed=true;return true}
 
-  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard,loadPremiumFix};
+  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard,loadPremiumFix,loadFloatingConfirm};
   install();
 })();
