@@ -9,7 +9,7 @@
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
 <script>
 (function fastBootPreload(){
-  const V='20260826-fastboot1';
+  const V='20260827-firstpaint1';
   const resources=[
     ['script','early-pin-eye.js?v=20260825-early1'],
     ['script','top-level-live-dictation.js?v=20260825-scrollfix1'],
@@ -21,6 +21,7 @@
     ['style','super-ux.css?v='+V],
     ['style','request-cartons.css?v='+V],
     ['style','voice-commands.css?v='+V],
+    ['style','final-ux-hardening-v1.css?v=20260827-final1'],
     ['script','modifica.js?v=20260814-0756'],
     ['script','fixes.js?v=20260814-0845'],
     ['script','xlsx-download-fix.js?v='+V],
@@ -55,7 +56,8 @@
     ['script','stock-rectification-grouped-ux-v1.js?v=20260826-direct-rect1'],
     ['script','master-panel-minimize-v2.js?v='+V],
     ['script','ux-polish-v3.js?v='+V],
-    ['script','sticky-top-back.js?v='+V]
+    ['script','sticky-top-back.js?v='+V],
+    ['script','final-ux-hardening-v1.js?v=20260827-final1']
   ];
   const seen=new Set();
   for(const [as,href] of resources){
@@ -68,31 +70,35 @@
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#edf3f8}
 #warehouseApp{display:block;width:100%;height:100dvh;border:0;background:#edf3f8;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease}
-body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
-#bootSplash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#edf3f8;padding:24px;transition:opacity .18s ease}
+body.appEntered #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
+#bootSplash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(180deg,#edf4f9 0,#f8fbfd 55%,#edf5f9 100%);padding:24px;transition:opacity .18s ease}
+#bootSplash::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='520' viewBox='0 0 900 520'%3E%3Cpath d='M-80 420 C140 230 230 520 440 325 S710 205 990 405' fill='none' stroke='%23245ca6' stroke-width='4'/%3E%3Cpath d='M-90 465 C150 275 250 555 455 365 S745 240 1010 455' fill='none' stroke='%230f9d68' stroke-width='2.5'/%3E%3C/svg%3E");background-repeat:repeat-x;background-position:center bottom;background-size:900px 520px}
+#bootSplash::after{content:"";position:absolute;width:70vw;height:70vw;max-width:700px;max-height:700px;right:-34vw;top:-28vw;border-radius:50%;border:55px solid rgba(36,92,166,.025);pointer-events:none}
 #bootSplash.bootLeaving{opacity:0;pointer-events:none}
-.bootCard{width:min(88vw,430px);background:linear-gradient(145deg,#fff,#e8f1f7);border:1px solid #d9e5ee;border-radius:30px;padding:32px 26px 28px;text-align:center;box-shadow:0 18px 48px #17314d18;opacity:0;visibility:hidden;transition:opacity .1s ease}
-.bootCard.logoReady{opacity:1;visibility:visible}
-.bootLogo{display:block;width:min(100%,330px);height:auto;margin:0 auto 22px;object-fit:contain;background:transparent}
-.bootTitle{font:900 27px/1.08 system-ui,-apple-system,"Segoe UI",sans-serif;color:#2c60aa;margin:0 0 9px}
-.bootStatus{font:750 14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#65788c;min-height:20px}
-.bootDots{display:flex;justify-content:center;gap:7px;margin-top:20px}
-.bootDots i{display:block;width:9px;height:9px;border-radius:50%;background:#2c60aa;animation:bootPulse 1s ease-in-out infinite}
-.bootDots i:nth-child(2){animation-delay:.16s}.bootDots i:nth-child(3){animation-delay:.32s}
-@keyframes bootPulse{0%,100%{opacity:.28;transform:scale(.82)}50%{opacity:1;transform:scale(1)}}
-@media(max-width:430px){.bootCard{border-radius:25px;padding:27px 20px 24px}.bootTitle{font-size:24px}.bootLogo{width:min(100%,285px)}}
+.firstAccessShell{position:relative;z-index:1;width:min(92vw,520px);text-align:center}
+.bootLogo{display:block;width:min(88%,390px);height:auto;margin:0 auto 30px;object-fit:contain;background:transparent}
+.bootCard{width:100%;box-sizing:border-box;background:rgba(255,255,255,.92);border:1px solid #d9e5ee;border-radius:30px;padding:31px 28px 28px;text-align:center;box-shadow:0 20px 54px rgba(23,49,77,.12);backdrop-filter:blur(10px)}
+.bootTitle{font:950 29px/1.08 system-ui,-apple-system,"Segoe UI",sans-serif;color:#17314d;margin:0 0 8px}
+.bootSub{font:800 16px/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:#6b7f92;margin:0 0 25px}
+.firstAccessBtn{width:100%;min-height:68px;border:0;border-radius:21px;background:linear-gradient(135deg,#2865b3,#3d7dca);color:#fff;font:950 20px/1 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.01em;box-shadow:0 12px 25px rgba(40,101,179,.22);-webkit-tap-highlight-color:transparent}
+.firstAccessBtn:active{transform:scale(.99)}.firstAccessBtn:disabled{opacity:.82}
+.bootStatus{display:none;font:800 12px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#65788c;margin-top:13px;min-height:17px}
+.bootStatus.visible{display:block}
+@media(max-width:430px){#bootSplash{padding:20px}.firstAccessShell{width:min(91vw,390px)}.bootLogo{width:min(90%,330px);margin-bottom:27px}.bootCard{border-radius:27px;padding:28px 22px 24px}.bootTitle{font-size:27px}.bootSub{font-size:15px;margin-bottom:22px}.firstAccessBtn{min-height:64px;border-radius:20px;font-size:19px}}
 </style>
 </head>
 <body>
-<div id="bootSplash" role="status" aria-live="polite">
-  <div class="bootCard">
-    <img src="logo-transparent.png?v=20260826-1" alt="Servizi Ospedalieri" class="bootLogo" onload="this.parentElement.classList.add('logoReady')" onerror="this.style.display='none';this.parentElement.classList.add('logoReady')">
-    <div class="bootTitle">Gestione Magazzino</div>
-    <div id="bootStatus" class="bootStatus">Caricamento in corso…</div>
-    <div class="bootDots" aria-hidden="true"><i></i><i></i><i></i></div>
+<div id="bootSplash" aria-label="Accesso Gestione Magazzino">
+  <div class="firstAccessShell">
+    <img src="logo-transparent.png?v=20260826-1" alt="Servizi Ospedalieri" class="bootLogo">
+    <div class="bootCard">
+      <div class="bootTitle">Gestione Magazzino</div>
+      <div class="bootSub">Accesso operatori</div>
+      <button id="firstAccessBtn" class="firstAccessBtn" type="button">ACCEDI</button>
+      <div id="bootStatus" class="bootStatus" aria-live="polite"></div>
+    </div>
   </div>
 </div>
-<script>(function(){const i=document.querySelector('.bootLogo');if(i&&i.complete&&i.naturalWidth)i.parentElement.classList.add('logoReady')})();</script>
 <iframe id="warehouseApp" src="base.html?v=20260814-0727" title="Gestione Magazzino" allow="clipboard-read; clipboard-write; web-share; camera; microphone"></iframe>
 <script src="early-pin-eye.js?v=20260825-early1"></script>
 <script src="top-level-live-dictation.js?v=20260825-scrollfix1"></script>
@@ -100,25 +106,34 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
 <script src="top-level-dialog-scroll-fix.js?v=20260825-scrollfix1"></script>
 <script>
 (function(){
-  const VERSION='20260826-fastboot1';
+  const VERSION='20260827-firstpaint1';
   const bootStarted=performance.now();
   const frame=document.getElementById('warehouseApp');
   const splash=document.getElementById('bootSplash');
   const bootStatus=document.getElementById('bootStatus');
-  let revealed=false;
+  const accessBtn=document.getElementById('firstAccessBtn');
+  let appReady=false,accessRequested=false,entered=false,lastStatus='';
 
-  function setBootStatus(text){if(bootStatus&&bootStatus.textContent!==text)bootStatus.textContent=text}
-  function revealApp(){
-    if(revealed)return;revealed=true;
+  function setBootStatus(text){lastStatus=text||'';if(accessRequested&&bootStatus){bootStatus.textContent=lastStatus;bootStatus.classList.toggle('visible',!!lastStatus)}}
+  function enterApp(){
+    if(entered||!appReady)return;entered=true;
     const bootMs=Math.round(performance.now()-bootStarted);window.__WAREHOUSE_BOOT_MS=bootMs;console.info('[FASTBOOT] App pronta in '+bootMs+' ms');
-    document.body.classList.add('bootReady');
+    document.body.classList.add('appEntered');
     if(splash){splash.classList.add('bootLeaving');splash.setAttribute('aria-hidden','true');setTimeout(()=>{splash.style.display='none'},220)}
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{try{frame.contentWindow?.openLogin?.()}catch(e){console.warn('Apertura login',e)}}));
   }
+  function markAppReady(){appReady=true;if(accessBtn&&!accessRequested){accessBtn.disabled=false;accessBtn.textContent='ACCEDI'}if(accessRequested)enterApp()}
+  function requestAccess(){
+    accessRequested=true;if(accessBtn){accessBtn.disabled=true;accessBtn.textContent=appReady?'APERTURA…':'PREPARAZIONE…'}
+    if(appReady)enterApp();else setBootStatus(lastStatus||'Preparazione accesso…');
+  }
+  accessBtn?.addEventListener('click',requestAccess);
+
   function failBoot(err){
-    console.error('Estensione magazzino non caricata',err);
-    setBootStatus('Avvio completato con funzioni ridotte.');
-    try{frame.contentWindow?.warehouseToast?.('Errore caricamento moduli: '+(err?.message||err),'error')}catch{}
-    setTimeout(revealApp,450);
+    console.error('Estensione magazzino non caricata',err);appReady=true;
+    if(accessRequested)setBootStatus('Avvio con funzioni ridotte.');
+    if(accessBtn){accessBtn.disabled=false;accessBtn.textContent='ACCEDI'}
+    if(accessRequested)enterApp();
   }
   function nextPaint(){return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))}
   function addStyle(d,id,href){if(d.getElementById(id))return;const l=d.createElement('link');l.id=id;l.rel='stylesheet';l.href=href;d.head.appendChild(l)}
@@ -137,6 +152,7 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
       addStyle(d,'superUxCss','super-ux.css?v='+VERSION);
       addStyle(d,'requestCartonsCss','request-cartons.css?v='+VERSION);
       addStyle(d,'voiceCommandsCss','voice-commands.css?v='+VERSION);
+      addStyle(d,'finalUxHardeningV1Css','final-ux-hardening-v1.css?v=20260827-final1');
 
       setBootStatus('Caricamento moduli…');
       await addScript(d,'stockEditJs','modifica.js?v=20260814-0756');
@@ -174,6 +190,7 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
       await addScript(d,'masterPanelMinimizeV2Js','master-panel-minimize-v2.js?v='+VERSION);
       await addScript(d,'uxPolishV3Js','ux-polish-v3.js?v='+VERSION);
       await addScript(d,'stickyTopBackJs','sticky-top-back.js?v='+VERSION);
+      await addScript(d,'finalUxHardeningV1Js','final-ux-hardening-v1.js?v=20260827-final1');
 
       setBootStatus('Finalizzazione…');
       await new Promise(resolve=>requestAnimationFrame(resolve));
@@ -202,13 +219,13 @@ body.bootReady #warehouseApp{opacity:1;visibility:visible;pointer-events:auto}
         frame.contentWindow?.WarehouseMasterPanelMinimizeV2?.install?.();
         frame.contentWindow?.WarehouseUxPolishV3?.install?.();
         frame.contentWindow?.WarehouseStickyTopBack?.install?.();
+        frame.contentWindow?.WarehouseFinalUxHardeningV1?.install?.();
       }catch(err){console.warn('Finalizzazione UI parziale',err)}
-      await nextPaint();
-      revealApp();
+      await nextPaint();markAppReady();
     }catch(err){failBoot(err)}
   });
 
-  setTimeout(()=>{if(!revealed)setBootStatus('Caricamento dati e interfaccia…')},3500);
+  setTimeout(()=>{if(!appReady&&accessRequested)setBootStatus('Preparazione interfaccia…')},3500);
 })();
 </script>
 </body>
