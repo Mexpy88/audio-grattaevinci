@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 const ux=fs.readFileSync('super-ux.js','utf8');
-const hard=fs.readFileSync('ui-hardening.js','utf8');
+const master=fs.readFileSync('master-controller-v2.js','utf8');
 const index=fs.readFileSync('index.html','utf8');
 const css=fs.readFileSync('super-ux.css','utf8');
 
@@ -17,11 +17,12 @@ const checks=[
   ['autosave checkpoint installed',/CHECKPOINT_KEY/.test(ux)&&/installSaveCheckpoint/.test(ux)],
   ['master versioning installed',/master_version/.test(ux)&&/ESPORTA v/.test(ux)],
   ['old-master preflight implemented',/beforeMasterImport/.test(ux)&&/Master precedente rilevato/.test(ux)],
-  ['hardening awaits preflight',/await window\.WarehouseUX\.beforeMasterImport\(\)/.test(hard)],
+  ['Master controller awaits Super UX preflight',/window\.WarehouseUX\?\.beforeMasterImport/.test(master)&&/await uxPreflight\(\)/.test(master)],
   ['beforeunload dirty protection',/beforeunload/.test(ux)&&/dirtyCount\(\)>0/.test(ux)],
   ['Super UX stylesheet loaded',/super-ux\.css/.test(index)],
   ['Super UX script loaded',/super-ux\.js/.test(index)],
   ['Super UX loads after UI hardening',index.indexOf("ui-hardening.js")<index.indexOf("super-ux.js")],
+  ['Master Controller loads after Super UX and V4',index.indexOf("super-ux.js")<index.indexOf("master-controller-v2.js")&&index.indexOf("warehouse-master-schema-v4.js")<index.indexOf("master-controller-v2.js")],
   ['camera permission declared',/allow="[^"]*camera/.test(index)],
   ['dirty bar styles present',/\.uxDirtyBar/.test(css)],
   ['mobile breakpoint present',/@media\(max-width:430px\)/.test(css)]
