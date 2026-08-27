@@ -7,7 +7,7 @@
   'use strict';
   if(window.WarehouseUxPolishV3)return;
 
-  const VERSION='2026.08.27-ux-polish-v3-premium2-floating-confirm1-registryfix1-finalhardening1';
+  const VERSION='2026.08.27-ux-polish-v3-premium2-floating-confirm1-registryfix1-finalhardening2';
   let installed=false,baseRenderRegistry=null;
 
   function injectCss(){
@@ -49,11 +49,18 @@
     wrapped.__uxPolishV3=true;wrapped.__previous=baseRenderRegistry;window.renderRegistry=wrapped;return true;
   }
 
+  function assertFinalRegistry(){
+    const api=window.WarehouseFinalUxHardeningV1;if(!api)return false;
+    api.install?.();api.decorate?.();
+    if(typeof api.openMovements==='function')window.openRoleRegistryMovementsV1=api.openMovements;
+    if(typeof api.renderSafeRegistry==='function')window.renderRegistry=api.renderSafeRegistry;
+    return true;
+  }
   function loadFinalHardening(){
-    if(window.WarehouseFinalUxHardeningV1){window.WarehouseFinalUxHardeningV1.install?.();window.WarehouseFinalUxHardeningV1.decorate?.();return true}
+    if(window.WarehouseFinalUxHardeningV1)return assertFinalRegistry();
     if(!document.getElementById('finalUxHardeningV1Css')){const l=document.createElement('link');l.id='finalUxHardeningV1Css';l.rel='stylesheet';l.href='final-ux-hardening-v1.css?v=20260827-final1';document.head.appendChild(l)}
-    if(document.getElementById('finalUxHardeningV1Js'))return true;
-    const f=document.createElement('script');f.id='finalUxHardeningV1Js';f.src='final-ux-hardening-v1.js?v=20260827-final1';f.async=false;f.onload=()=>window.WarehouseFinalUxHardeningV1?.install?.();f.onerror=()=>console.error('Impossibile caricare final-ux-hardening-v1.js');document.body.appendChild(f);return true;
+    const existing=document.getElementById('finalUxHardeningV1Js');if(existing){existing.addEventListener('load',assertFinalRegistry,{once:true});return true}
+    const f=document.createElement('script');f.id='finalUxHardeningV1Js';f.src='final-ux-hardening-v1.js?v=20260827-final1';f.async=false;f.onload=assertFinalRegistry;f.onerror=()=>console.error('Impossibile caricare final-ux-hardening-v1.js');document.body.appendChild(f);return true;
   }
   function loadRegistryFix(){
     if(window.WarehouseRegistryMovementsFixV1){window.WarehouseRegistryMovementsFixV1.install?.();loadFinalHardening();return true}
@@ -91,6 +98,6 @@
 
   function install(){if(typeof document==='undefined')return false;injectCss();hideRegistryMaster();wrapRegistry();loadRoleDashboard();installed=true;return true}
 
-  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard,loadPremiumFix,loadFloatingConfirm,loadRegistryFix,loadFinalHardening};
+  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard,loadPremiumFix,loadFloatingConfirm,loadRegistryFix,loadFinalHardening,assertFinalRegistry};
   install();
 })();
