@@ -7,7 +7,7 @@
   'use strict';
   if(window.WarehouseUxPolishV3)return;
 
-  const VERSION='2026.08.28-ux-polish-v3-premium2-floating-confirm1-registryfix1-goods-receipt2';
+  const VERSION='2026.08.28-ux-polish-v3-dashboard-event1-goods-receipt2';
   let installed=false,baseRenderRegistry=null;
 
   function injectCss(){
@@ -52,7 +52,7 @@
   function loadGoodsReceiptFix(){
     if(window.WarehouseGoodsReceiptV2Fix){window.WarehouseGoodsReceiptV2Fix.install?.();return true}
     const existing=document.getElementById('goodsReceiptV2FixJs');if(existing)return true;
-    const f=document.createElement('script');f.id='goodsReceiptV2FixJs';f.src='goods-receipt-v2-fix.js?v=20260828-gr2fix1';f.async=false;f.onload=()=>window.WarehouseGoodsReceiptV2Fix?.install?.();f.onerror=()=>console.error('Impossibile caricare goods-receipt-v2-fix.js');document.body.appendChild(f);return true;
+    const f=document.createElement('script');f.id='goodsReceiptV2FixJs';f.src='goods-receipt-v2-fix.js?v=20260828-gr2fix2';f.async=false;f.onload=()=>window.WarehouseGoodsReceiptV2Fix?.install?.();f.onerror=()=>console.error('Impossibile caricare goods-receipt-v2-fix.js');document.body.appendChild(f);return true;
   }
 
   function loadGoodsReceipt(){
@@ -105,7 +105,21 @@
     if(window.WarehouseRoleDashboardV1){window.WarehouseRoleDashboardV1.install?.();loadRolePatch();return true}
     if(!document.getElementById('roleDashboardV1Css')){const l=document.createElement('link');l.id='roleDashboardV1Css';l.rel='stylesheet';l.href='role-dashboard-v1.css?v=20260827-role-dashboard1';document.head.appendChild(l)}
     const existing=document.getElementById('roleDashboardV1Js');if(existing){existing.addEventListener('load',loadRolePatch,{once:true});return true}
-    const s=document.createElement('script');s.id='roleDashboardV1Js';s.src='role-dashboard-v1.js?v=20260827-role-dashboard1';s.async=false;s.onload=()=>{window.WarehouseRoleDashboardV1?.install?.();loadRolePatch()};s.onerror=()=>console.error('Impossibile caricare role-dashboard-v1.js');document.body.appendChild(s);return true;
+
+    /* Role Dashboard V1 used to rebuild #rdDashboardV1 from scratch every 1.5 seconds.
+       That periodic render conflicts with composable modules such as Entrata Merci and also wastes CPU.
+       Suppress only that legacy interval while the script bootstraps; all explicit/event-driven renders remain. */
+    const realSetInterval=window.setInterval;let restored=false;
+    const restore=()=>{if(restored)return;restored=true;window.setInterval=realSetInterval};
+    window.setInterval=function(fn,delay,...args){
+      if(Number(delay)===1500&&String(fn).includes('renderDashboard'))return 0;
+      return realSetInterval.call(window,fn,delay,...args);
+    };
+
+    const s=document.createElement('script');s.id='roleDashboardV1Js';s.src='role-dashboard-v1.js?v=20260828-role-dashboard-event1';s.async=false;
+    s.onload=()=>{restore();window.WarehouseRoleDashboardV1?.install?.();loadRolePatch()};
+    s.onerror=()=>{restore();console.error('Impossibile caricare role-dashboard-v1.js')};
+    document.body.appendChild(s);return true;
   }
 
   function install(){if(typeof document==='undefined')return false;injectCss();hideRegistryMaster();wrapRegistry();loadRoleDashboard();installed=true;return true}
