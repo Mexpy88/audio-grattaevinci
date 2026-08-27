@@ -34,9 +34,13 @@ assert.match(grouped,/#fff0e3/i);
 assert.match(grouped,/#e6f5f3/i);
 assert.notEqual('#fff0e3','#e6f5f3');
 
-assert.match(index,/\.bootCard\{[^}]*opacity:0;visibility:hidden/s);
-assert.match(index,/\.bootCard\.logoReady\{opacity:1;visibility:visible\}/);
-assert.match(index,/onload="this\.parentElement\.classList\.add\('logoReady'\)"/);
+// Boot UX intentionally changed: ACCEDI is now the immediate first paint, not a hidden loading card.
+assert.match(index,/id="bootSplash"/);
+assert.match(index,/Accesso operatori/);
+assert.match(index,/id="firstAccessBtn"/);
+assert.match(index,/>ACCEDI</);
+assert.match(index,/body\.appEntered #warehouseApp/);
+assert.doesNotMatch(index,/\.bootCard\.logoReady/,'old loading-card reveal contract must stay retired');
 
 assert.match(polish,/loadGroupedRectificationV2/);
 assert.match(polish,/stock-rectification-grouped-ux-v2\.js/);
@@ -47,4 +51,4 @@ assert.match(sounds,/safe-sounds4-louder-success/);
 assert.match(sounds,/0\.07/);
 assert.match(sounds,/0\.075/);
 
-console.log('Grouped direct rectification V2 + single add button + splash integrity OK');
+console.log('Grouped direct rectification V2 + access-first boot integrity OK');
