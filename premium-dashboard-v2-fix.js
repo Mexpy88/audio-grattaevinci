@@ -2,7 +2,7 @@
 (function installWarehousePremiumDashboardV2Fix(){
   'use strict';
   if(window.WarehousePremiumDashboardV2Fix)return;
-  const VERSION='2026.08.27-premium-dashboard2-fix1';
+  const VERSION='2026.08.27-premium-dashboard2-fix2-teramo1';
   const $=id=>document.getElementById(id);
   let baseReview=null,observer=null,scheduled=false;
 
@@ -32,8 +32,34 @@
     const s=$('requestNew');if(!s?.classList.contains('on'))return;const e=s.querySelector('.eyebrow'),h=s.querySelector('h1');if(e)e.textContent='SCANSIONA RICHIESTA';if(h)h.textContent='Acquisisci richiesta cartacea';
   }
 
-  function decorate(){wrapReview();decorateLinaStatuses();decorateScanTitle()}
+  function ensureTeramoPolishCss(){
+    if($('teramoDashboardPolishV1Css'))return;
+    const style=document.createElement('style');style.id='teramoDashboardPolishV1Css';style.textContent=`
+      @media(max-width:899px){
+        body:not(.desktopMode) #rdDashboardV1 .rdMaster.rdMasterEmptyV2{grid-template-columns:minmax(0,1fr) 52px!important;column-gap:12px!important;align-items:center!important}
+        body:not(.desktopMode) #rdDashboardV1 .rdMaster.rdMasterEmptyV2 .rdMasterMain{grid-column:1!important;grid-row:1!important;min-width:0!important;padding-right:0!important;overflow:hidden!important}
+        body:not(.desktopMode) #rdDashboardV1 .rdMaster.rdMasterEmptyV2 .rdMasterDetails.rdMasterAddV2{grid-column:2!important;grid-row:1!important;width:48px!important;height:48px!important;min-width:48px!important;margin:0!important;padding:0!important;justify-self:end!important;align-self:center!important}
+        body:not(.desktopMode) #rdDashboardV1 .rdMaster.rdMasterEmptyV2 .rdMasterText{min-width:0!important;width:100%!important}
+        body:not(.desktopMode) #rdDashboardV1 .rdMaster.rdMasterEmptyV2 .rdMasterTopline{display:flex!important;align-items:center!important;flex-wrap:wrap!important;column-gap:7px!important;row-gap:5px!important;min-width:0!important}
+        body:not(.desktopMode) #rdDashboardV1 .rdMaster.rdMasterEmptyV2 .rdMasterTopline>b{white-space:nowrap!important}
+        body:not(.desktopMode) #rdDashboardV1 .rdMaster.rdMasterEmptyV2 .rdReady{position:static!important;transform:none!important;white-space:nowrap!important;max-width:100%!important;flex:0 0 auto!important}
+      }
+      @media(max-width:430px){
+        body:not(.desktopMode) #rdDashboardV1 .rdMaster.rdMasterEmptyV2{padding:14px!important;column-gap:10px!important}
+        body:not(.desktopMode) #rdDashboardV1 .rdMaster.rdMasterEmptyV2 .rdMasterMain{gap:10px!important}
+      }
+    `;document.head.appendChild(style);
+  }
+
+  function decorateTeramoTitle(){
+    const title=document.querySelector('#rdDashboardV1 .rdDashTitle h1');
+    if(title&&title.textContent!=='MAGAZZINO TERAMO')title.textContent='MAGAZZINO TERAMO';
+    const headerSub=$('rdHeaderTitleV1')?.querySelector('span');
+    if(headerSub&&headerSub.textContent==='Dashboard')headerSub.textContent='MAGAZZINO TERAMO';
+  }
+
+  function decorate(){ensureTeramoPolishCss();decorateTeramoTitle();wrapReview();decorateLinaStatuses();decorateScanTitle()}
   function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;decorate()})}
   function install(){decorate();if(!observer){observer=new MutationObserver(schedule);observer.observe(document.body,{childList:true,subtree:true})}return true}
-  window.WarehousePremiumDashboardV2Fix={version:VERSION,install,reviewShell,decorate};install();
+  window.WarehousePremiumDashboardV2Fix={version:VERSION,install,reviewShell,decorate,ensureTeramoPolishCss,decorateTeramoTitle};install();
 })();
