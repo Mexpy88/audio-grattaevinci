@@ -7,7 +7,7 @@
   'use strict';
   if(window.WarehouseUxPolishV3)return;
 
-  const VERSION='2026.08.27-ux-polish-v3-goods-receipt1';
+  const VERSION='2026.08.27-ux-polish-v3-premium2-floating-confirm1-registryfix1-goods-receipt1';
   let installed=false,baseRenderRegistry=null;
 
   function injectCss(){
