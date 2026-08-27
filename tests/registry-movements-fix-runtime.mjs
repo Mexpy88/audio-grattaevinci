@@ -44,7 +44,7 @@ els.registryScreen.querySelector=sel=>sel===':scope>.back'?el('back'):sel==='.ta
 els.registryScreen.classList.add('on');
 els.registryFilters.appendChild=node=>{els[node.id]=node};
 const document={
-  body:{classList:new ClassList(),appendChild(){}},
+  body:{classList:new ClassList(),appendChild(){}},head:{appendChild(){}},
   getElementById:id=>els[id]||null,
   createElement(tag){const n=el('');n.tagName=tag.toUpperCase();Object.defineProperty(n,'id',{get(){return this._id||''},set(v){this._id=v;els[v]=this}});return n},
   querySelectorAll(){return []}
