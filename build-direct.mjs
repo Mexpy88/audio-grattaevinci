@@ -16,6 +16,8 @@ mustReplace("'toggle-pin':()=>{const p=document.getElementById('loginPin');p.typ
 
 if(!html.includes('bundle/mobile-v4.css'))html=html.replace('</head>','<link rel="stylesheet" href="bundle/mobile-v4.css?v=20260828-v6"></head>');
 else html=html.replace(/bundle\/mobile-v4\.css\?v=[^"']+/g,'bundle/mobile-v4.css?v=20260828-v6');
+if(!html.includes('bundle/landing-brand-v7.css'))html=html.replace('</head>','<link rel="stylesheet" href="bundle/landing-brand-v7.css?v=20260828-v7"></head>');
+else html=html.replace(/bundle\/landing-brand-v7\.css\?v=[^"']+/g,'bundle/landing-brand-v7.css?v=20260828-v7');
 
 fs.writeFileSync('index.html',html,'utf8');
-console.log(`NOVA V6 direct static shell generated: ${Buffer.byteLength(html)} bytes`);
+console.log(`NOVA V7 branded static shell generated: ${Buffer.byteLength(html)} bytes`);
