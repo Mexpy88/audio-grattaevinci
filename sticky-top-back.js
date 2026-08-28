@@ -4,7 +4,7 @@
 (function installWarehouseStickyTopBack(){
   'use strict';
   if(window.WarehouseStickyTopBack)return;
-  const VERSION='2026.08.26-sticky-top-back2-passive';
+  const VERSION='2026.08.28-sticky-top-back3-goods-context';
   let installed=false,pollTimer=null,clickBound=false,lastScreenId='';
 
   function currentScreen(){return document.querySelector('main .screen.on')}
@@ -54,12 +54,28 @@
     return true;
   }
 
+  function finishBack(){setTimeout(()=>sync(true),0)}
+
   function goBack(){
     const screen=currentScreen();if(!screen||screen.id==='home')return;
+
+    if(screen.id==='grListV1'){
+      const target=window.__grGoodsListReturnV1||'grHubV1';
+      if(target==='home'&&typeof window.show==='function')window.show('home');
+      else if(typeof window.openGoodsReceiptHubV1==='function')window.openGoodsReceiptHubV1();
+      else if(typeof window.show==='function')window.show('home');
+      finishBack();return;
+    }
+
+    if(screen.id==='grHubV1'){
+      if(typeof window.show==='function')window.show('home');
+      finishBack();return;
+    }
+
     const nativeBack=screen.querySelector(':scope > .back');
-    if(nativeBack){nativeBack.click();setTimeout(()=>sync(true),0);return}
+    if(nativeBack){nativeBack.click();finishBack();return}
     if(typeof window.show==='function')window.show('home');
-    setTimeout(()=>sync(true),0);
+    finishBack();
   }
 
   function bindPassiveSync(){
