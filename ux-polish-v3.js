@@ -8,7 +8,7 @@
   'use strict';
   if(window.WarehouseUxPolishV3)return;
 
-  const VERSION='2026.08.28-ux-polish-v3-premium-event2-dashboard-event1-goods-receipt2';
+  const VERSION='2026.08.28-ux-polish-v3-premium-event2-dashboard-event1-goods-receipt2-activity1';
   let installed=false,baseRenderRegistry=null,premiumRootObserver=null,premiumInboxTimer=null,premiumRefreshScheduled=false;
 
   function injectCss(){
@@ -59,6 +59,7 @@
       window.WarehousePremiumDashboardV2Fix?.decorate?.();
       window.WarehouseGoodsReceiptV1?.decorate?.();
       window.WarehouseGoodsReceiptV2Fix?.decoratePartialCounters?.();
+      window.WarehouseActivityDailyFilterV1?.decorate?.();
     });
   }
 
@@ -80,10 +81,20 @@
     return true;
   }
 
+  function loadActivityDailyFilter(){
+    if(window.WarehouseActivityDailyFilterV1){window.WarehouseActivityDailyFilterV1.install?.();return true}
+    const existing=document.getElementById('activityDailyFilterV1Js');
+    if(existing){existing.addEventListener('load',()=>window.WarehouseActivityDailyFilterV1?.install?.(),{once:true});return true}
+    const a=document.createElement('script');a.id='activityDailyFilterV1Js';a.src='activity-daily-filter-v1.js?v=20260828-activity1';a.async=false;
+    a.onload=()=>window.WarehouseActivityDailyFilterV1?.install?.();
+    a.onerror=()=>console.error('Impossibile caricare activity-daily-filter-v1.js');
+    document.body.appendChild(a);return true;
+  }
+
   function loadGoodsReceiptFix(){
-    if(window.WarehouseGoodsReceiptV2Fix){window.WarehouseGoodsReceiptV2Fix.install?.();return true}
-    const existing=document.getElementById('goodsReceiptV2FixJs');if(existing)return true;
-    const f=document.createElement('script');f.id='goodsReceiptV2FixJs';f.src='goods-receipt-v2-fix.js?v=20260828-gr2fix2';f.async=false;f.onload=()=>window.WarehouseGoodsReceiptV2Fix?.install?.();f.onerror=()=>console.error('Impossibile caricare goods-receipt-v2-fix.js');document.body.appendChild(f);return true;
+    if(window.WarehouseGoodsReceiptV2Fix){window.WarehouseGoodsReceiptV2Fix.install?.();loadActivityDailyFilter();return true}
+    const existing=document.getElementById('goodsReceiptV2FixJs');if(existing){existing.addEventListener('load',loadActivityDailyFilter,{once:true});return true}
+    const f=document.createElement('script');f.id='goodsReceiptV2FixJs';f.src='goods-receipt-v2-fix.js?v=20260828-gr2fix2';f.async=false;f.onload=()=>{window.WarehouseGoodsReceiptV2Fix?.install?.();loadActivityDailyFilter()};f.onerror=()=>console.error('Impossibile caricare goods-receipt-v2-fix.js');document.body.appendChild(f);return true;
   }
 
   function loadGoodsReceipt(){
@@ -187,6 +198,6 @@
 
   function install(){if(typeof document==='undefined')return false;injectCss();hideRegistryMaster();wrapRegistry();loadRoleDashboard();installed=true;return true}
 
-  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard,loadPremiumFix,loadFloatingConfirm,loadRegistryFix,loadGoodsReceipt,loadGoodsReceiptFix,installPremiumEventRefresh,schedulePremiumRefresh};
+  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard,loadPremiumFix,loadFloatingConfirm,loadRegistryFix,loadGoodsReceipt,loadGoodsReceiptFix,loadActivityDailyFilter,installPremiumEventRefresh,schedulePremiumRefresh};
   install();
 })();
