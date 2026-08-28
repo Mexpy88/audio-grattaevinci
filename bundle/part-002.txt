@@ -1,0 +1,112 @@
+w:ellipsis;white-space:nowrap;background:#eaf2f7;border-radius:99px;padding:7px 10px;font-size:12px;font-weight:850}.marker-box{background:#fff0d5;color:#835a08;padding:10px 12px;border-radius:13px;font-weight:850;margin:10px 0}.pick-source{grid-template-columns:42px minmax(0,1fr) minmax(150px,230px)}.pick-dot{width:34px;height:34px;border-radius:50%;background:#e6eef4;color:#376b91;display:grid!important;place-items:center;font-weight:950}.pick-pair{display:grid;grid-template-columns:1fr 1fr;gap:7px}.pick-pair label{margin:0;font-size:11px;color:var(--muted)}.pick-pair input{width:100%;height:46px;border:2px solid #d0dce5;border-radius:12px;padding:7px;font-size:16px;font-weight:900;color:var(--ink)}.registry-search-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.registry-search-row .soft{margin:0;min-height:62px}.registry-filters{margin-top:12px;padding-top:12px;border-top:1px solid #e1e9ef}.analysis-dialog{width:min(94vw,560px)}.analysis-prompt{min-height:150px;font-size:12px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:500}.code-area{min-height:180px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;font-weight:500}.scan-row .ico{width:20px;height:20px;vertical-align:middle;margin-right:6px}.extra-pick h2{margin-top:0}
+@media(max-width:600px){.pick-source{grid-template-columns:36px 1fr}.pick-pair{grid-column:2/-1}.registry-search-row{grid-template-columns:1fr}.registry-search-row .soft{min-height:48px}.analysis-dialog .two{grid-template-columns:1fr 1fr}}
+
+.count-extra-section{margin:22px 0}.section-label{font-size:13px;font-weight:950;letter-spacing:.09em;color:#587086;margin:15px 2px 8px}.count-extra{border-color:#a9d9c2;background:linear-gradient(145deg,#fff,#f3fbf7)}.count-extra .line-top{margin-bottom:10px}.empty.compact{font-size:16px;padding:20px}.pick-pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pick-pair label{margin:0;font-size:11px}.pick-pair input{width:100%;min-width:0;height:45px;border:2px solid #d0dce5;border-radius:12px;padding:6px;font-weight:900}.registry-search-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.registry-search-row .small{margin:0}.registry-filters{margin-top:10px}
+</style>
+</head>
+<body>
+<header id="topbar" class="topbar"></header>
+<main id="appView" class="app-view"></main>
+
+<input id="masterFile" type="file" accept=".xlsx,.xlsm" hidden>
+<input id="ddtCamera" type="file" accept="image/*" capture="environment" multiple hidden>
+<input id="ddtFile" type="file" accept="image/*,application/pdf" multiple hidden>
+<input id="requestCamera" type="file" accept="image/*" capture="environment" multiple hidden>
+<input id="requestFile" type="file" accept="image/*" multiple hidden>
+
+<dialog id="loginDialog" class="dialog">
+  <div class="dialog-head"><h2>Accesso operatore</h2><button type="button" onclick="this.closest('dialog').close()">×</button></div>
+  <p>Inserisci il PIN personale di 4 cifre.</p>
+  <label class="pin-wrap"><input id="loginPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]*" autocomplete="off"><button type="button" data-action="toggle-pin" aria-label="Mostra PIN"><svg class="ico" viewBox="0 0 24 24"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg></button></label>
+  <div id="loginError" class="error-box hidden">PIN non valido.</div>
+  <button class="primary" data-action="login-submit">ACCEDI</button>
+</dialog>
+
+<dialog id="notificationDialog" class="dialog">
+  <div class="dialog-head"><h2>Notifiche</h2><button type="button" onclick="this.closest('dialog').close()">×</button></div>
+  <div class="dialog-body"></div>
+</dialog>
+
+<dialog id="analysisDialog" class="dialog analysis-dialog">
+  <div class="dialog-head"><h2 id="analysisTitle">Analisi assistita</h2><button type="button" onclick="this.closest('dialog').close()">×</button></div>
+  <div id="analysisInfo"></div>
+  <p class="hint">Condividi i file con ChatGPT insieme alle istruzioni. Poi incolla qui il JSON restituito. Nessun dato viene registrato automaticamente.</p>
+  <textarea id="analysisPrompt" class="field textarea analysis-prompt" readonly></textarea>
+  <div class="two"><button class="soft" data-action="analysis-copy">COPIA ISTRUZIONI</button><button class="primary" data-action="analysis-share">CONDIVIDI</button></div>
+  <label>JSON restituito<textarea id="analysisJson" class="field textarea code-area" placeholder='{"lines":[...]}'></textarea></label>
+  <button class="success" data-action="analysis-import">IMPORTA NEL MODULO</button>
+</dialog>
+
+<div id="toastHost" class="toast-host"></div>
+<script>
+/* js/core.js */
+const CONFIG = Object.freeze({
+  version: 'NOVA_DB_V1',
+  storageKey: 'so_magazzino_nova_v1',
+  legacyStorageKey: 'so_magazzino_v2',
+  sessionKey: 'so_nova_current_user',
+  viewKey: 'so_nova_view_mode',
+  receivingLocation: 'AREA RICEVIMENTO',
+  states: ['NUOVO','SCARICATO','USATO','DISMESSO','NON_CHIARO'],
+  destinations: ['LINA','SPEDIZIONI','LAVAGGIO','PRODUZIONE','CONTROLLO QUALITÀ','ALTRO'],
+  userHashes: {
+    'a4a83020b7bcf38c771155cf99a83265fcee6b4c6dad1b1f041dc8615b788140':'Mattia',
+    'c7f64465ddbc194f297e7a82e0a1fae97632e24f8a6cfcf25fb6827b7f146630':'Massimo',
+    'c7a2797dbb855b475ccc5a3f6fe19345ad5259331d0cebe956813091a94cad7f':'Alessandra',
+    'affce9023143d551660fdacd5a3c8c827c31fd3e521331e38bc8a375ef4cedc2':'Lina',
+    '549df9b2f2268e5c381ff04aa5019cf4f5eb6c8768821c23a7b42cb5c31fa2ff':'Luca'
+  }
+});
+
+const ALL_CAPS=['STOCK_VIEW','MOVE','RECTIFY','COUNT','REQUEST_VIEW','REQUEST_CREATE','REQUEST_PROCESS','REGISTRY_VIEW','AUDIT_VIEW','EXPORT','MASTER','RECEIVE'];
+const PROFILES=Object.freeze({
+  Mattia:{role:'ADMIN',label:'Amministratore',caps:ALL_CAPS},
+  Massimo:{role:'OPERATORE_FULL',label:'Operatore',caps:ALL_CAPS},
+  Alessandra:{role:'SUPERVISORE',label:'Sola lettura',caps:['STOCK_VIEW','REQUEST_VIEW','REGISTRY_VIEW','AUDIT_VIEW']},
+  Lina:{role:'RICHIEDENTE',label:'Richiedente',caps:['STOCK_VIEW','REQUEST_VIEW','REQUEST_CREATE']},
+  Luca:{role:'SUPERVISORE',label:'Sola lettura',caps:['STOCK_VIEW','REQUEST_VIEW','REGISTRY_VIEW','AUDIT_VIEW']}
+});
+
+const clone=value=>globalThis.structuredClone?structuredClone(value):JSON.parse(JSON.stringify(value));
+const norm=value=>String(value??'').trim().toUpperCase();
+const normalizeArticle=value=>{let x=norm(value).replace(/\s+/g,'');if(/^1[A-Z0-9]/.test(x))x='I'+x.slice(1);return x};
+const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const nowIso=()=>new Date().toISOString();
+const dateKeyLocal=value=>{const d=value instanceof Date?value:new Date(value);if(Number.isNaN(d.getTime()))return'';const z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`};
+const fmtDateTime=value=>{if(!value)return'—';const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})};
+const fmtDate=value=>{if(!value)return'—';const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleDateString('it-IT')};
+const localDateInput=(value=new Date())=>dateKeyLocal(value);
+const localDateTimeInput=(value=new Date())=>{const d=value instanceof Date?value:new Date(value),z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`};
+const isoFromLocalInput=value=>{if(!value)return nowIso();const d=new Date(value);return Number.isNaN(d.getTime())?nowIso():d.toISOString()};
+
+function createEmptyDb(){return {
+  schema:CONFIG.version,createdAt:nowIso(),updatedAt:nowIso(),
+  master:{rows:[],excelRows:[],filename:'',sheetName:'MAGAZZINO',importedAt:null,headerRow:0,columns:{},mode:'wide',source:'NOVA'},
+  ledger:[],receipts:[],requests:[],issues:[],audits:[],notifications:[],
+  counters:{receipt:0,request:0,issue:0},
+  settings:{lastExportAt:null,lastExportName:'',legacyMigratedAt:null}
+}}
+
+class EventBus{
+  #map=new Map();
+  on(name,fn){if(!this.#map.has(name))this.#map.set(name,new Set());this.#map.get(name).add(fn);return()=>this.#map.get(name)?.delete(fn)}
+  emit(name,payload){for(const fn of this.#map.get(name)||[])fn(payload)}
+}
+
+function hydrateDb(x){const base=createEmptyDb();return {...base,...x,schema:CONFIG.version,master:{...base.master,...(x?.master||{})},ledger:Array.isArray(x?.ledger)?x.ledger:[],receipts:Array.isArray(x?.receipts)?x.receipts:[],requests:Array.isArray(x?.requests)?x.requests:[],issues:Array.isArray(x?.issues)?x.issues:[],audits:Array.isArray(x?.audits)?x.audits:[],notifications:Array.isArray(x?.notifications)?x.notifications:[],counters:{...base.counters,...(x?.counters||{})},settings:{...base.settings,...(x?.settings||{})}}}
+
+class Store{
+  constructor({storage=globalThis.localStorage,key=CONFIG.storageKey,bus=new EventBus()}={}){this.storage=storage;this.key=key;this.bus=bus;this.db=this.load()}
+  load(){try{const raw=this.storage?.getItem?.(this.key);if(raw){const x=JSON.parse(raw);if(x?.schema===CONFIG.version)return hydrateDb(x)}}catch(e){console.warn('[NOVA] Database non leggibile',e)}return createEmptyDb()}
+  save(reason='save'){this.db.updatedAt=nowIso();this.storage?.setItem?.(this.key,JSON.stringify(this.db));this.bus.emit('db:changed',{reason,db:this.db});return this.db}
+  replace(db,reason='replace'){this.db=hydrateDb(clone(db));return this.save(reason)}
+  mutate(reason,fn){const out=fn(this.db);this.save(reason);return out}
+  snapshot(){return clone(this.db)}
+}
+
+class AuthService{
+  constructor({session=globalThis.sessionStorage}={}){this.session=session;this.user=session?.getItem?.(CONFIG.sessionKey)||''}
+  profile(user=this.user){return PROFILES[user]||{role:'GUEST',label:'Ospite',caps:[]}}
+  can(cap,user=this.user){return this.profile(user).caps.includes(cap)}
+  isLina(){return this.user==='Lina'}
+  async login(pin){const clean=String(pin||'').replace(/\D/g,'').slice

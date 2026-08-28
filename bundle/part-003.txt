@@ -1,0 +1,91 @@
+(0,4);if(clean.length!==4)return false;const bytes=new TextEncoder().encode('warehouse-so|'+clean),digest=await globalThis.crypto.subtle.digest('SHA-256',bytes),hash=[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join(''),user=CONFIG.userHashes[hash];if(!user)return false;this.user=user;this.session?.setItem?.(CONFIG.sessionKey,user);return true}
+  logout(){this.user='';this.session?.removeItem?.(CONFIG.sessionKey)}
+}
+
+class Router{
+  constructor(onChange){this.stack=[];this.route={name:'home',params:{}};this.onChange=onChange}
+  #scroll(){try{globalThis.scrollTo?.({top:0,behavior:'instant'})}catch{}}
+  go(name,params={},opts={}){if(!opts.replace)this.stack.push(this.route);this.route={name,params};this.onChange?.(this.route);this.#scroll();return this.route}
+  replace(name,params={}){this.route={name,params};this.onChange?.(this.route);this.#scroll();return this.route}
+  back(){const prev=this.stack.pop();this.route=prev||{name:'home',params:{}};this.onChange?.(this.route);this.#scroll();return this.route}
+  home(){this.stack=[];return this.replace('home',{})}
+  canBack(){return this.route.name!=='home'}
+}
+
+/* js/domain.js */
+
+const number=value=>Number(value||0)||0;
+const integer=value=>Math.max(0,Math.floor(Number(value)||0));
+const locationOf=x=>norm(x?.location||x?.fila_scaffale||[x?.fila,x?.scaffale].filter(Boolean).join('/'));
+const palletOf=x=>norm(x?.pallet||x?.bancale);
+const bucketKey=b=>[normalizeArticle(b.article||b.article_base),norm(b.size||b.taglia),norm(b.state),locationOf(b),palletOf(b)].join('|');
+const cleanItem=item=>({article:normalizeArticle(item?.article||item?.article_base),size:norm(item?.size||item?.taglia),state:norm(item?.state||'NUOVO')||'NUOVO'});
+const cleanBucket=b=>({location:locationOf(b),pallet:palletOf(b)});
+
+function normalizeMasterRows(rows=[]){
+  const out=[];
+  for(const raw of rows){
+    const article=normalizeArticle(raw.article||raw.article_base||raw.codice||raw.codice_sap),size=norm(raw.size||raw.taglia),location=locationOf(raw),pallet=palletOf(raw),description=String(raw.description||raw.descrizione||'').trim();
+    if(!article)continue;
+    if(raw.state&&raw.quantity!=null){out.push({id:raw.id||uid(),article,size,state:norm(raw.state),quantity:number(raw.quantity),location,pallet,description,sourceRow:raw.sourceRow??null});continue}
+    for(const state of CONFIG.states){const q=number(raw[state]??raw[state.toLowerCase()]);if(q)out.push({id:uid(),article,size,state,quantity:q,location,pallet,description,sourceRow:raw.sourceRow??null})}
+  }
+  return out;
+}
+
+class AuditService{
+  constructor(store,auth){this.store=store;this.auth=auth}
+  record(action,entityType,entityId,before=null,after=null,meta={}){const row={id:uid(),action,entityType,entityId,operator:this.auth?.user||'',at:nowIso(),before:before==null?null:clone(before),after:after==null?null:clone(after),meta:clone(meta)};this.store.db.audits.unshift(row);return row}
+}
+
+class NotificationService{
+  constructor(store,auth){this.store=store;this.auth=auth}
+  create({recipient,title,body,type='INFO',entityType='',entityId=''}){const row={id:uid(),recipient,title,body,type,entityType,entityId,createdAt:nowIso(),readAt:null};this.store.db.notifications.unshift(row);return row}
+  visibleTo(user=this.auth?.user||''){return this.store.db.notifications.filter(n=>!n.recipient||n.recipient===user||(n.recipient==='WAREHOUSE'&&user!=='Lina')).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))}
+  unread(user){return this.visibleTo(user).filter(n=>!n.readAt).length}
+  markRead(id){const n=this.store.db.notifications.find(x=>x.id===id);if(n&&!n.readAt)n.readAt=nowIso()}
+  markAllRead(user){for(const n of this.visibleTo(user))if(!n.readAt)n.readAt=nowIso()}
+}
+
+class StockService{
+  constructor(store){this.store=store;this.cache=null;this.store?.bus?.on?.('db:changed',()=>this.invalidate())}
+  invalidate(){this.cache=null}
+  rows({excludeEventId=''}={}){
+    if(!excludeEventId&&this.cache)return this.cache;
+    const map=new Map(),apply=(bucket,delta)=>{const b={...cleanItem(bucket),...cleanBucket(bucket)},key=bucketKey(b);if(!map.has(key))map.set(key,{...b,quantity:0});map.get(key).quantity+=number(delta)};
+    for(const r of normalizeMasterRows(this.store.db.master.rows))apply(r,r.quantity);
+    for(const e of this.store.db.ledger){if(e.cancelledAt||e.id===excludeEventId||e.affectsStock===false)continue;const q=number(e.quantity);
+      if(e.type==='IN')apply({...e.item,...e.to},q);
+      else if(e.type==='OUT')apply({...e.item,...e.from},-q);
+      else if(e.type==='TRANSFER'){apply({...e.item,...e.from},-q);apply({...e.item,...e.to},q)}
+      else if(e.type==='ADJUST')apply({...e.item,...e.atBucket},number(e.delta));
+    }
+    const rows=[...map.values()].filter(r=>Math.abs(r.quantity)>1e-9).sort((a,b)=>a.article.localeCompare(b.article,'it')||a.size.localeCompare(b.size,'it')||a.location.localeCompare(b.location,'it')||a.pallet.localeCompare(b.pallet,'it'));
+    if(!excludeEventId)this.cache=rows;
+    return rows;
+  }
+  positive(opts){return this.rows(opts).filter(r=>r.quantity>0)}
+  findByKey(key,opts){return this.rows(opts).find(r=>bucketKey(r)===key)}
+  sources(article,size='',state=''){const A=normalizeArticle(article),S=norm(size),ST=norm(state);return this.positive().filter(r=>r.article===A&&(!S||r.size===S)&&(!ST||r.state===ST)).sort((a,b)=>Number(a.location===CONFIG.receivingLocation)-Number(b.location===CONFIG.receivingLocation)||b.quantity-a.quantity)}
+  total(article,size='',state=''){return this.sources(article,size,state).reduce((n,r)=>n+r.quantity,0)}
+  receivingTotal(article,size=''){return this.sources(article,size).filter(r=>r.location===CONFIG.receivingLocation).reduce((n,r)=>n+r.quantity,0)}
+  suggest(article,size='',state=''){return this.sources(article,size,state).filter(r=>r.location!==CONFIG.receivingLocation).sort((a,b)=>b.quantity-a.quantity)[0]||null}
+  assertAvailable(sourceKey,amount,{excludeEventId=''}={}){const r=this.findByKey(sourceKey,{excludeEventId}),q=number(amount);if(!r||r.quantity+1e-9<q)throw new Error(`Disponibilità insufficiente: ${r?.quantity||0} disponibili, ${q} richiesti.`);return r}
+}
+
+class LedgerService{
+  constructor(store,stock,audit,auth){Object.assign(this,{store,stock,audit,auth})}
+  push(event,action){const e={id:uid(),at:nowIso(),operator:this.auth?.user||'',cancelledAt:null,affectsStock:true,...clone(event)};this.store.db.ledger.push(e);this.stock.invalidate?.();this.audit.record(action||`STOCK_${e.type}`,'LEDGER',e.id,null,e);return e}
+  incoming(item,to,quantity,source={}){const q=number(quantity);if(q<=0)throw new Error('Quantità non valida.');return this.push({type:'IN',item:cleanItem(item),to:cleanBucket(to),quantity:q,source},'STOCK_IN')}
+  outgoing(item,from,quantity,source={}){const q=number(quantity),f=cleanBucket(from),i=cleanItem(item);if(q<=0)throw new Error('Quantità non valida.');this.stock.assertAvailable(bucketKey({...i,...f}),q);return this.push({type:'OUT',item:i,from:f,quantity:q,source,destination:source.destination||''},'STOCK_OUT')}
+  transfer(item,from,to,quantity,source={}){const q=number(quantity),f=cleanBucket(from),t=cleanBucket(to),i=cleanItem(item);if(q<=0)throw new Error('Quantità non valida.');if(f.location===t.location&&f.pallet===t.pallet)throw new Error('La posizione di partenza e destinazione coincidono.');this.stock.assertAvailable(bucketKey({...i,...f}),q);return this.push({type:'TRANSFER',item:i,from:f,to:t,quantity:q,source},'STOCK_TRANSFER')}
+  adjust(item,atBucket,delta,source={}){const d=number(delta),b=cleanBucket(atBucket),i=cleanItem(item);if(!d)return null;if(d<0)this.stock.assertAvailable(bucketKey({...i,...b}),Math.abs(d));return this.push({type:'ADJUST',item:i,atBucket:b,delta:d,quantity:Math.abs(d),source},'STOCK_ADJUST')}
+  canCancel(id){const e=this.store.db.ledger.find(x=>x.id===id);if(!e||e.cancelledAt)return{ok:false,reason:'Movimento non disponibile.'};if(e.source?.kind==='REQUEST')return{ok:false,reason:'I prelievi collegati a una richiesta si gestiscono dalla richiesta.'};if(['RECEIPT','PUTAWAY'].includes(e.source?.kind))return{ok:false,reason:'Le entrate e le ubicazioni si gestiscono dal modulo Entrata Merci.'};try{if(e.type==='IN')this.stock.assertAvailable(bucketKey({...e.item,...e.to}),e.quantity);else if(e.type==='TRANSFER')this.stock.assertAvailable(bucketKey({...e.item,...e.to}),e.quantity);else if(e.type==='ADJUST'&&e.delta>0)this.stock.assertAvailable(bucketKey({...e.item,...e.atBucket}),e.delta);return{ok:true}}catch{return{ok:false,reason:'Non annullabile: la quantità risultante è già stata utilizzata o spostata.'}}}
+  cancel(id){const e=this.store.db.ledger.find(x=>x.id===id),check=this.canCancel(id);if(!check.ok)throw new Error(check.reason);const before=clone(e);e.cancelledAt=nowIso();e.cancelledBy=this.auth?.user||'';this.stock.invalidate?.();this.audit.record('LEDGER_CANCEL','LEDGER',id,before,e);return e}
+}
+
+class ReceivingService{
+  constructor(store,stock,ledger,audit,notifications,auth){Object.assign(this,{store,stock,ledger,audit,notifications,auth})}
+  nextId(){this.store.db.counters.receipt=(this.store.db.counters.receipt||0)+1;return `EM-${new Date().getFullYear()}-${String(this.store.db.counters.receipt).padStart(5,'0')}`}
+  findLineByPallet(pallet,item={}){const p=norm(pallet),i=cleanItem(item);for(const r of this.store.db.receipts)for(const l of r.lines||[])if(norm(l.receivingPallet)===p&&(!i.article||l.article===i.article)&&(!i.size||l.size===i.size)&&(!i.state||l.state===i.state))return{receipt:r,line:l};return null}
+  create(draft){if(!this.auth.can('RECEIVE'))throw new Error('Operazione non autorizzata.');const supplier=String(draft.supplier||'').trim();if(!supplier)throw new Error('Inserisci il fornitore.');const valid=(draft.lines||[]).filter(l=>normalizeArticle(l.article)&&number(l.checkedQuantity)>0);if(!valid.length)throw new Error('Inserisci almeno un articolo con quantità controllata maggiore di zero.');const id=this.nextId(),receipt={id,supplie

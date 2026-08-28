@@ -1,0 +1,24 @@
+'receipts-pending':()=>go('receipts',{mode:'PENDING'}),'receipts-all':()=>go('receipts',{mode:'ALL'}),'receipt-line-add':()=>this.addReceiptLine(),'receipt-confirm':()=>this.confirmReceipt(),'ddt-camera':()=>document.getElementById('ddtCamera').click(),'ddt-file':()=>document.getElementById('ddtFile').click(),'ddt-analyze':()=>this.openAnalysis('DDT'),'request-camera':()=>document.getElementById('requestCamera').click(),'request-file':()=>document.getElementById('requestFile').click(),'request-analyze':()=>this.openAnalysis('REQUEST'),'analysis-share':()=>this.shareAnalysis(),'analysis-copy':()=>this.copyAnalysisPrompt(),'analysis-import':()=>this.importAnalysisJson(),stock:()=>{if(this.require('STOCK_VIEW',{master:true}))go('stock')},'rectify-new':()=>go('rectify',{key:''}),rectify:()=>go('rectify',{key:''}),'rectify-save':()=>this.saveRectify(),count:()=>go('count'),'count-load':()=>this.loadCount(),'count-finalize':()=>this.finalizeCount(),issue:()=>go('issue'),'issue-confirm':()=>this.confirmIssue(),transfer:()=>go('transfer'),'transfer-confirm':()=>this.confirmTransfer(),requests:()=>go('requests-progress'),'request-new':()=>this.openRequestNew(),'request-line-add':()=>this.addRequestLine(),'request-save':()=>this.saveRequest(),'requests-progress':()=>go('requests-progress'),'requests-process':()=>go('requests-process'),registry:()=>go('registry'),'registry-movements':()=>{this.registryTab='MOVIMENTI';go('registry-list')},'registry-audit':()=>{this.registryTab='AUDIT';go('registry-list')},'registry-export':async()=>{const n=await this.excel.exportRegistry();this.toast(`${n} esportato.`)},'activity-today':()=>{this.activityDate=localDateInput();this.renderView()},'registry-filter-toggle':()=>document.getElementById('registryFilters')?.classList.toggle('hidden')};
+    if(map[action])return map[action]();
+    if(action==='receipt-line-remove')return this.removeReceiptLine(el.dataset.line);if(action==='partial-add')return this.addPartial(el.dataset.line);if(action==='partial-undo')return this.undoPartial(el.dataset.line);if(action==='partial-clear')return this.clearPartial(el.dataset.line);if(action==='receipt-open')return go('receipt-detail',{id:el.dataset.id});if(action==='putaway-open')return go('putaway',{receipt:el.dataset.receipt,line:el.dataset.line});if(action==='putaway-confirm')return this.confirmPutAway(el.dataset.receipt,el.dataset.line);if(action==='rectify-open')return go('rectify',{key:el.dataset.key});if(action==='count-partial-add')return this.addCountPartial(el.dataset.dom);if(action==='count-undo')return this.undoCountPartial(el.dataset.dom);if(action==='count-clear')return this.clearCountPartial(el.dataset.dom);if(action==='count-zero')return this.countZero(el.dataset.dom);if(action==='count-extra-add')return this.addCountExtra();if(action==='count-extra-remove')return this.removeCountExtra(el.dataset.dom);if(action==='count-extra-partial-add')return this.addCountExtraPartial(el.dataset.dom);if(action==='count-extra-undo')return this.undoCountExtra(el.dataset.dom);if(action==='count-extra-clear')return this.clearCountExtra(el.dataset.dom);if(action==='request-line-remove')return this.removeRequestLine(el.dataset.line);if(action==='request-open')return go('request-detail',{id:el.dataset.id});if(action==='request-pick')return go('request-pick',{id:el.dataset.id});if(action==='request-pick-save')return this.saveRequestPick(el.dataset.id);if(action==='ledger-cancel')return this.cancelLedger(el.dataset.id);if(action==='notif-read'){this.domain.notifications.markRead(el.dataset.id);this.store.save('notification:read');document.getElementById('notificationDialog').close();if(el.dataset.entity==='RECEIPT')go('receipt-detail',{id:el.dataset.entityId});else if(el.dataset.entity==='REQUEST')go('request-detail',{id:el.dataset.entityId});return}
+  }
+}
+
+/* js/app.js */
+
+const store=new Store();
+const auth=new AuthService();
+let ui=null;
+const router=new Router(()=>ui?.render());
+const domain=createDomain(store,auth);
+const excel=new ExcelService(store,domain);
+ui=new UI({store,auth,router,domain,excel});
+
+// NOVA usa esclusivamente NOVA_DB_V1. L'eventuale database REMOTO viene solo rilevato
+// per una migrazione esplicita e non viene mai modificato.
+try{globalThis.__NOVA_LEGACY_AVAILABLE=!!localStorage.getItem(CONFIG.legacyStorageKey)}catch{globalThis.__NOVA_LEGACY_AVAILABLE=false}
+
+globalThis.NOVA=Object.freeze({version:CONFIG.version,store,auth,router,domain,excel,ui});
+ui.render();</script>
+</body>
+</html>

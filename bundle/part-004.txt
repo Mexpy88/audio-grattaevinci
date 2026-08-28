@@ -1,0 +1,51 @@
+r,ddtNumber:String(draft.ddtNumber||'').trim(),ddtDate:draft.ddtDate||'',receivedAt:draft.receivedAt||nowIso(),note:String(draft.note||'').trim(),operator:this.auth.user,createdAt:nowIso(),attachments:clone(draft.attachments||[]),lines:[]};
+    valid.forEach((raw,index)=>{const item=cleanItem(raw),lineId=uid(),receivingPallet=`${id}-${norm(raw.pallet||'P01')||'P01'}-${String(index+1).padStart(2,'0')}`,suggest=this.stock.suggest(item.article,item.size,item.state),checked=number(raw.checkedQuantity),line={id:lineId,...item,ddtQuantity:number(raw.ddtQuantity),checkedQuantity:checked,remainingToPutAway:checked,pallet:norm(raw.pallet||'P01')||'P01',receivingPallet,note:String(raw.note||'').trim(),suggestedLocation:suggest?.location||'',suggestedPallet:suggest?.pallet||'',partials:clone(raw.partials||[])};receipt.lines.push(line);this.ledger.incoming(item,{location:CONFIG.receivingLocation,pallet:receivingPallet},checked,{kind:'RECEIPT',receiptId:id,lineId})});
+    this.store.db.receipts.unshift(receipt);this.notifications.create({recipient:'Lina',title:`Merce arrivata · ${supplier}`,body:`${receipt.lines.length} ${receipt.lines.length===1?'articolo':'articoli'} · ${receipt.lines.reduce((n,l)=>n+l.checkedQuantity,0)} pezzi controllati`,type:'GOODS_ARRIVED',entityType:'RECEIPT',entityId:id});this.audit.record('RECEIPT_CONFIRMED','RECEIPT',id,null,receipt);this.store.save('receipt:create');return receipt}
+  pendingForLine(lineId){for(const r of this.store.db.receipts){const l=(r.lines||[]).find(x=>x.id===lineId);if(l)return Math.max(0,number(l.remainingToPutAway))}return 0}
+  lineStats(_receipt,line){const received=number(line.checkedQuantity),pending=Math.max(0,number(line.remainingToPutAway)),putAway=Math.max(0,number(line.putAwayQuantity)),direct=Math.max(0,received-pending-putAway);return{received,pending,putAway,direct}}
+  stats(receipt){const x=(receipt.lines||[]).map(l=>this.lineStats(receipt,l));return{received:x.reduce((n,v)=>n+v.received,0),pending:x.reduce((n,v)=>n+v.pending,0),putAway:x.reduce((n,v)=>n+v.putAway,0),direct:x.reduce((n,v)=>n+v.direct,0)}}
+  status(receipt){const s=this.stats(receipt);return s.pending<=0?'COMPLETATA':s.pending<s.received?'PARZIALMENTE GESTITA':'DA UBICARE'}
+  consumeFromReceiving(source,quantity,{reason='PRELIEVO'}={}){if(source.location!==CONFIG.receivingLocation)return null;const found=this.findLineByPallet(source.pallet,source),q=number(quantity);if(!found)return null;if(found.line.remainingToPutAway+1e-9<q)throw new Error('La quantità da ubicare associata al pallet non è sufficiente.');found.line.remainingToPutAway-=q;found.line.receivingMovements=found.line.receivingMovements||[];found.line.receivingMovements.push({at:nowIso(),quantity:q,reason});return found}
+  restoreToReceiving(lineId,quantity){for(const r of this.store.db.receipts){const l=(r.lines||[]).find(x=>x.id===lineId);if(l){l.remainingToPutAway=Math.min(number(l.checkedQuantity),number(l.remainingToPutAway)+number(quantity));return l}}return null}
+  putAway(receiptId,lineId,quantity,to){if(!this.auth.can('MOVE'))throw new Error('Operazione non autorizzata.');const receipt=this.store.db.receipts.find(r=>r.id===receiptId),line=receipt?.lines?.find(l=>l.id===lineId);if(!line)throw new Error('Riga entrata non trovata.');const q=number(quantity),pending=this.pendingForLine(lineId);if(q<=0||q>pending)throw new Error(`Quantità da ubicare non valida. Restano ${pending} pezzi.`);const target=cleanBucket(to);if(!target.location)throw new Error('Inserisci Fila/Scaffale di destinazione.');if(target.location===CONFIG.receivingLocation)throw new Error('Scegli una posizione definitiva diversa da AREA RICEVIMENTO.');const from={location:CONFIG.receivingLocation,pallet:line.receivingPallet};const e=this.ledger.transfer(line,from,target,q,{kind:'PUTAWAY',receiptId,lineId});line.remainingToPutAway-=q;line.putAwayQuantity=number(line.putAwayQuantity)+q;line.putAways=line.putAways||[];line.putAways.push({id:e.id,at:e.at,quantity:q,location:target.location,pallet:target.pallet,operator:this.auth.user});this.audit.record('RECEIPT_PUTAWAY','RECEIPT',receiptId,null,{lineId,quantity:q,to:target});this.store.save('receipt:putaway');return e}
+}
+
+class IssueService{
+  constructor(store,stock,ledger,audit,receiving,auth){Object.assign(this,{store,stock,ledger,audit,receiving,auth})}
+  nextId(){this.store.db.counters.issue=(this.store.db.counters.issue||0)+1;return `SC-${new Date().getFullYear()}-${String(this.store.db.counters.issue).padStart(5,'0')}`}
+  prepare(items=[]){
+    const prepared=[];
+    for(const p of items){
+      const source=p.source||p,stockRow=p.stockRow||source,item=cleanItem(p.item||stockRow),pieces=integer(p.pieces??p.quantity),cartons=integer(p.cartons);
+      if(pieces<=0)continue;
+      const bucket=cleanBucket(source),sourceKey=bucketKey({...item,...bucket});
+      prepared.push({raw:p,item,source:bucket,stockRow:{...stockRow,...item,...bucket},sourceKey,pieces,cartons,lineId:p.lineId||'',extra:!!p.extra});
+    }
+    if(!prepared.length)throw new Error('Nessuna quantità da scaricare.');
+    const totals=new Map();for(const p of prepared)totals.set(p.sourceKey,(totals.get(p.sourceKey)||0)+p.pieces);
+    for(const [key,q] of totals)this.stock.assertAvailable(key,q);
+    const receivingTotals=new Map();for(const p of prepared)if(p.source.location===CONFIG.receivingLocation)receivingTotals.set(p.sourceKey,(receivingTotals.get(p.sourceKey)||0)+p.pieces);
+    for(const [key,q] of receivingTotals){const row=this.stock.findByKey(key),found=row?this.receiving.findLineByPallet(row.pallet,row):null;if(!found)throw new Error('Pallet in Area Ricevimento non associato a un’entrata merci.');if(number(found.line.remainingToPutAway)+1e-9<q)throw new Error(`Sul pallet risultano ${number(found.line.remainingToPutAway)} pezzi ancora gestibili, ma ne stai prelevando ${q}.`)}
+    return prepared;
+  }
+  create({destination='',note='',requestId='',items=[]}){
+    if(!this.auth.can('MOVE')&&!this.auth.can('REQUEST_PROCESS'))throw new Error('Operazione non autorizzata.');
+    const prepared=this.prepare(items),id=this.nextId(),issue={id,createdAt:nowIso(),operator:this.auth.user,destination:norm(destination),note:String(note||'').trim(),requestId,movementIds:[],items:[]};
+    for(const p of prepared){const evt=this.ledger.outgoing(p.item,p.source,p.pieces,{kind:requestId?'REQUEST':'ISSUE',issueId:id,requestId,destination:issue.destination,note:issue.note});if(p.source.location===CONFIG.receivingLocation){const found=this.receiving.consumeFromReceiving(p.stockRow,p.pieces,{reason:requestId?'RICHIESTA':'SCARICO'});if(found)evt.source.receiptLineId=found.line.id}issue.movementIds.push(evt.id);issue.items.push({article:p.item.article,size:p.item.size,state:p.item.state,pieces:p.pieces,cartons:p.cartons,source:p.source,movementId:evt.id,lineId:p.lineId,extra:p.extra})}
+    this.store.db.issues.unshift(issue);this.audit.record('ISSUE_CONFIRMED','ISSUE',id,null,issue);return issue
+  }
+}
+
+class RequestService{
+  constructor(store,stock,issues,audit,notifications,auth){Object.assign(this,{store,stock,issues,audit,notifications,auth})}
+  nextId(){this.store.db.counters.request=(this.store.db.counters.request||0)+1;return `RQ-${new Date().getFullYear()}-${String(this.store.db.counters.request).padStart(5,'0')}`}
+  create(draft){if(!this.auth.can('REQUEST_CREATE'))throw new Error('Operazione non autorizzata.');const lines=(draft.lines||[]).map(l=>({id:uid(),article:normalizeArticle(l.article),size:norm(l.size),cartonsRequested:integer(l.cartonsRequested??l.cartons??l.quantity),marker:String(l.marker||'').includes('*')?'*':'',note:String(l.note||'').trim()})).filter(l=>l.article&&l.cartonsRequested>0);if(!lines.length)throw new Error('Inserisci almeno una riga con almeno 1 cartone.');const r={id:this.nextId(),destination:norm(draft.destination||'LINA')||'LINA',operator:this.auth.user,reference:String(draft.reference||'').trim(),requestedAt:draft.requestedAt||nowIso(),createdAt:nowIso(),note:String(draft.note||'').trim(),quantityUnit:'CARTONI',status:'DA PREPARARE',lines,deliveries:[]};this.store.db.requests.unshift(r);this.notifications.create({recipient:'WAREHOUSE',title:`Nuova richiesta · ${r.destination}`,body:`${r.id} · ${lines.reduce((n,l)=>n+l.cartonsRequested,0)} cartoni richiesti`,type:'REQUEST_CREATED',entityType:'REQUEST',entityId:r.id});this.audit.record('REQUEST_CREATED','REQUEST',r.id,null,r);this.store.save('request:create');return r}
+  visible(r){return !this.auth.isLina()||r.operator==='Lina'||r.destination==='LINA'}
+  deliveredForLine(r,lineId){let cartons=0,pieces=0;for(const d of r.deliveries||[])for(const i of d.items||[])if(i.lineId===lineId&&!i.extra){cartons+=integer(i.cartons);pieces+=integer(i.pieces)}return{cartons,pieces}}
+  summary(r){let requested=0,delivered=0,pieces=0;for(const l of r.lines||[]){requested+=integer(l.cartonsRequested);const d=this.deliveredForLine(r,l.id);delivered+=d.cartons;pieces+=d.pieces}const remaining=Math.max(0,requested-delivered);return{requested,delivered,remaining,pieces,percent:requested?Math.min(100,Math.round(delivered*100/requested)):0}}
+  fulfill(requestId,picks,note=''){
+    if(!this.auth.can('REQUEST_PROCESS'))throw new Error('Operazione non autorizzata.');const r=this.store.db.requests.find(x=>x.id===requestId);if(!r)throw new Error('Richiesta non trovata.');
+    const items=[],allocatedCartons=new Map();
+    for(const p of picks||[]){const pieces=integer(p.pieces??p.quantity),cartons=integer(p.cartons);if(!pieces&&!cartons)continue;const source=this.stock.findByKey(p.sourceKey);if(!source)throw new Error('Posizione di prelievo non più disponibile.');
+      if(p.extra){if(pieces<=0)throw new Error('Per il materiale extra inserisci i pezzi reali da scaricare.');items.push({lineId:'',item:source,source,stockRow:source,pieces,cartons,extra:true});continue}
+      const line=r.lines.find(l=>l.id===p.lineId);if(!line)throw new Error('Riga richiesta non trovata.');if(cartons<=0||pieces<=0)thr
