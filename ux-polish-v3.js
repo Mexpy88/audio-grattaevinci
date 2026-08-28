@@ -2,13 +2,14 @@
    - semantic pastel action cards
    - Registry keeps operational history only; duplicate Master controls stay in DOM but hidden
    - bootstraps Role Dashboard V1 + Premium Dashboard V2 + mobile request confirmation + registry repair + optimized goods receipt
+   Contract lineage: 2026.08.26-ux-polish-v3
 */
 (function installWarehouseUxPolishV3(){
   'use strict';
   if(window.WarehouseUxPolishV3)return;
 
-  const VERSION='2026.08.28-ux-polish-v3-dashboard-event1-goods-receipt2';
-  let installed=false,baseRenderRegistry=null;
+  const VERSION='2026.08.28-ux-polish-v3-premium-event2-dashboard-event1-goods-receipt2';
+  let installed=false,baseRenderRegistry=null,premiumRootObserver=null,premiumInboxTimer=null,premiumRefreshScheduled=false;
 
   function injectCss(){
     if(document.getElementById('warehouseUxPolishV3Css'))return;
@@ -49,6 +50,36 @@
     wrapped.__uxPolishV3=true;wrapped.__previous=baseRenderRegistry;window.renderRegistry=wrapped;return true;
   }
 
+  function schedulePremiumRefresh(){
+    if(premiumRefreshScheduled)return;
+    premiumRefreshScheduled=true;
+    requestAnimationFrame(()=>{
+      premiumRefreshScheduled=false;
+      window.WarehousePremiumDashboardV2?.sync?.();
+      window.WarehousePremiumDashboardV2Fix?.decorate?.();
+      window.WarehouseGoodsReceiptV1?.decorate?.();
+      window.WarehouseGoodsReceiptV2Fix?.decoratePartialCounters?.();
+    });
+  }
+
+  function installPremiumEventRefresh(){
+    const root=document.getElementById('rdDashboardV1');
+    if(root&&!premiumRootObserver){
+      premiumRootObserver=new MutationObserver(mutations=>{
+        if(mutations.some(m=>m.target===root&&m.type==='childList'))schedulePremiumRefresh();
+      });
+      premiumRootObserver.observe(root,{childList:true});
+    }
+    if(!premiumInboxTimer){
+      premiumInboxTimer=setInterval(()=>{
+        if(document.hidden)return;
+        window.WarehousePremiumDashboardV2?.renderInbox?.();
+      },10000);
+    }
+    schedulePremiumRefresh();
+    return true;
+  }
+
   function loadGoodsReceiptFix(){
     if(window.WarehouseGoodsReceiptV2Fix){window.WarehouseGoodsReceiptV2Fix.install?.();return true}
     const existing=document.getElementById('goodsReceiptV2FixJs');if(existing)return true;
@@ -85,16 +116,48 @@
     const existing=document.getElementById('requestFloatingConfirmV1Js');if(existing){existing.addEventListener('load',loadRegistryFix,{once:true});return true}
     const f=document.createElement('script');f.id='requestFloatingConfirmV1Js';f.src='request-floating-confirm-v1.js?v=20260827-rf1';f.async=false;f.onload=()=>{window.WarehouseRequestFloatingConfirmV1?.install?.();loadRegistryFix()};f.onerror=()=>console.error('Impossibile caricare request-floating-confirm-v1.js');document.body.appendChild(f);return true;
   }
+
   function loadPremiumFix(){
-    if(window.WarehousePremiumDashboardV2Fix){window.WarehousePremiumDashboardV2Fix.install?.();loadFloatingConfirm();return true}
-    const existing=document.getElementById('premiumDashboardV2FixJs');if(existing){existing.addEventListener('load',loadFloatingConfirm,{once:true});return true}
-    const f=document.createElement('script');f.id='premiumDashboardV2FixJs';f.src='premium-dashboard-v2-fix.js?v=20260827-premium2-fix1';f.async=false;f.onload=()=>{window.WarehousePremiumDashboardV2Fix?.install?.();loadFloatingConfirm()};f.onerror=()=>console.error('Impossibile caricare premium-dashboard-v2-fix.js');document.body.appendChild(f);return true;
+    if(window.WarehousePremiumDashboardV2Fix){window.WarehousePremiumDashboardV2Fix.install?.();installPremiumEventRefresh();loadFloatingConfirm();return true}
+    const existing=document.getElementById('premiumDashboardV2FixJs');if(existing){existing.addEventListener('load',()=>{installPremiumEventRefresh();loadFloatingConfirm()},{once:true});return true}
+
+    /* Premium fix used a second document.body subtree observer. Its work is now driven by the
+       dashboard-root observer installed below, so suppress only the legacy observer at bootstrap. */
+    const RealMutationObserver=window.MutationObserver;
+    class PremiumFixNoopObserver{observe(){}disconnect(){}takeRecords(){return[]}}
+    let restored=false;
+    const restore=()=>{if(restored)return;restored=true;window.MutationObserver=RealMutationObserver};
+    window.MutationObserver=PremiumFixNoopObserver;
+
+    const f=document.createElement('script');f.id='premiumDashboardV2FixJs';f.src='premium-dashboard-v2-fix.js?v=20260828-premium2-fix-event1';f.async=false;
+    f.onload=()=>{restore();window.WarehousePremiumDashboardV2Fix?.install?.();installPremiumEventRefresh();loadFloatingConfirm()};
+    f.onerror=()=>{restore();console.error('Impossibile caricare premium-dashboard-v2-fix.js')};
+    document.body.appendChild(f);return true;
   }
+
   function loadPremiumDashboard(){
     if(window.WarehousePremiumDashboardV2){window.WarehousePremiumDashboardV2.install?.();loadPremiumFix();return true}
     if(!document.getElementById('premiumDashboardV2Css')){const l=document.createElement('link');l.id='premiumDashboardV2Css';l.rel='stylesheet';l.href='premium-dashboard-v2.css?v=20260827-premium2';document.head.appendChild(l)}
     const existing=document.getElementById('premiumDashboardV2Js');if(existing){existing.addEventListener('load',loadPremiumFix,{once:true});return true}
-    const p=document.createElement('script');p.id='premiumDashboardV2Js';p.src='premium-dashboard-v2.js?v=20260827-premium2';p.async=false;p.onload=()=>{window.WarehousePremiumDashboardV2?.install?.();loadPremiumFix()};p.onerror=()=>console.error('Impossibile caricare premium-dashboard-v2.js');document.body.appendChild(p);return true;
+
+    /* Premium Dashboard V2 originally observed the entire body subtree and called sync() after
+       every DOM mutation. sync() itself rewrites the inbox, producing another mutation and a
+       self-sustaining render cycle. It also refreshed the inbox every 1.2 seconds. Neutralize both
+       schedulers only while the legacy module installs; its exported UI/data functions remain intact. */
+    const RealMutationObserver=window.MutationObserver,realSetInterval=window.setInterval;
+    class PremiumDashboardNoopObserver{observe(){}disconnect(){}takeRecords(){return[]}}
+    let restored=false;
+    const restore=()=>{if(restored)return;restored=true;window.MutationObserver=RealMutationObserver;window.setInterval=realSetInterval};
+    window.MutationObserver=PremiumDashboardNoopObserver;
+    window.setInterval=function(fn,delay,...args){
+      if(Number(delay)===1200&&String(fn).includes('renderInbox'))return 0;
+      return realSetInterval.call(window,fn,delay,...args);
+    };
+
+    const p=document.createElement('script');p.id='premiumDashboardV2Js';p.src='premium-dashboard-v2.js?v=20260828-premium2-event1';p.async=false;
+    p.onload=()=>{restore();window.WarehousePremiumDashboardV2?.install?.();loadPremiumFix()};
+    p.onerror=()=>{restore();console.error('Impossibile caricare premium-dashboard-v2.js')};
+    document.body.appendChild(p);return true;
   }
   function loadRolePatch(){
     if(window.WarehouseRoleDashboardPatchV1){window.WarehouseRoleDashboardPatchV1.install?.();loadPremiumDashboard();return true}
@@ -124,6 +187,6 @@
 
   function install(){if(typeof document==='undefined')return false;injectCss();hideRegistryMaster();wrapRegistry();loadRoleDashboard();installed=true;return true}
 
-  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard,loadPremiumFix,loadFloatingConfirm,loadRegistryFix,loadGoodsReceipt,loadGoodsReceiptFix};
+  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard,loadPremiumFix,loadFloatingConfirm,loadRegistryFix,loadGoodsReceipt,loadGoodsReceiptFix,installPremiumEventRefresh,schedulePremiumRefresh};
   install();
 })();
