@@ -1,6 +1,5 @@
 {
-  "schema": "NOVA_PACKAGE_V3",
-  "sha256": "b76b0db9269db61e793254961fbfdf96c81311d2e5b01e26e2b0978819190481",
+  "schema": "NOVA_PACKAGE_V4",
   "parts": [
     "bundle/seg-000.txt",
     "bundle/seg-001.txt",
@@ -22,7 +21,7 @@
     "bundle/seg-017.txt",
     "bundle/seg-018.txt"
   ],
-  "bytes": 146591,
+  "presentation": "bundle/mobile-v4.css",
   "generated": "2026-08-28",
-  "release": "mobile-login-cleanup"
+  "release": "warehouse-selector-mobile-ux-v4"
 }
