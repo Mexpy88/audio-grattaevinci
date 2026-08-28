@@ -11,5 +11,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify packaged clean-room application
+      - name: Verify clean-room mobile/login build
         run: node verify-package.mjs
