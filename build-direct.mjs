@@ -2,8 +2,20 @@ import fs from 'node:fs';
 
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 let html=manifest.parts.map(p=>fs.readFileSync(p,'utf8')).join('');
-if(!html.includes('bundle/mobile-v4.css')){
-  html=html.replace('</head>','<link rel="stylesheet" href="bundle/mobile-v4.css?v=20260828-v5"></head>');
-}
+const mustReplace=(from,to,label)=>{if(!html.includes(from))throw new Error(`NOVA build contract missing: ${label}`);html=html.replace(from,to)};
+
+mustReplace('<link rel="preload" as="image" href="logo-transparent.png">','<link rel="preload" as="image" href="logo-transparent.png" fetchpriority="high">','logo preload');
+
+const landingRe=/landing\(\)\{return `<section class="landing warehouse-landing">[\s\S]*?<\/section>`\}/;
+if(!landingRe.test(html))throw new Error('NOVA build contract missing: landing renderer');
+html=html.replace(landingRe,`landing(){return \`<section class="landing warehouse-landing"><div class="brand-lockup"><img class="brand-logo" src="\${LOGO}" width="600" height="127" alt="Servizi Ospedalieri" loading="eager" decoding="sync" fetchpriority="high" onload="this.closest('.warehouse-landing')?.classList.add('brand-ready')" onerror="this.closest('.warehouse-landing')?.classList.add('brand-ready')"></div><div class="warehouse-list"><button class="warehouse-card warehouse-teramo" type="button" data-action="login" aria-label="Accedi a Magazzino Teramo"><span>MAGAZZINO TERAMO</span></button><button class="warehouse-card warehouse-ferrara" type="button" disabled aria-disabled="true"><span>MAGAZZINO FERRARA</span></button><button class="warehouse-card warehouse-lucca" type="button" disabled aria-disabled="true"><span>MAGAZZINO LUCCA</span></button></div></section>\`}`);
+
+mustReplace('data-action="toggle-pin" aria-label="Mostra PIN"','class="pin-toggle" data-action="toggle-pin" aria-label="Mostra PIN" aria-pressed="false"','PIN toggle markup');
+mustReplace("openLogin(){const d=document.getElementById('loginDialog'),pin=document.getElementById('loginPin');pin.value='';document.getElementById('loginError').classList.add('hidden');d.showModal();setTimeout(()=>pin.focus(),50)}","openLogin(){const d=document.getElementById('loginDialog'),pin=document.getElementById('loginPin'),toggle=d.querySelector('[data-action=\\\"toggle-pin\\\"]');pin.value='';pin.type='password';if(toggle){toggle.setAttribute('aria-label','Mostra PIN');toggle.setAttribute('aria-pressed','false')}document.getElementById('loginError').classList.add('hidden');d.showModal();setTimeout(()=>pin.focus(),50)}",'login reset');
+mustReplace("'toggle-pin':()=>{const p=document.getElementById('loginPin');p.type=p.type==='password'?'text':'password'}","'toggle-pin':()=>{const p=document.getElementById('loginPin'),show=p.type==='password';p.type=show?'text':'password';el.setAttribute('aria-label',show?'Nascondi PIN':'Mostra PIN');el.setAttribute('aria-pressed',show?'true':'false')}",'PIN toggle state');
+
+if(!html.includes('bundle/mobile-v4.css'))html=html.replace('</head>','<link rel="stylesheet" href="bundle/mobile-v4.css?v=20260828-v6"></head>');
+else html=html.replace(/bundle\/mobile-v4\.css\?v=[^"']+/g,'bundle/mobile-v4.css?v=20260828-v6');
+
 fs.writeFileSync('index.html',html,'utf8');
-console.log(`NOVA direct static shell generated: ${Buffer.byteLength(html)} bytes`);
+console.log(`NOVA V6 direct static shell generated: ${Buffer.byteLength(html)} bytes`);
