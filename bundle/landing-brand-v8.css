@@ -1,0 +1,23 @@
+/* NOVA landing refinement V8 — elevated watermark, preserving V7 brand language */
+.warehouse-landing::after{
+  top:46%!important;
+  width:min(760px,156vw)!important;
+  transform:translate(-50%,-26%)!important;
+  opacity:.052!important;
+}
+@media(max-width:700px){
+  .warehouse-landing::after{
+    top:44%!important;
+    width:min(680px,166vw)!important;
+    transform:translate(-50%,-26%)!important;
+    opacity:.050!important;
+  }
+}
+@media(max-width:390px){
+  .warehouse-landing::after{
+    top:47%!important;
+    width:174vw!important;
+    transform:translate(-50%,-24%)!important;
+    opacity:.047!important;
+  }
+}
