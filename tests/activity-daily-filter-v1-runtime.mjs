@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 const js=fs.readFileSync('activity-daily-filter-v1.js','utf8');
 const polish=fs.readFileSync('ux-polish-v3.js','utf8');
 
-assert.match(js,/2026\.08\.28-activity-daily-filter1-lina-goods1/);
+assert.match(js,/2026\.08\.28-activity-daily-filter1-lina-goods2/);
 assert.match(js,/RIEPILOGO ATTIVITÀ/);
 assert.match(js,/rdActivityCalendarV1/);
 assert.match(js,/type=\"date\"/);
@@ -23,13 +23,18 @@ assert.match(js,/Richieste ricevute/);
 assert.match(js,/Richieste completate/);
 assert.match(js,/dayAudits=audits\.filter\(a=>sameDay\(a\?\.at,key\)\)/);
 
-// Lina wording is user-facing only: the read-only goods action is renamed without changing its handler or data flow.
+// Lina wording is user-facing only: both dashboard and the receipt hub are renamed without changing handlers/data flow.
 assert.match(js,/function decorateLinaGoodsLabel/);
 assert.match(js,/if\(!isLina\(\)\)return false/);
 assert.match(js,/ARRIVI MERCE/);
 assert.match(js,/MERCE ARRIVATA/);
 assert.match(js,/rdGoodsReceiptModuleV1/);
 assert.match(js,/grDashAction/);
+assert.match(js,/grHubV1/);
+assert.match(js,/grHubAction b/);
+assert.match(js,/function wrapGoodsHub/);
+assert.match(js,/openGoodsReceiptHubV1/);
+assert.match(js,/requestAnimationFrame\(decorateLinaGoodsLabel\)/);
 
 // The observer is restricted to direct dashboard children: changing the activity card itself cannot self-trigger.
 assert.match(js,/rootObserver\.observe\(root,\{childList:true\}\)/);
