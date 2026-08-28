@@ -14,7 +14,7 @@
     }catch{return null}
   };
 
-  const tone=(frequency,duration,gain=0.006,type='sine',delay=0)=>{
+  const tone=(frequency,duration,gain=0.014,type='sine',delay=0)=>{
     const ctx=getAudio();
     if(!ctx)return;
     const start=ctx.currentTime+delay;
@@ -32,21 +32,21 @@
   };
 
   const softTap=()=>{
-    tone(330,0.028,0.006,'sine',0);
-    tone(520,0.020,0.0035,'sine',0.010);
+    tone(330,0.028,0.014,'sine',0);
+    tone(520,0.020,0.0085,'sine',0.010);
   };
 
   const keyTick=()=>{
-    tone(760,0.016,0.0034,'triangle',0);
+    tone(760,0.016,0.009,'triangle',0);
   };
 
   const accessSuccess=()=>{
     const now=performance.now();
     if(now-lastSuccessAt<500)return;
     lastSuccessAt=now;
-    tone(520,0.055,0.0055,'sine',0);
-    tone(660,0.060,0.0052,'sine',0.045);
-    tone(820,0.075,0.0048,'sine',0.092);
+    tone(520,0.055,0.017,'sine',0);
+    tone(660,0.060,0.016,'sine',0.045);
+    tone(820,0.075,0.0145,'sine',0.092);
   };
 
   const checkSuccessfulLogin=()=>{
