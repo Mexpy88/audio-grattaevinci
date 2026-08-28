@@ -25,7 +25,13 @@ assert.doesNotMatch(hardening,/window\.importMappedMaster\s*=\s*execute/,'UI har
 class MO{observe(){}}
 const classes=new Set();
 const body={classList:{toggle:(n,on)=>on?classes.add(n):classes.delete(n)},appendChild(){},querySelector(){return null}};
-const document={body,head:{appendChild(){}},getElementById(){return null},querySelector(){return null},createElement(tag){return {tagName:tag.toUpperCase(),id:'',className:'',textContent:'',innerHTML:'',dataset:{},style:{},setAttribute(){},appendChild(){},addEventListener(){},querySelector(){return null},querySelectorAll(){return[],},classList:{add(){},remove(){},toggle(){},contains(){return false}}}}};
+const document={
+  body,
+  head:{appendChild(){}},
+  getElementById(){return null},
+  querySelector(){return null},
+  createElement(tag){return {tagName:tag.toUpperCase(),id:'',className:'',textContent:'',innerHTML:'',dataset:{},style:{},setAttribute(){},appendChild(){},addEventListener(){},querySelector(){return null},querySelectorAll(){return []},classList:{add(){},remove(){},toggle(){},contains(){return false}}}}
+};
 const local=new Map();
 const localStorage={getItem:k=>local.get(k)??null,setItem:(k,v)=>local.set(k,String(v)),removeItem:k=>local.delete(k)};
 const db={master:{rows:[]},audits:[{at:'2026-08-28T05:00:00Z'}],movements:[],documents:[],requests:[]};
