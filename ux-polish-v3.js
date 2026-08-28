@@ -1,13 +1,13 @@
 /* Final UX polish for REMOTO V1 managerial interface.
    - semantic pastel action cards
    - Registry keeps operational history only; duplicate Master controls stay in DOM but hidden
-   - bootstraps Role Dashboard V1 + Premium Dashboard V2 + mobile request confirmation + registry repair
+   - bootstraps Role Dashboard V1 + Premium Dashboard V2 + mobile request confirmation + registry repair + consolidated Master controller
 */
 (function installWarehouseUxPolishV3(){
   'use strict';
   if(window.WarehouseUxPolishV3)return;
 
-  const VERSION='2026.08.27-ux-polish-v3-premium2-floating-confirm1-registryfix1';
+  const VERSION='2026.08.28-ux-polish-v3-refactor-master1';
   let installed=false,baseRenderRegistry=null;
 
   function injectCss(){
@@ -49,10 +49,15 @@
     wrapped.__uxPolishV3=true;wrapped.__previous=baseRenderRegistry;window.renderRegistry=wrapped;return true;
   }
 
+  function loadMasterController(){
+    if(window.WarehouseMasterControllerV1){window.WarehouseMasterControllerV1.install?.();return true}
+    if(document.getElementById('masterControllerV1Js'))return true;
+    const m=document.createElement('script');m.id='masterControllerV1Js';m.src='master-controller-v1.js?v=20260828-master-controller1';m.async=false;m.onload=()=>window.WarehouseMasterControllerV1?.install?.();m.onerror=()=>console.error('Impossibile caricare master-controller-v1.js');document.body.appendChild(m);return true;
+  }
   function loadRegistryFix(){
-    if(window.WarehouseRegistryMovementsFixV1){window.WarehouseRegistryMovementsFixV1.install?.();return true}
-    if(document.getElementById('registryMovementsFixV1Js'))return true;
-    const r=document.createElement('script');r.id='registryMovementsFixV1Js';r.src='registry-movements-fix-v1.js?v=20260827-registryfix1';r.async=false;r.onload=()=>window.WarehouseRegistryMovementsFixV1?.install?.();r.onerror=()=>console.error('Impossibile caricare registry-movements-fix-v1.js');document.body.appendChild(r);return true;
+    if(window.WarehouseRegistryMovementsFixV1){window.WarehouseRegistryMovementsFixV1.install?.();loadMasterController();return true}
+    if(document.getElementById('registryMovementsFixV1Js')){loadMasterController();return true}
+    const r=document.createElement('script');r.id='registryMovementsFixV1Js';r.src='registry-movements-fix-v1.js?v=20260827-registryfix1';r.async=false;r.onload=()=>{window.WarehouseRegistryMovementsFixV1?.install?.();loadMasterController()};r.onerror=()=>console.error('Impossibile caricare registry-movements-fix-v1.js');document.body.appendChild(r);return true;
   }
   function loadFloatingConfirm(){
     if(window.WarehouseRequestFloatingConfirmV1){window.WarehouseRequestFloatingConfirmV1.install?.();loadRegistryFix();return true}
@@ -85,6 +90,6 @@
 
   function install(){if(typeof document==='undefined')return false;injectCss();hideRegistryMaster();wrapRegistry();loadRoleDashboard();installed=true;return true}
 
-  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard,loadPremiumFix,loadFloatingConfirm,loadRegistryFix};
+  window.WarehouseUxPolishV3={version:VERSION,install,hideRegistryMaster,loadRoleDashboard,loadRolePatch,loadPremiumDashboard,loadPremiumFix,loadFloatingConfirm,loadRegistryFix,loadMasterController};
   install();
 })();
