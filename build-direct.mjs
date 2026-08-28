@@ -22,8 +22,8 @@ if(!html.includes('bundle/landing-brand-v7.css'))html=html.replace('</head>','<l
 else html=html.replace(/bundle\/landing-brand-v7\.css\?v=[^"']+/g,'bundle/landing-brand-v7.css?v=20260828-v7');
 if(!html.includes('bundle/landing-brand-v8.css'))html=html.replace('</head>','<link rel="stylesheet" href="bundle/landing-brand-v8.css?v=20260828-v8"></head>');
 else html=html.replace(/bundle\/landing-brand-v8\.css\?v=[^"']+/g,'bundle/landing-brand-v8.css?v=20260828-v8');
-if(!html.includes('bundle/ui-sound-v8.js'))html=html.replace('</body>','<script src="bundle/ui-sound-v8.js?v=20260828-v9"></script></body>');
-else html=html.replace(/bundle\/ui-sound-v8\.js\?v=[^"']+/g,'bundle/ui-sound-v8.js?v=20260828-v9');
+if(!html.includes('bundle/ui-sound-v8.js'))html=html.replace('</body>','<script src="bundle/ui-sound-v8.js?v=20260828-v10"></script></body>');
+else html=html.replace(/bundle\/ui-sound-v8\.js\?v=[^"']+/g,'bundle/ui-sound-v8.js?v=20260828-v10');
 
 fs.writeFileSync('index.html',html,'utf8');
-console.log(`NOVA V9 stronger sound + protected-sheet preservation shell generated: ${Buffer.byteLength(html)} bytes`);
+console.log(`NOVA V10 high-presence sound + protected-sheet shell generated: ${Buffer.byteLength(html)} bytes`);
