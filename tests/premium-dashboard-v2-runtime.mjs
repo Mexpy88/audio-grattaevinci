@@ -59,9 +59,19 @@ assert.match(polish,/premium-dashboard-v2\.js/);
 assert.match(polish,/premium-dashboard-v2-fix\.js/);
 assert.match(polish,/loadPremiumFix/);
 
+// Performance contract: legacy body-wide observers and 1.2s polling remain in the old
+// presentation modules for compatibility, but the loader must neutralize them at bootstrap.
+assert.match(polish,/PremiumDashboardNoopObserver/);
+assert.match(polish,/PremiumFixNoopObserver/);
+assert.match(polish,/Number\(delay\)===1200/);
+assert.match(polish,/installPremiumEventRefresh/);
+assert.match(polish,/premiumRootObserver\.observe\(root,\{childList:true\}\)/);
+assert.match(polish,/10000/);
+assert.ok(!/premiumRootObserver\.observe\([^\n]*subtree:true/.test(polish),'premium replacement observer must not watch a subtree');
+
 // Presentation layer must not replace warehouse stock/master engines.
 assert.ok(!/window\.stockBuckets\s*=/.test(js));
 assert.ok(!/window\.saveDb\s*=/.test(js));
 assert.ok(!/window\.confirmPicking\s*=/.test(js));
 
-console.log('Premium Dashboard V2 + notifications + Lina digital request contract OK');
+console.log('Premium Dashboard V2 + notifications + Lina digital request + event-driven performance contract OK');
