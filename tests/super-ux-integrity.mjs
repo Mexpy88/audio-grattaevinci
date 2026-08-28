@@ -2,6 +2,7 @@ import fs from 'node:fs';
 
 const ux=fs.readFileSync('super-ux.js','utf8');
 const hard=fs.readFileSync('ui-hardening.js','utf8');
+const controller=fs.readFileSync('master-controller-v1.js','utf8');
 const index=fs.readFileSync('index.html','utf8');
 const css=fs.readFileSync('super-ux.css','utf8');
 
@@ -16,8 +17,10 @@ const checks=[
   ['undo flow installed',/showUndo\(/.test(ux)&&/undoLastOperation/.test(ux)],
   ['autosave checkpoint installed',/CHECKPOINT_KEY/.test(ux)&&/installSaveCheckpoint/.test(ux)],
   ['master versioning installed',/master_version/.test(ux)&&/ESPORTA v/.test(ux)],
-  ['old-master preflight implemented',/beforeMasterImport/.test(ux)&&/Master precedente rilevato/.test(ux)],
-  ['hardening awaits preflight',/await window\.WarehouseUX\.beforeMasterImport\(\)/.test(hard)],
+  ['legacy old-master preflight remains available',/beforeMasterImport/.test(ux)&&/Master precedente rilevato/.test(ux)],
+  ['UI hardening no longer owns Master import',!/window\.importMappedMaster\s*=\s*execute/.test(hard)],
+  ['authoritative Master controller validates generation guard',/async function validateGuard/.test(controller)&&/WarehouseMasterGenerationGuard/.test(controller)&&/validateInspection/.test(controller)],
+  ['Master controller validates before parsing/saving',controller.indexOf('await validateGuard(selected.bytes)')<controller.indexOf('const parsed=parseV4(selected.wb)')&&controller.indexOf('const parsed=parseV4(selected.wb)')<controller.indexOf('saveDb();await idbPut')],
   ['beforeunload dirty protection',/beforeunload/.test(ux)&&/dirtyCount\(\)>0/.test(ux)],
   ['Super UX stylesheet loaded',/super-ux\.css/.test(index)],
   ['Super UX script loaded',/super-ux\.js/.test(index)],
