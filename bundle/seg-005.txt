@@ -1,0 +1,9 @@
+urn{ok:true}}catch{return{ok:false,reason:'Non annullabile: la quantità risultante è già stata utilizzata o spostata.'}}}
+  cancel(id){const e=this.store.db.ledger.find(x=>x.id===id),check=this.canCancel(id);if(!check.ok)throw new Error(check.reason);const before=clone(e);e.cancelledAt=nowIso();e.cancelledBy=this.auth?.user||'';this.stock.invalidate?.();this.audit.record('LEDGER_CANCEL','LEDGER',id,before,e);return e}
+}
+
+class ReceivingService{
+  constructor(store,stock,ledger,audit,notifications,auth){Object.assign(this,{store,stock,ledger,audit,notifications,auth})}
+  nextId(){this.store.db.counters.receipt=(this.store.db.counters.receipt||0)+1;return `EM-${new Date().getFullYear()}-${String(this.store.db.counters.receipt).padStart(5,'0')}`}
+  findLineByPallet(pallet,item={}){const p=norm(pallet),i=cleanItem(item);for(const r of this.store.db.receipts)for(const l of r.lines||[])if(norm(l.receivingPallet)===p&&(!i.article||l.article===i.article)&&(!i.size||l.size===i.size)&&(!i.state||l.state===i.state))return{receipt:r,line:l};return null}
+  create(draft){if(!this.auth.can('RECEIVE'))throw new Error('Operazione non autorizzata.');const supplier=String(draft.supplier||'').trim();if(!supplier)throw new Error('Inserisci il fornitore.');const valid=(draft.lines||[]).filter(l=>normalizeArticle(l.article)&&number(l.checkedQuantity)>0);if(!valid.length)throw new Error('Inserisci almeno un articolo con quantità controllata maggiore di zero.');const id=this.nextId(),receipt={id,supplie

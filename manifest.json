@@ -1,0 +1,28 @@
+{
+  "schema": "NOVA_PACKAGE_V3",
+  "sha256": "b76b0db9269db61e793254961fbfdf96c81311d2e5b01e26e2b0978819190481",
+  "parts": [
+    "bundle/seg-000.txt",
+    "bundle/seg-001.txt",
+    "bundle/seg-002.txt",
+    "bundle/seg-003.txt",
+    "bundle/seg-004.txt",
+    "bundle/seg-005.txt",
+    "bundle/seg-006.txt",
+    "bundle/seg-007.txt",
+    "bundle/seg-008.txt",
+    "bundle/seg-009.txt",
+    "bundle/seg-010.txt",
+    "bundle/seg-011.txt",
+    "bundle/seg-012.txt",
+    "bundle/seg-013.txt",
+    "bundle/seg-014.txt",
+    "bundle/seg-015.txt",
+    "bundle/seg-016.txt",
+    "bundle/seg-017.txt",
+    "bundle/seg-018.txt"
+  ],
+  "bytes": 146591,
+  "generated": "2026-08-28",
+  "release": "mobile-login-cleanup"
+}

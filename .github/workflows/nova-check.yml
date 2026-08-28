@@ -11,5 +11,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify clean-room mobile/login build
+      - name: Verify NOVA package V3
         run: node verify-package.mjs
