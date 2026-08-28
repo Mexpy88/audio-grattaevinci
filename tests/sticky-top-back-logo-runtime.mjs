@@ -10,12 +10,19 @@ assert.match(index,/logo-transparent\.png\?v=/);
 assert.doesNotMatch(index,/logo-full\.svg\?v=20260814-0756/);
 assert.match(index,/sticky-top-back\.js\?v=/);
 assert.match(index,/WarehouseStickyTopBack\?\.install\?\.\(\)/);
-assert.match(nav,/sticky-top-back2-passive/);
+assert.match(nav,/2026\.08\.28-sticky-top-back3-goods-context/);
 assert.match(nav,/currentScreen\(\)/);
 assert.match(nav,/screen\.querySelector\(':scope > \.back'\)/);
 assert.match(nav,/nativeBack\.click\(\)/);
 assert.match(nav,/screen\.id==='home'/);
 assert.match(nav,/body\.stickyTopBackReady main>\.screen>\.back\{display:none!important\}/);
+
+// Goods receipt list has an explicit route so the top-bar arrow never depends on clicking a hidden native button.
+assert.match(nav,/screen\.id==='grListV1'/);
+assert.match(nav,/__grGoodsListReturnV1/);
+assert.match(nav,/window\.openGoodsReceiptHubV1/);
+assert.match(nav,/target==='home'/);
+assert.match(nav,/screen\.id==='grHubV1'/);
 
 // Critical regression guard: sticky navigation must never replace app/auth globals.
 assert.doesNotMatch(nav,/window\.show\s*=(?!=)/);
@@ -29,4 +36,4 @@ assert.match(nav,/document\.addEventListener\('click'/);
 assert.match(base,/currentUser=user;[\s\S]*closeLogin\(\);syncAuthUI\(\);/);
 assert.match(base,/function logout\(\)[\s\S]*currentUser='';[\s\S]*show\('home'\);syncAuthUI\(\);/);
 
-console.log('sticky top back passive + transparent logo + auth lifecycle OK');
+console.log('sticky top back contextual goods navigation + transparent logo + auth lifecycle OK');
