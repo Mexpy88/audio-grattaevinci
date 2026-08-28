@@ -1,5 +1,5 @@
 {
-  "schema": "NOVA_PACKAGE_V4",
+  "schema": "NOVA_PACKAGE_V6",
   "parts": [
     "bundle/seg-000.txt",
     "bundle/seg-001.txt",
@@ -23,5 +23,5 @@
   ],
   "presentation": "bundle/mobile-v4.css",
   "generated": "2026-08-28",
-  "release": "warehouse-selector-mobile-ux-v4"
+  "release": "premium-mobile-ux-v6"
 }
