@@ -5,12 +5,12 @@
   'use strict';
   if(window.WarehouseActivityDailyFilterV1)return;
 
-  const VERSION='2026.08.28-activity-daily-filter1-lina-goods2';
+  const VERSION='2026.08.28-activity-daily-filter1-lina-goods3';
   const $=id=>document.getElementById(id);
   const txt=v=>String(v??'');
   const norm=v=>txt(v).trim().toUpperCase();
   const h=v=>typeof esc==='function'?esc(v):txt(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  let installed=false,rootObserver=null,scheduled=false,baseRender=null,baseGoodsHub=null,selectedDate='',explicitDate=false;
+  let installed=false,rootObserver=null,goodsHubObserver=null,goodsHubObservedEl=null,scheduled=false,baseRender=null,baseGoodsHub=null,baseGoodsList=null,selectedDate='',explicitDate=false;
 
   function safeDb(){try{return typeof db!=='undefined'&&db?db:{}}catch{return {}}}
   function actor(){try{return currentUser||''}catch{return ''}}
@@ -94,8 +94,20 @@
     return changed;
   }
 
+  function observeGoodsHub(){
+    const host=$('grHubContentV1');
+    if(!host)return false;
+    if(goodsHubObserver&&goodsHubObservedEl===host)return true;
+    goodsHubObserver?.disconnect?.();goodsHubObservedEl=host;
+    goodsHubObserver=new MutationObserver(mutations=>{
+      if(mutations.some(m=>m.target===host&&m.type==='childList'))requestAnimationFrame(decorateLinaGoodsLabel);
+    });
+    goodsHubObserver.observe(host,{childList:true});
+    return true;
+  }
+
   function decorate(){
-    injectCss();decorateLinaGoodsLabel();
+    injectCss();observeGoodsHub();decorateLinaGoodsLabel();
     const card=document.querySelector('#rdDashboardV1>.rdActivity');if(!card)return false;
     const key=activeKey(),isToday=key===todayKey(),s=stats(key);
     const items=isLina()?[
@@ -120,8 +132,18 @@
   function wrapGoodsHub(){
     const fn=window.openGoodsReceiptHubV1;if(typeof fn!=='function'||fn.__activityDailyFilterV1)return;
     baseGoodsHub=fn;
-    const wrapped=function(){const out=baseGoodsHub.apply(this,arguments);decorateLinaGoodsLabel();requestAnimationFrame(decorateLinaGoodsLabel);return out};
+    const wrapped=function(){const out=baseGoodsHub.apply(this,arguments);observeGoodsHub();decorateLinaGoodsLabel();requestAnimationFrame(decorateLinaGoodsLabel);return out};
     wrapped.__activityDailyFilterV1=true;wrapped.__previous=fn;window.openGoodsReceiptHubV1=wrapped;
+  }
+  function wrapGoodsList(){
+    const fn=window.openGoodsReceiptListV1;if(typeof fn!=='function'||fn.__activityDailyFilterV1)return;
+    baseGoodsList=fn;
+    const wrapped=function(){
+      const from=document.querySelector('main .screen.on')?.id||'';
+      window.__grGoodsListReturnV1=from==='home'?'home':'grHubV1';
+      return baseGoodsList.apply(this,arguments);
+    };
+    wrapped.__activityDailyFilterV1=true;wrapped.__previous=fn;window.openGoodsReceiptListV1=wrapped;
   }
 
   window.setRoleActivityDateV1=function(value){
@@ -131,13 +153,13 @@
   window.resetRoleActivityDateV1=function(){selectedDate=todayKey();explicitDate=false;decorate()};
 
   function install(){
-    if(installed){wrapGoodsHub();observeRoot();decorate();return true}
-    installed=true;injectCss();wrapRender();wrapGoodsHub();observeRoot();decorate();
+    if(installed){wrapGoodsHub();wrapGoodsList();observeGoodsHub();observeRoot();decorate();return true}
+    installed=true;injectCss();wrapRender();wrapGoodsHub();wrapGoodsList();observeGoodsHub();observeRoot();decorate();
     document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!explicitDate)decorate()});
     window.addEventListener('pageshow',()=>{if(!explicitDate)decorate()});
     return true;
   }
 
-  window.WarehouseActivityDailyFilterV1={version:VERSION,install,decorate,decorateLinaGoodsLabel,wrapGoodsHub,stats,getDate:activeKey,setDate:window.setRoleActivityDateV1,reset:window.resetRoleActivityDateV1};
+  window.WarehouseActivityDailyFilterV1={version:VERSION,install,decorate,decorateLinaGoodsLabel,observeGoodsHub,wrapGoodsHub,wrapGoodsList,stats,getDate:activeKey,setDate:window.setRoleActivityDateV1,reset:window.resetRoleActivityDateV1};
   install();
 })();
