@@ -5,7 +5,7 @@
   'use strict';
   if(window.WarehouseActivityDailyFilterV1)return;
 
-  const VERSION='2026.08.28-activity-daily-filter1';
+  const VERSION='2026.08.28-activity-daily-filter1-lina-goods1';
   const $=id=>document.getElementById(id);
   const txt=v=>String(v??'');
   const norm=v=>txt(v).trim().toUpperCase();
@@ -76,8 +76,17 @@
     `;document.head.appendChild(s);
   }
 
+  function decorateLinaGoodsLabel(){
+    if(!isLina())return false;
+    const module=$('rdGoodsReceiptModuleV1');if(!module)return false;
+    const label=module.querySelector('.grDashAction b');if(!label)return false;
+    const value=txt(label.textContent).trim();
+    if(/^ARRIVI MERCE\b/i.test(value))label.textContent=value.replace(/^ARRIVI MERCE\b/i,'MERCE ARRIVATA');
+    return true;
+  }
+
   function decorate(){
-    injectCss();
+    injectCss();decorateLinaGoodsLabel();
     const card=document.querySelector('#rdDashboardV1>.rdActivity');if(!card)return false;
     const key=activeKey(),isToday=key===todayKey(),s=stats(key);
     const items=isLina()?[
@@ -114,6 +123,6 @@
     return true;
   }
 
-  window.WarehouseActivityDailyFilterV1={version:VERSION,install,decorate,stats,getDate:activeKey,setDate:window.setRoleActivityDateV1,reset:window.resetRoleActivityDateV1};
+  window.WarehouseActivityDailyFilterV1={version:VERSION,install,decorate,decorateLinaGoodsLabel,stats,getDate:activeKey,setDate:window.setRoleActivityDateV1,reset:window.resetRoleActivityDateV1};
   install();
 })();
