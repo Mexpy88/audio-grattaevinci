@@ -27,8 +27,10 @@ if(!html.includes('bundle/landing-brand-v8.css'))html=html.replace('</head>','<l
 else html=html.replace(/bundle\/landing-brand-v8\.css\?v=[^"']+/g,'bundle/landing-brand-v8.css?v=20260828-v8');
 if(!html.includes('bundle/stock-ux-v11.css'))html=html.replace('</head>','<link rel="stylesheet" href="bundle/stock-ux-v11.css?v=20260831-v11"></head>');
 else html=html.replace(/bundle\/stock-ux-v11\.css\?v=[^"']+/g,'bundle/stock-ux-v11.css?v=20260831-v11');
+if(!html.includes('bundle/article-palette-v12.css'))html=html.replace('</head>','<link rel="stylesheet" href="bundle/article-palette-v12.css?v=20260831-v12"></head>');
+else html=html.replace(/bundle\/article-palette-v12\.css\?v=[^"']+/g,'bundle/article-palette-v12.css?v=20260831-v12');
 if(!html.includes('bundle/ui-sound-v8.js'))html=html.replace('</body>','<script src="bundle/ui-sound-v8.js?v=20260828-v10"></script></body>');
 else html=html.replace(/bundle\/ui-sound-v8\.js\?v=[^"']+/g,'bundle/ui-sound-v8.js?v=20260828-v10');
 
 fs.writeFileSync('index.html',html,'utf8');
-console.log(`NOVA V11 stock UX + V10 sound + protected-sheet shell generated: ${Buffer.byteLength(html)} bytes`);
+console.log(`NOVA V12 collision-proof article palette + V10 sound + protected-sheet shell generated: ${Buffer.byteLength(html)} bytes`);
