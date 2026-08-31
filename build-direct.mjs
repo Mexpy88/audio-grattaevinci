@@ -16,14 +16,19 @@ mustReplace("'toggle-pin':()=>{const p=document.getElementById('loginPin');p.typ
 
 mustReplace("replaceSheet(wb,name,ws){if(wb.SheetNames.includes(name))wb.Sheets[name]=ws;else X().utils.book_append_sheet(wb,ws,name)}","replaceSheet(wb,name,ws){const previous=wb.Sheets[name],protection=previous?.['!protect'];if(protection)ws['!protect']=clone(protection);if(wb.SheetNames.includes(name))wb.Sheets[name]=ws;else X().utils.book_append_sheet(wb,ws,name)}",'worksheet protection preservation');
 
+mustReplace('<input id="stockQuery" class="field" placeholder="Codice articolo o taglia…">','<input id="stockQuery" class="field stock-query-uppercase" placeholder="CODICE ARTICOLO O TAGLIA…" autocapitalize="characters" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()">','stock query uppercase');
+mustReplace('<article class="stock-card"><div><b>','<article class="stock-card"><div class="stock-card-head"><b>','stock result card hierarchy');
+
 if(!html.includes('bundle/mobile-v4.css'))html=html.replace('</head>','<link rel="stylesheet" href="bundle/mobile-v4.css?v=20260828-v6"></head>');
 else html=html.replace(/bundle\/mobile-v4\.css\?v=[^"']+/g,'bundle/mobile-v4.css?v=20260828-v6');
 if(!html.includes('bundle/landing-brand-v7.css'))html=html.replace('</head>','<link rel="stylesheet" href="bundle/landing-brand-v7.css?v=20260828-v7"></head>');
 else html=html.replace(/bundle\/landing-brand-v7\.css\?v=[^"']+/g,'bundle/landing-brand-v7.css?v=20260828-v7');
 if(!html.includes('bundle/landing-brand-v8.css'))html=html.replace('</head>','<link rel="stylesheet" href="bundle/landing-brand-v8.css?v=20260828-v8"></head>');
 else html=html.replace(/bundle\/landing-brand-v8\.css\?v=[^"']+/g,'bundle/landing-brand-v8.css?v=20260828-v8');
+if(!html.includes('bundle/stock-ux-v11.css'))html=html.replace('</head>','<link rel="stylesheet" href="bundle/stock-ux-v11.css?v=20260831-v11"></head>');
+else html=html.replace(/bundle\/stock-ux-v11\.css\?v=[^"']+/g,'bundle/stock-ux-v11.css?v=20260831-v11');
 if(!html.includes('bundle/ui-sound-v8.js'))html=html.replace('</body>','<script src="bundle/ui-sound-v8.js?v=20260828-v10"></script></body>');
 else html=html.replace(/bundle\/ui-sound-v8\.js\?v=[^"']+/g,'bundle/ui-sound-v8.js?v=20260828-v10');
 
 fs.writeFileSync('index.html',html,'utf8');
-console.log(`NOVA V10 high-presence sound + protected-sheet shell generated: ${Buffer.byteLength(html)} bytes`);
+console.log(`NOVA V11 stock UX + V10 sound + protected-sheet shell generated: ${Buffer.byteLength(html)} bytes`);
