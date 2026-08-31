@@ -1,0 +1,157 @@
+/* NOVA UX system V13 — definitive sage/cream palette, full-screen source picker, master identity */
+:root{
+  --v13-sage-1:#f1faf4;
+  --v13-sage-2:#dff1e6;
+  --v13-sage-border:#bcdcc8;
+  --v13-cream-1:#fff9ed;
+  --v13-cream-2:#f9e9c9;
+  --v13-cream-border:#e7cf9f;
+  --v13-ink:#173552;
+  --v13-blue:#2c66af;
+}
+
+/* Definitive override: GIACENZE must never fall back to the V11 blue card. */
+#stockResults .stock-card:nth-child(odd){
+  background:linear-gradient(145deg,var(--v13-sage-1) 0%,var(--v13-sage-2) 100%)!important;
+  border-color:var(--v13-sage-border)!important;
+}
+#stockResults .stock-card:nth-child(even){
+  background:linear-gradient(145deg,var(--v13-cream-1) 0%,var(--v13-cream-2) 100%)!important;
+  border-color:var(--v13-cream-border)!important;
+}
+
+/* Repeated article/event cards share the same visual grammar. */
+#registryResults .ledger-card:nth-child(odd),
+#registryResults .audit-card:nth-child(odd),
+.receipt-list .detail-line:nth-child(odd),
+.request-list .detail-line:nth-child(odd),
+#countBody .count-card:not(.count-extra):nth-child(odd),
+#requestPickSources .pick-line:nth-child(odd),
+.form-card .line-form:nth-of-type(odd){
+  background:linear-gradient(145deg,var(--v13-sage-1) 0%,var(--v13-sage-2) 100%)!important;
+  border-color:var(--v13-sage-border)!important;
+}
+#registryResults .ledger-card:nth-child(even),
+#registryResults .audit-card:nth-child(even),
+.receipt-list .detail-line:nth-child(even),
+.request-list .detail-line:nth-child(even),
+#countBody .count-card:not(.count-extra):nth-child(even),
+#requestPickSources .pick-line:nth-child(even),
+.form-card .line-form:nth-of-type(even){
+  background:linear-gradient(145deg,var(--v13-cream-1) 0%,var(--v13-cream-2) 100%)!important;
+  border-color:var(--v13-cream-border)!important;
+}
+#registryResults .ledger-card,
+#registryResults .audit-card,
+#stockResults .stock-card,
+.detail-line,.pick-line,.count-card:not(.count-extra),.line-form{
+  box-shadow:0 12px 28px rgba(23,53,82,.065),inset 0 1px 0 rgba(255,255,255,.84)!important;
+}
+
+/* Movement badges stay crisp on tinted cards. */
+#registryResults .ledger-tags span,
+#registryResults .audit-card span{
+  background:rgba(255,255,255,.74)!important;
+  border:1px solid rgba(35,79,112,.06);
+}
+
+/* Preserve collision-proof stock hierarchy from V12. */
+#stockResults .stock-card-head{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) max-content!important;
+  align-items:start!important;
+  gap:14px!important;
+  width:100%;
+  min-width:0;
+}
+#stockResults .stock-card-head>b{
+  min-width:0!important;
+  max-width:100%!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+  hyphens:none!important;
+  line-height:1.12!important;
+}
+#stockResults .stock-card-head>strong{
+  min-width:max-content!important;
+  max-width:none!important;
+  white-space:nowrap!important;
+  text-align:right!important;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;
+  padding-left:6px!important;
+}
+
+/* Custom NOVA source selector: replaces Android native stock list. */
+.source-picker-field{width:100%;margin-top:8px}
+.source-picker-trigger{
+  width:100%;min-height:82px;padding:14px 16px;border:2px solid #cfdae4;border-radius:18px;
+  background:#fff;display:grid;grid-template-columns:minmax(0,1fr) 28px;gap:12px;align-items:center;text-align:left;
+  color:var(--v13-ink);box-shadow:0 6px 16px rgba(23,53,82,.035)
+}
+.source-picker-trigger>span:first-child{min-width:0}
+.source-picker-trigger b{display:block;font-size:17px;line-height:1.15;overflow-wrap:anywhere;word-break:normal}
+.source-picker-trigger small{display:block;margin-top:5px;color:#637b90;font-size:12px;font-weight:750;line-height:1.25}
+.source-picker-trigger .source-picker-chevron{font-size:30px;color:var(--v13-blue);line-height:1;text-align:right}
+
+#sourcePickerDialog{
+  width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:#edf4f8;
+  overflow:hidden;color:var(--v13-ink)
+}
+#sourcePickerDialog::backdrop{background:rgba(12,29,43,.58);backdrop-filter:blur(4px)}
+#sourcePickerDialog[open]{display:block!important;position:fixed!important;inset:0!important}
+body:has(#sourcePickerDialog[open]){overflow:hidden!important;position:fixed!important;inset:0!important;width:100%!important}
+.source-picker-shell{height:100dvh;display:grid;grid-template-rows:auto auto minmax(0,1fr);background:linear-gradient(180deg,#f8fbfd 0,#edf4f8 100%)}
+.source-picker-head{
+  position:sticky;top:0;z-index:3;min-height:82px;padding:max(12px,env(safe-area-inset-top)) 18px 12px;
+  display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:center;
+  background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-bottom:1px solid #d7e3eb;box-shadow:0 5px 16px rgba(23,53,82,.05)
+}
+.source-picker-back{width:48px;height:48px;border-radius:16px;background:#e6f0f6;color:var(--v13-blue);font-size:35px;line-height:1;display:grid;place-items:center}
+.source-picker-head span{display:block;color:#2e68b0;font-size:11px;font-weight:950;letter-spacing:.14em}
+.source-picker-head b{display:block;margin-top:2px;font-size:22px;line-height:1.05}
+.source-picker-search{padding:14px 18px 10px;background:#edf4f8;position:relative;z-index:2}
+.source-picker-search .field{min-height:58px;background:#fff;text-transform:uppercase}
+.source-picker-list{overflow-y:auto;overscroll-behavior:contain;padding:4px 18px calc(28px + env(safe-area-inset-bottom));display:grid;gap:12px}
+.source-picker-empty{padding:28px;text-align:center;color:#6c8194;font-weight:800}
+.source-picker-item{
+  width:100%;padding:17px;border-radius:24px;border:1px solid transparent;display:grid;
+  grid-template-columns:minmax(0,1fr) max-content;gap:14px;text-align:left;align-items:start;color:var(--v13-ink);
+  box-shadow:0 8px 20px rgba(23,53,82,.055),inset 0 1px 0 rgba(255,255,255,.82)
+}
+.source-picker-item.tone-green{background:linear-gradient(145deg,var(--v13-sage-1),var(--v13-sage-2));border-color:var(--v13-sage-border)}
+.source-picker-item.tone-cream{background:linear-gradient(145deg,var(--v13-cream-1),var(--v13-cream-2));border-color:var(--v13-cream-border)}
+.source-picker-item.selected{outline:3px solid rgba(44,102,175,.30);outline-offset:1px}
+.source-picker-copy{min-width:0}
+.source-picker-copy b{display:block;font-size:18px;line-height:1.12;overflow-wrap:anywhere;word-break:normal}
+.source-picker-copy small{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;color:#45647e;font-size:12px;font-weight:800}
+.source-picker-copy small span{background:rgba(255,255,255,.76);border-radius:999px;padding:6px 9px}
+.source-picker-qty{font-size:36px;font-weight:950;line-height:.95;color:var(--v13-blue);white-space:nowrap;font-variant-numeric:tabular-nums}
+.source-picker-item.selected .source-picker-qty:after{content:" ✓";font-size:17px;color:#178255;vertical-align:middle}
+
+/* Master identity: durable, readable and independent from the filename. */
+.master-version-card{
+  margin:18px 0;padding:16px;border-radius:20px;background:linear-gradient(145deg,#f4faf6,#e7f4eb);
+  border:1px solid #c8dfd0;display:grid;grid-template-columns:1fr 1fr;gap:12px
+}
+.master-version-card>div{min-width:0;padding:11px 12px;border-radius:15px;background:rgba(255,255,255,.68)}
+.master-version-card span{display:block;color:#657d91;font-size:10px;font-weight:950;letter-spacing:.09em}
+.master-version-card b{display:block;margin-top:4px;font-size:15px;line-height:1.18;overflow-wrap:anywhere}
+.master-version-card .master-id{grid-column:1/-1}
+.master-version-card .master-id b{font-size:18px;color:#185e42;letter-spacing:.025em}
+
+@media(max-width:700px){
+  #stockResults .stock-card-head{gap:11px!important}
+  #stockResults .stock-card-head>strong{font-size:clamp(34px,9vw,43px)!important}
+  .source-picker-list{padding-left:14px;padding-right:14px}
+  .source-picker-search{padding-left:14px;padding-right:14px}
+  .source-picker-item{padding:15px;border-radius:22px;gap:10px}
+  .source-picker-copy b{font-size:17px}
+  .source-picker-qty{font-size:34px}
+}
+@media(max-width:390px){
+  .master-version-card{grid-template-columns:1fr}
+  .master-version-card .master-id{grid-column:auto}
+  .source-picker-item{grid-template-columns:minmax(0,1fr) 58px}
+  .source-picker-qty{font-size:31px}
+}
