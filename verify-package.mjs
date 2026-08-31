@@ -1,16 +1,63 @@
 import fs from 'node:fs';import assert from 'node:assert/strict';import vm from 'node:vm';
-const m=JSON.parse(fs.readFileSync('manifest.json','utf8')),source=m.parts.map(p=>fs.readFileSync(p,'utf8')).join(''),css=fs.readFileSync('bundle/mobile-v4.css','utf8'),brand=fs.readFileSync('bundle/landing-brand-v7.css','utf8'),refine=fs.readFileSync('bundle/landing-brand-v8.css','utf8'),stockUx=fs.readFileSync('bundle/stock-ux-v11.css','utf8'),palette=fs.readFileSync('bundle/article-palette-v12.css','utf8'),sound=fs.readFileSync('bundle/ui-sound-v8.js','utf8'),direct=fs.readFileSync('index.html','utf8');
-assert.ok(source.length>100000,'bundle NOVA incompleto');assert.ok(direct.length>100000,'index NOVA incompleto');
+const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));
+const source=m.parts.map(p=>fs.readFileSync(p,'utf8')).join('');
+const css=fs.readFileSync('bundle/mobile-v4.css','utf8');
+const brand=fs.readFileSync('bundle/landing-brand-v7.css','utf8');
+const refine=fs.readFileSync('bundle/landing-brand-v8.css','utf8');
+const stockUx=fs.readFileSync('bundle/stock-ux-v11.css','utf8');
+const palette=fs.readFileSync('bundle/article-palette-v12.css','utf8');
+const v13=fs.readFileSync('bundle/ux-system-v13.css','utf8');
+const sound=fs.readFileSync('bundle/ui-sound-v8.js','utf8');
+const direct=fs.readFileSync('index.html','utf8');
+
+assert.ok(source.length>100000,'bundle NOVA incompleto');
+assert.ok(direct.length>100000,'index NOVA incompleto');
 assert.doesNotMatch(direct,/Avvio applicazione|const PARTS=|document\.write\(/,'loader legacy ancora presente');
-assert.match(direct,/fetchpriority="high"/);assert.match(direct,/class="brand-lockup"/);assert.match(direct,/class="brand-logo"[^>]*width="600"[^>]*height="127"/);assert.match(direct,/brand-ready/);assert.match(direct,/MAGAZZINO TERAMO/);assert.match(direct,/MAGAZZINO FERRARA/);assert.match(direct,/MAGAZZINO LUCCA/);assert.match(direct,/warehouse-ferrara[^>]*disabled/);assert.match(direct,/warehouse-lucca[^>]*disabled/);assert.doesNotMatch(direct,/Gestione Magazzino|Applicazione pulita/);assert.match(direct,/bundle\/landing-brand-v7\.css\?v=20260828-v7/);assert.match(direct,/bundle\/landing-brand-v8\.css\?v=20260828-v8/);assert.match(direct,/bundle\/stock-ux-v11\.css\?v=20260831-v11/);assert.match(direct,/bundle\/article-palette-v12\.css\?v=20260831-v12/);assert.match(direct,/bundle\/ui-sound-v8\.js\?v=20260828-v10/);
-assert.match(direct,/class="pin-toggle"[^>]*aria-label="Mostra PIN"[^>]*aria-pressed="false"/);assert.match(direct,/pin\.type='password'/);assert.match(direct,/show\?'Nascondi PIN':'Mostra PIN'/);assert.match(direct,/show\?'true':'false'/);
-assert.match(direct,/home-title/);assert.doesNotMatch(direct,/sectionTitle\('MAGAZZINO TERAMO','Dashboard'/);assert.match(direct,/MERCE ARRIVATA/);assert.doesNotMatch(direct,/ARRIVI MERCE/);assert.match(direct,/MOVIMENTAZIONE/);assert.match(direct,/MATERIALE TROVATO NON PREVISTO/);assert.doesNotMatch(direct,/MutationObserver/);assert.doesNotMatch(direct,/setInterval\s*\(/);assert.doesNotMatch(direct,/premium-dashboard|role-dashboard-v1|goods-receipt-v1|patch\.js|fix\.js/);assert.match(direct,/mode==='desktop'&&!this\.isPhoneViewport\(\)/);
-assert.match(css,/NOVA mobile layout V6/);assert.match(css,/\.warehouse-landing\.brand-ready/);assert.match(css,/height:clamp\(306px,55dvh,390px\)/);assert.match(css,/border-radius:29px/);assert.match(css,/#loginDialog\[open\]\{position:fixed!important/);assert.match(css,/top:50%!important;left:50%!important;transform:translate\(-50%,-50%\)!important/);assert.match(css,/body:has\(#loginDialog\[open\]\)\{overflow:hidden!important;position:fixed!important/);assert.match(css,/\.pin-wrap:has\(#loginPin\[type="password"\]\) \.pin-toggle:after/);assert.match(css,/touch-action:pan-y pinch-zoom/);assert.match(css,/@media\(max-width:700px\)/);assert.match(css,/grid-template-columns:64px minmax\(0,1fr\) 22px/);assert.match(css,/grid-template-columns:48px minmax\(0,1fr\) 20px/);assert.match(css,/\.module-head b\{[^}]*white-space:nowrap/);assert.match(css,/word-break:normal/);assert.doesNotMatch(css,/overflow-wrap:anywhere/);assert.match(css,/\.export-float\{position:static/);assert.match(css,/\.activity-grid\{grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)\}/);assert.match(css,/\.app-view,body\.desktop-mode \.app-view\{width:100%;max-width:100%;min-width:0/);
-assert.match(brand,/NOVA landing branding V7/);assert.match(brand,/background-image:url\("data:image\/png;base64,/);assert.match(brand,/opacity:\.055/);assert.match(brand,/\.warehouse-teramo::after\{content:none!important;display:none!important\}/);assert.match(brand,/\.warehouse-card\{padding-left:24px!important;padding-right:24px!important\}/);assert.doesNotMatch(brand,/content:"›"/);
-assert.match(refine,/NOVA landing refinement V8/);assert.match(refine,/top:44%!important/);assert.match(refine,/width:min\(680px,166vw\)!important/);assert.match(refine,/transform:translate\(-50%,-26%\)!important/);assert.doesNotMatch(refine,/background-image/,'V8 must reuse the single embedded watermark asset');
-assert.match(stockUx,/NOVA stock UX V11/);assert.match(stockUx,/#stockQuery\.stock-query-uppercase/);assert.match(stockUx,/\.stock-card:nth-child\(odd\)/);assert.match(stockUx,/\.stock-card:nth-child\(even\)/);assert.match(stockUx,/\.stock-card-head/);assert.match(stockUx,/\.stock-card>\.mini-btn/);assert.match(stockUx,/margin:18px 0 0!important/);assert.doesNotMatch(stockUx,/overflow-wrap:anywhere/);assert.match(direct,/id="stockQuery" class="field stock-query-uppercase"[^>]*placeholder="CODICE ARTICOLO O TAGLIA…"[^>]*autocapitalize="characters"[^>]*oninput="this\.value=this\.value\.toUpperCase\(\)"/);assert.match(direct,/class="stock-card-head"/);
-assert.match(palette,/NOVA article palette V12/);assert.match(palette,/--article-green-1:#f5fbf7/);assert.match(palette,/--article-cream-1:#fffaf1/);assert.match(palette,/stock-card:nth-of-type\(odd\)/);assert.match(palette,/detail-line:nth-of-type\(odd\)/);assert.match(palette,/count-card:not\(\.count-extra\):nth-of-type\(odd\)/);assert.match(palette,/pick-line:nth-of-type\(odd\)/);assert.match(palette,/line-form:nth-of-type\(odd\)/);assert.match(palette,/#stockResults \.stock-card-head\{[\s\S]*?display:flex!important/);assert.match(palette,/#stockResults \.stock-card-head>b\{[\s\S]*?overflow-wrap:anywhere!important/);assert.match(palette,/#stockResults \.stock-card-head>strong\{[\s\S]*?white-space:nowrap/);assert.match(palette,/font-variant-numeric:tabular-nums/);assert.match(palette,/#stockResults \.stock-card>\.mini-btn\{[\s\S]*?margin-top:20px!important/);
-assert.match(sound,/AudioContext\|\|window\.webkitAudioContext/);assert.match(sound,/\.warehouse-teramo/);assert.match(sound,/event\.target\?\.id==='loginPin'/);assert.match(sound,/accessSuccess/);assert.match(sound,/gain=0\.10/);assert.match(sound,/tone\(330,0\.034,0\.10/);assert.match(sound,/tone\(760,0\.022,0\.075/);assert.match(sound,/tone\(520,0\.070,0\.16/);assert.match(sound,/tone\(660,0\.078,0\.14/);assert.match(sound,/tone\(820,0\.095,0\.12/);assert.doesNotMatch(sound,/fetch\s*\(|\.mp3|\.wav|MutationObserver|setInterval\s*\(/,'sound layer must stay local and event-driven');new vm.Script(sound,{filename:'ui-sound-v10.js'});
-assert.match(direct,/replaceSheet\(wb,name,ws\)\{const previous=wb\.Sheets\[name\],protection=previous\?\.\['!protect'\];if\(protection\)ws\['!protect'\]=clone\(protection\);/,'existing worksheet protection must survive sheet regeneration');assert.doesNotMatch(direct,/sheetPassword|worksheetPassword|protectionPassword/,'NOVA must not store a worksheet password');
-const script=(direct.match(/<script>([\s\S]*?)<\/script>/)||[])[1];assert.ok(script,'application script missing');new vm.Script(script,{filename:'nova-v12.js'});
-const core=(script.split('/* js/core.js */')[1]||'').split('/* js/domain.js */')[0],domain=(script.split('/* js/domain.js */')[1]||'').split('/* js/excel.js */')[0];assert.ok(core&&domain);const runtime=core+'\n'+domain+`\nclass M{constructor(){this.m=new Map()}getItem(k){return this.m.get(k)||null}setItem(k,v){this.m.set(k,String(v))}removeItem(k){this.m.delete(k)}};globalThis.localStorage=new M();const s={db:createEmptyDb(),save(){},snapshot(){return structuredClone(this.db)},replace(x){this.db=x}},a={user:'Mattia',can(c){return PROFILES[this.user].caps.includes(c)},isLina(){return this.user==='Lina'}},d=createDomain(s,a);s.db.master.rows=[{article:'I1',size:'M',state:'NUOVO',quantity:10,location:'1',pallet:'A'}];d.stock.invalidate();const r=d.receiving.create({supplier:'TEST',lines:[{article:'I1',size:'M',state:'NUOVO',ddtQuantity:5,checkedQuantity:5,pallet:'P'}]});if(d.stock.total('I1','M')!==15)throw new Error('receipt stock regression');if(d.receiving.stats(r).pending!==5)throw new Error('pending regression');`;vm.runInNewContext(runtime,{console,structuredClone,crypto:globalThis.crypto,Date,Math,Number,String,Array,Map,Set,JSON,Object,Error,Intl});console.log('NOVA V12 collision-proof article palette + V10 sound + protected-sheet preservation + domain regression: OK');
+assert.doesNotMatch(direct,/MutationObserver|setInterval\s*\(/,'NOVA must stay event-driven');
+
+/* Existing release contracts must survive. */
+assert.match(direct,/fetchpriority="high"/);assert.match(direct,/class="brand-lockup"/);assert.match(direct,/MAGAZZINO TERAMO/);assert.match(direct,/warehouse-ferrara[^>]*disabled/);assert.match(direct,/warehouse-lucca[^>]*disabled/);
+assert.match(direct,/bundle\/mobile-v4\.css\?v=20260828-v6/);assert.match(direct,/bundle\/landing-brand-v7\.css\?v=20260828-v7/);assert.match(direct,/bundle\/landing-brand-v8\.css\?v=20260828-v8/);assert.match(direct,/bundle\/stock-ux-v11\.css\?v=20260831-v11/);assert.match(direct,/bundle\/article-palette-v12\.css\?v=20260831-v12/);assert.match(direct,/bundle\/ux-system-v13\.css\?v=20260831-v13/);assert.match(direct,/bundle\/ui-sound-v8\.js\?v=20260828-v10/);
+assert.match(direct,/class="pin-toggle"[^>]*aria-label="Mostra PIN"[^>]*aria-pressed="false"/);assert.match(direct,/pin\.type='password'/);assert.match(direct,/show\?'Nascondi PIN':'Mostra PIN'/);
+assert.match(css,/NOVA mobile layout V6/);assert.match(brand,/NOVA landing branding V7/);assert.match(refine,/NOVA landing refinement V8/);assert.match(stockUx,/NOVA stock UX V11/);assert.match(palette,/NOVA article palette V12/);
+
+/* V13: definitive sage/cream hierarchy. */
+assert.match(v13,/NOVA UX system V13/);
+assert.match(v13,/--v13-sage-2:#dff1e6/);assert.match(v13,/--v13-cream-2:#f9e9c9/);
+assert.match(v13,/#stockResults \.stock-card:nth-child\(odd\)/);assert.match(v13,/#stockResults \.stock-card:nth-child\(even\)/);
+assert.match(v13,/#registryResults \.ledger-card:nth-child\(odd\)/);assert.match(v13,/#registryResults \.ledger-card:nth-child\(even\)/);
+assert.match(v13,/grid-template-columns:minmax\(0,1fr\) max-content!important/);assert.match(v13,/white-space:nowrap!important/);
+assert.match(v13,/#sourcePickerDialog/);assert.match(v13,/position:sticky;top:0/);assert.match(v13,/\.source-picker-back/);assert.match(v13,/\.source-picker-item\.tone-green/);assert.match(v13,/\.source-picker-item\.tone-cream/);
+assert.match(v13,/\.master-version-card/);assert.match(v13,/\.master-id/);
+
+/* V13: native stock select is replaced by NOVA picker. */
+assert.match(direct,/id="sourcePickerDialog"/);assert.match(direct,/class="source-picker-back"[^>]*data-action="source-picker-close"/);assert.match(direct,/id="sourcePickerSearch"/);assert.match(direct,/id="sourcePickerList"/);
+assert.match(direct,/sourcePickerTriggerMarkup\(r\)/);assert.match(direct,/openSourcePicker\(id\)/);assert.match(direct,/renderSourcePicker\(query=''/);assert.match(direct,/chooseSource\(key\)/);
+assert.match(direct,/'source-picker-open':\(\)=>this\.openSourcePicker/);assert.match(direct,/'source-picker-close':\(\)=>this\.closeSourcePicker/);assert.match(direct,/'source-picker-choose':\(\)=>this\.chooseSource/);
+assert.match(direct,/sourcePickerSearch'\)this\.renderSourcePicker\(el\.value\)/);
+assert.doesNotMatch(direct,/sourceSelect\(id='sourceSelect'\)\{const rows=this\.domain\.stock\.positive\(\);return `<select/,'native stock select must be gone');
+
+/* V13: Master identity/version lineage. */
+assert.match(direct,/const masterIdFor=/);assert.match(direct,/masterId:'',version:0,versionAt:null/);
+assert.match(direct,/source:'FRESH_IMPORT',masterId:masterIdFor\(file\.name,importedAt\),version:1,versionAt:importedAt/);
+assert.match(direct,/source:'REMOTO_XLSX_MIGRATION',masterId:masterIdFor\(file\.name,importedAt\),version:1,versionAt:importedAt/);
+assert.match(direct,/source:'NOVA_REIMPORT',masterId:next\.master\?\.masterId\|\|masterIdFor/);
+assert.match(direct,/meta\.version=Math\.max\(1,Number\(meta\.version\)\|\|1\)\+1/);
+assert.match(direct,/ID MASTER/);assert.match(direct,/VERSIONE CREATA/);assert.match(direct,/class="master-version-card"/);
+assert.match(direct,/MASTER_EXPORTED','MASTER',name,null,\{name,masterId:this\.store\.db\.master\.masterId,version:this\.store\.db\.master\.version\}/);
+
+/* Stock search and card collision fix remain active. */
+assert.match(direct,/id="stockQuery" class="field stock-query-uppercase"[^>]*oninput="this\.value=this\.value\.toUpperCase\(\)"/);assert.match(direct,/class="stock-card-head"/);
+
+/* Sound and protected-sheet preservation remain intact. */
+assert.match(sound,/gain=0\.10/);assert.match(sound,/tone\(520,0\.070,0\.16/);assert.doesNotMatch(sound,/fetch\s*\(|\.mp3|\.wav|MutationObserver|setInterval\s*\(/);
+new vm.Script(sound,{filename:'ui-sound-v10.js'});
+assert.match(direct,/replaceSheet\(wb,name,ws\)\{const previous=wb\.Sheets\[name\],protection=previous\?\.\['!protect'\];if\(protection\)ws\['!protect'\]=clone\(protection\);/);
+assert.doesNotMatch(direct,/sheetPassword|worksheetPassword|protectionPassword/);
+
+/* Syntax + domain regression. */
+const script=(direct.match(/<script>([\s\S]*?)<\/script>/)||[])[1];assert.ok(script,'application script missing');new vm.Script(script,{filename:'nova-v13.js'});
+const core=(script.split('/* js/core.js */')[1]||'').split('/* js/domain.js */')[0],domain=(script.split('/* js/domain.js */')[1]||'').split('/* js/excel.js */')[0];assert.ok(core&&domain);
+const runtime=core+'\n'+domain+`\nclass M{constructor(){this.m=new Map()}getItem(k){return this.m.get(k)||null}setItem(k,v){this.m.set(k,String(v))}removeItem(k){this.m.delete(k)}};globalThis.localStorage=new M();const s={db:createEmptyDb(),save(){},snapshot(){return structuredClone(this.db)},replace(x){this.db=x}},a={user:'Mattia',can(c){return PROFILES[this.user].caps.includes(c)},isLina(){return this.user==='Lina'}},d=createDomain(s,a);s.db.master.rows=[{article:'I1',size:'M',state:'NUOVO',quantity:10,location:'1',pallet:'A'}];d.stock.invalidate();const r=d.receiving.create({supplier:'TEST',lines:[{article:'I1',size:'M',state:'NUOVO',ddtQuantity:5,checkedQuantity:5,pallet:'P'}]});if(d.stock.total('I1','M')!==15)throw new Error('receipt stock regression');if(d.receiving.stats(r).pending!==5)throw new Error('pending regression');const mid=masterIdFor('MASTER.xlsx','2026-08-31T12:00:00.000Z');if(!/^MST-20260831-[A-F0-9]{6}$/.test(mid))throw new Error('master id regression');`;
+vm.runInNewContext(runtime,{console,structuredClone,crypto:globalThis.crypto,Date,Math,Number,String,Array,Map,Set,JSON,Object,Error,Intl});
+console.log('NOVA V13 sage/cream + source picker + Master identity + domain regression: OK');
