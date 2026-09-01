@@ -24,21 +24,21 @@ const parseMaster=`function parseMaster(wb){const sheetName=wb.SheetNames.includ
   return{rows:normalizeMasterRows(rows),excelRows:normalizeMasterRows(excelRows),sheetName,headerRow:det.row,columns:det.cols,mode,rowCount:Math.max(0,matrix.length-det.row-1)}}`;
 mustRegex(/function parseMaster\(wb\)\{[\s\S]*?\n\}/,parseMaster,'Master parser preserving zero rows');
 
-/* A NOVA reimport must use the visible MAGAZZINO sheet as the new stock baseline. Hidden history is retained but never allowed to overwrite repaired physical positions. */
+/* A NOVA reimport must use the visible MAGAZZINO sheet as the new stock baseline. Hidden history is retained, identity/version are preserved, but stale hidden positions may never overwrite the repaired physical sheet. */
 mustRegex(
   /if\(restoreHistory&&nova\?\.db\)\{[\s\S]*?\n    \}else if\(restoreHistory&&legacy\?\.db\)\{/,
   `if(restoreHistory&&nova?.db){
       next={...createEmptyDb(),...clone(nova.db)};
       next.ledger=(next.ledger||[]).map(e=>({...e,affectsStock:false}));
-      next.master={...createEmptyDb().master,...(next.master||{}),rows:parsed.rows,excelRows:parsed.excelRows,filename:file.name,sheetName:parsed.sheetName,importedAt:nowIso(),headerRow:parsed.headerRow,columns:parsed.columns,mode:parsed.mode,rowCount:parsed.rowCount,source:'NOVA_REIMPORT'};
+      next.master={...createEmptyDb().master,...(next.master||{}),rows:parsed.rows,excelRows:parsed.excelRows,filename:file.name,sheetName:parsed.sheetName,importedAt,headerRow:parsed.headerRow,columns:parsed.columns,mode:parsed.mode,rowCount:parsed.rowCount,source:'NOVA_REIMPORT',masterId:next.master?.masterId||masterIdFor(file.name,importedAt),version:Math.max(1,Number(next.master?.version)||1),versionAt:next.master?.versionAt||next.master?.importedAt||importedAt};
     }else if(restoreHistory&&legacy?.db){`,
   'NOVA reimport visible baseline'
 );
 html=html.split('rows:parsed.rows,excelRows:parsed.rows').join('rows:parsed.rows,excelRows:parsed.excelRows');
-html=html.split("mode:parsed.mode,source:'REMOTO_XLSX_MIGRATION'").join("mode:parsed.mode,rowCount:parsed.rowCount,source:'REMOTO_XLSX_MIGRATION'");
-html=html.split("mode:parsed.mode,source:'FRESH_IMPORT'").join("mode:parsed.mode,rowCount:parsed.rowCount,source:'FRESH_IMPORT'");
-html=html.replace("{rows:parsed.rows.length,source:next.master.source}","{rows:parsed.rowCount,stockRows:parsed.rows.length,source:next.master.source}");
-html=html.replace("return{rows:parsed.rows.length,source:next.master.source,filename:file.name,restored:!!(nova||legacy)}","return{rows:parsed.rowCount,stockRows:parsed.rows.length,source:next.master.source,filename:file.name,restored:!!(nova||legacy)}");
+html=html.split("mode:parsed.mode,source:'REMOTO_XLSX_MIGRATION',masterId:").join("mode:parsed.mode,rowCount:parsed.rowCount,source:'REMOTO_XLSX_MIGRATION',masterId:");
+html=html.split("mode:parsed.mode,source:'FRESH_IMPORT',masterId:").join("mode:parsed.mode,rowCount:parsed.rowCount,source:'FRESH_IMPORT',masterId:");
+mustReplace("{rows:parsed.rows.length,source:next.master.source,masterId:next.master.masterId,version:next.master.version}","{rows:parsed.rowCount,stockRows:parsed.rows.length,source:next.master.source,masterId:next.master.masterId,version:next.master.version}",'Master import audit row counts');
+mustReplace("return{rows:parsed.rows.length,source:next.master.source,filename:file.name,restored:!!(nova||legacy)}","return{rows:parsed.rowCount,stockRows:parsed.rows.length,source:next.master.source,filename:file.name,restored:!!(nova||legacy)}",'Master import result row count');
 
 /* Rebuild Excel tables to match the user's reference workbook. Do not create hidden filter buttons or a totals row. */
 const finalizerRe=/async function enhanceWorkbookTables\(bytes,\{masterSheet='',masterHeaderRow=1,registryOnly=false\}=\{\}\)\{[\s\S]*?\n\}\nlet xlsxPromise=null;/;
