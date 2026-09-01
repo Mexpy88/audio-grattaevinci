@@ -18,22 +18,22 @@ jobs:
           node-version: '22'
       - name: Install Excel integration verifier
         run: npm install --no-save --package-lock=false exceljs@4.4.0 xlsx@0.18.5 jszip@3.10.1
-      - name: Generate V16 request UX shell
-        run: node build-v16.mjs
+      - name: Generate V17 exact position shell
+        run: node build-v17.mjs
       - name: Verify NOVA baseline contracts
         run: node verify-package.mjs
-      - name: Verify NOVA V16 request UX and lifecycle
-        run: node verify-v16.mjs
-      - name: Verify Excel OOXML regression under V16
-        run: node verify-excel-v16.mjs
+      - name: Verify NOVA V17 exact position behavior
+        run: node verify-v17.mjs
+      - name: Verify Excel OOXML regression under V17
+        run: node verify-excel-v17.mjs
       - name: Publish generated direct shell
         run: |
           if ! git diff --quiet -- index.html; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add index.html
-            git commit -m "build(nova): publish V16 request UX shell"
+            git commit -m "build(nova): publish V17 exact position shell"
             git push origin HEAD:magazzino-nova-clean-20260828
           else
-            echo "V16 direct shell already current"
+            echo "V17 direct shell already current"
           fi
