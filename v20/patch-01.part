@@ -1,0 +1,42 @@
+/* NOVA V20 incremental patch
+   Baseline immutabile: 69f806943be73b1345092c55108b6913c7801c33
+   Questa patch modifica solo: export Excel, Rettifica, Conteggio Assistito e indicatori V20 correlati.
+*/
+(()=>{
+'use strict';
+const V20_BASE_COMMIT='69f806943be73b1345092c55108b6913c7801c33';
+const V20_BUILD='NOVA_V20_PATCH_2026-09-01';
+if(!globalThis.NOVA){console.error('[NOVA V20] NOVA non disponibile');return}
+const {ui,domain,store}=globalThis.NOVA;
+
+/* =========================================================
+   1) EXCEL / OOXML — one source of truth + validator
+   ========================================================= */
+const v20XmlEscape=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+const v20ColName=index=>{let n=index+1,out='';while(n){n--;out=String.fromCharCode(65+n%26)+out;n=Math.floor(n/26)}return out};
+const v20CellValue=(ws,r,c)=>{const cell=ws[X().utils.encode_cell({r,c})];if(!cell||cell.v==null)return'';return String(cell.w??cell.v).trim()};
+const v20LastDataRow=(ws,headerRow,lastCol)=>{const ref=X().utils.decode_range(ws['!ref']||`A${headerRow}`),start=headerRow-1;for(let r=ref.e.r;r>=start;r--){for(let c=0;c<=lastCol;c++)if(v20CellValue(ws,r,c)!=='')return r+1}return headerRow};
+const v20ParseXml=(text,path,errors=[])=>{const doc=new DOMParser().parseFromString(text,'application/xml');if(doc.getElementsByTagName('parsererror').length)errors.push(`${path}: XML non valido`);return doc};
+const v20XmlString=doc=>{const raw=new XMLSerializer().serializeToString(doc);return raw.startsWith('<?xml')?raw:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>${raw}`};
+const v20ResolvePath=(base,target)=>{const parts=base.split('/').slice(0,-1).concat(String(target||'').split('/')),out=[];for(const p of parts){if(!p||p==='.')continue;if(p==='..')out.pop();else out.push(p)}return out.join('/')};
+const v20SheetRelsPath=path=>path.replace(/\/([^/]+)$/, '/_rels/$1.rels');
+const v20RangeWidth=ref=>{const m=String(ref||'').match(/^([A-Z]+)\d+:([A-Z]+)\d+$/);if(!m)return 0;const n=s=>{let v=0;for(const ch of s)v=v*26+ch.charCodeAt(0)-64;return v};return n(m[2])-n(m[1])+1};
+
+async function enhanceWorkbookTablesV20(bytes,{masterSheet='',masterHeaderRow=1,registryOnly=false}={}){
+  const JSZip=await ensureJsZip(),zip=await JSZip.loadAsync(bytes),book=X().read(bytes,{type:'array',cellDates:true,cellStyles:true}),errors=[],fixes=[];
+  const workbookPath='xl/workbook.xml',workbookRelsPath='xl/_rels/workbook.xml.rels',workbookFile=zip.file(workbookPath),workbookRelsFile=zip.file(workbookRelsPath);
+  if(!workbookFile||!workbookRelsFile)throw new Error('Export Excel V20: struttura workbook incompleta.');
+  const workbookDoc=v20ParseXml(await workbookFile.async('string'),workbookPath,errors),workbookRelsDoc=v20ParseXml(await workbookRelsFile.async('string'),workbookRelsPath,errors);
+  const relMap=new Map([...workbookRelsDoc.getElementsByTagNameNS('*','Relationship')].map(r=>[r.getAttribute('Id'),r.getAttribute('Target')]));
+  const sheetInfos=new Map();
+  [...workbookDoc.getElementsByTagNameNS('*','sheet')].forEach((node,index)=>{const name=node.getAttribute('name')||'',rid=node.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id')||node.getAttribute('r:id'),target=relMap.get(rid);if(name&&target)sheetInfos.set(name,{name,index,path:v20ResolvePath(workbookPath,target)})});
+  const specs=registryOnly
+    ?[{sheet:'MOVIMENTI',headerRow:1,key:'MOVIMENTI',name:'TabellaMovimenti'},{sheet:'AUDIT',headerRow:1,key:'AUDIT',name:'TabellaAudit'}]
+    :[
+      {sheet:masterSheet||'MAGAZZINO',headerRow:Math.max(1,Number(masterHeaderRow)||1),key:'MAGAZZINO',name:'Tabella1'},
+      {sheet:'CERCA_GIACENZE',headerRow:14,key:'CERCA_GIACENZE',name:'TabellaCercaGiacenze'},
+      {sheet:'REGISTRO_MOVIMENTI',headerRow:1,key:'REGISTRO_MOVIMENTI',name:'TabellaRegistroMovimenti'},
+      {sheet:'SCARICHI',headerRow:1,key:'SCARICHI',name:'TabellaScarichi'},
+      {sheet:'RICHIESTE',headerRow:1,key:'RICHIESTE',name:'TabellaRichieste'},
+      {sheet:'ENTRATE_MERCI',headerRow:1,key:'ENTRATE_MERCI',name:'TabellaEntrateMerci'},
+      {sh
