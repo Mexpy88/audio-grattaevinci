@@ -1,0 +1,103 @@
+/* NOVA position UX V17 — independent exact location/pallet filters */
+:root{
+  --v17-pos-bg:#f4f9f6;
+  --v17-pos-border:#cfe3d7;
+  --v17-pos-ink:#315f4c;
+  --v17-pos-accent:#19875d;
+  --v17-pos-chip:#e2f3e9;
+}
+
+.position-filter-block{
+  margin-top:16px;
+  padding:16px;
+  border:1px solid var(--v17-pos-border);
+  border-radius:22px;
+  background:linear-gradient(145deg,#fbfefc,var(--v17-pos-bg));
+}
+.position-filter-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+.position-filter-head b{
+  display:block;
+  color:var(--v17-pos-ink);
+  font-size:15px;
+  letter-spacing:.055em;
+}
+.position-filter-head small{
+  display:block;
+  color:#698177;
+  font-size:12px;
+  line-height:1.35;
+  margin-top:3px;
+  font-weight:700;
+}
+.exact-chip{
+  flex:0 0 auto;
+  padding:7px 9px;
+  border-radius:99px;
+  background:var(--v17-pos-chip);
+  color:var(--v17-pos-accent);
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.05em;
+}
+.position-filter-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.position-filter-grid label{margin:0;color:#355b4d;font-size:14px}
+.position-filter-grid .field{margin-top:7px;border-color:#cddfd5}
+.position-filter-grid .field:focus{border-color:#4e9a79;box-shadow:0 0 0 4px rgba(78,154,121,.12)}
+.position-filter-help{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:10px;
+  color:#71867d;
+  font-size:11px;
+  font-weight:750;
+}
+.position-filter-help:before{
+  content:'=';
+  width:22px;height:22px;border-radius:50%;
+  display:grid;place-items:center;
+  background:#e5f2ea;color:#287556;
+  font-weight:950;
+}
+
+.count-position-card .position-filter-block{margin:0 0 14px}
+.count-scope{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:16px 0;
+  padding:14px 16px;
+  border:1px solid #cfe3d7;
+  border-radius:18px;
+  background:#eef8f2;
+  color:#315f4c;
+}
+.count-scope span{display:block;font-size:10px;font-weight:950;letter-spacing:.08em;color:#5a796a}
+.count-scope b{display:block;margin-top:2px;font-size:15px;line-height:1.25}
+.count-scope i{
+  flex:0 0 auto;
+  width:36px;height:36px;border-radius:12px;
+  display:grid;place-items:center;
+  background:#dff1e6;color:#1b7d56;
+  font-style:normal;font-weight:950;
+}
+.count-card .count-position-meta{color:#6a7f91!important;font-size:13px!important;line-height:1.35}
+
+@media(max-width:470px){
+  .position-filter-block{padding:14px}
+  .position-filter-grid{grid-template-columns:1fr}
+  .position-filter-head{align-items:center}
+  .exact-chip{font-size:9px}
+  .count-scope{padding:12px 14px}
+}
