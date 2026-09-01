@@ -1,0 +1,160 @@
+/* NOVA workflow V14 — explicit lifecycle actions + safe terminal states */
+:root{
+  --v14-danger:#b8463e;
+  --v14-danger-soft:#fff0ed;
+  --v14-danger-border:#efc9c3;
+  --v14-neutral:#eef4f8;
+  --v14-neutral-border:#d4e1e9;
+  --v14-green:#18af7a;
+  --v14-ink:#173552;
+}
+
+.workflow-actions{
+  display:grid;
+  grid-template-columns:minmax(0,.86fr) minmax(0,1.45fr);
+  gap:12px;
+  margin-top:20px;
+  padding-top:18px;
+  border-top:1px solid #dfe8ee;
+}
+.workflow-actions>button{
+  width:100%!important;
+  min-height:62px!important;
+  margin:0!important;
+}
+.workflow-cancel{
+  border:1px solid var(--v14-neutral-border);
+  border-radius:17px;
+  background:var(--v14-neutral);
+  color:#4f687d;
+  font-weight:950;
+  padding:10px 15px;
+}
+.workflow-cancel.danger{
+  background:var(--v14-danger-soft);
+  border-color:var(--v14-danger-border);
+  color:var(--v14-danger);
+}
+.record-actions{
+  margin:22px 0 0;
+  padding:18px;
+  border:1px solid #d9e4eb;
+  border-radius:22px;
+  background:rgba(255,255,255,.72);
+  box-shadow:0 9px 22px rgba(23,53,82,.045);
+}
+.record-actions h3{
+  margin:0 0 5px;
+  font-size:15px;
+  letter-spacing:.04em;
+}
+.record-actions p{
+  margin:0 0 14px;
+  color:#657d91;
+  font-size:13px;
+  line-height:1.35;
+}
+.record-actions .danger-action,
+.record-actions .close-action{
+  width:100%;
+  min-height:58px;
+  border-radius:17px;
+  font-weight:950;
+}
+.record-actions .danger-action{
+  background:var(--v14-danger-soft);
+  color:var(--v14-danger);
+  border:1px solid var(--v14-danger-border);
+}
+.record-actions .close-action{
+  background:#fff5df;
+  color:#8b6417;
+  border:1px solid #ecd6a4;
+}
+.terminal-banner{
+  margin:16px 0;
+  padding:16px 18px;
+  border-radius:19px;
+  font-weight:850;
+  line-height:1.35;
+}
+.terminal-banner.cancelled{
+  background:var(--v14-danger-soft);
+  color:#963c35;
+  border:1px solid var(--v14-danger-border);
+}
+.terminal-banner.closed{
+  background:#fff5df;
+  color:#7b5b19;
+  border:1px solid #ead39e;
+}
+.status-pill.cancelled{
+  background:#fde7e3!important;
+  color:#9d3e37!important;
+}
+.status-pill.closed{
+  background:#fff0cf!important;
+  color:#7c5a13!important;
+}
+
+#operationConfirmDialog[open]{
+  width:min(calc(100vw - 30px),440px)!important;
+  max-width:440px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:26px!important;
+  overflow:hidden!important;
+  background:#fff!important;
+}
+#operationConfirmDialog::backdrop{
+  background:rgba(12,29,43,.64);
+  backdrop-filter:blur(5px);
+}
+.operation-confirm-body{padding:24px}
+.operation-confirm-mark{
+  width:54px;height:54px;border-radius:18px;
+  display:grid;place-items:center;
+  background:var(--v14-danger-soft);
+  color:var(--v14-danger);
+  font-size:28px;font-weight:950;
+  margin-bottom:14px;
+}
+.operation-confirm-body h2{margin:0;font-size:24px;line-height:1.06}
+.operation-confirm-body>p{margin:9px 0 18px;color:#63798d;line-height:1.4}
+.operation-confirm-body label{margin-top:0}
+.operation-confirm-body textarea{min-height:88px}
+.operation-confirm-body .workflow-actions{margin-top:16px}
+
+/* Make lifecycle state obvious on cancelled receipts/requests. */
+.receipt-card.is-cancelled,
+.request-card.is-cancelled{
+  opacity:.76;
+  filter:saturate(.72);
+}
+.receipt-card.is-cancelled,
+.request-card.is-cancelled{
+  border-color:#e6c6c1!important;
+}
+
+/* Excel export explanation inside Master details. */
+.excel-table-guarantee{
+  margin:16px 0;
+  padding:14px 16px;
+  border-radius:18px;
+  background:linear-gradient(145deg,#f1faf4,#e3f3e9);
+  border:1px solid #c5dfce;
+  color:#35654e;
+  font-size:13px;
+  font-weight:760;
+  line-height:1.4;
+}
+.excel-table-guarantee b{display:block;color:#185e42;margin-bottom:3px}
+
+@media(max-width:700px){
+  .workflow-actions{grid-template-columns:minmax(0,.82fr) minmax(0,1.35fr);gap:9px}
+  .workflow-actions>button{min-height:58px!important;font-size:14px!important}
+  .record-actions{padding:16px}
+}
+@media(max-width:370px){
+  .workflow-actions{grid-template-columns:1fr}
+}
