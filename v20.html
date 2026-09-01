@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#edf4f8">
+<title>NOVA V20 · caricamento</title>
+<style>html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#edf4f8;color:#173552}.boot{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center}.boot b{font-size:24px}.boot span{display:block;margin-top:8px;color:#687d91}</style>
+</head>
+<body><div class="boot"><div><b>MAGAZZINO NOVA V20</b><span>Caricamento della base V19 certificata…</span></div></div>
+<script>
+(async()=>{
+  const BASE_COMMIT='69f806943be73b1345092c55108b6913c7801c33';
+  const BASE_DIR=`https://rawcdn.githack.com/Mexpy88/audio-grattaevinci/${BASE_COMMIT}/`;
+  const BASE_URL=BASE_DIR+'index.html';
+  const HERE=new URL('.',location.href).href;
+  const response=await fetch(BASE_URL,{cache:'no-store'});
+  if(!response.ok)throw new Error(`Base V19 non disponibile (${response.status})`);
+  let html=await response.text();
+  if(!html.includes('<title>Magazzino NOVA · Teramo · V19</title>'))throw new Error('La baseline caricata non corrisponde alla V19 certificata.');
+  html=html.replace('<head>',`<head><base href="${BASE_DIR}">`);
+  html=html.replace('<title>Magazzino NOVA · Teramo · V19</title>','<title>Magazzino NOVA · Teramo · V20</title>');
+  html=html.replace('</head>',`<link rel="stylesheet" href="${HERE}v20-patch.css?v=20260901"></head>`);
+  html=html.replace('</body>',`<script src="${HERE}v20-patch.js?v=20260901"><\/script></body>`);
+  document.open();document.write(html);document.close();
+})().catch(error=>{console.error(error);document.body.innerHTML=`<div class="boot"><div><b>Impossibile aprire NOVA V20</b><span>${String(error.message||error)}</span></div></div>`});
+</script>
+</body>
+</html>
