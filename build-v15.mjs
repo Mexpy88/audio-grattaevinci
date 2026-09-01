@@ -32,8 +32,8 @@ const finalizer=`async function enhanceWorkbookTables(bytes,{masterSheet='',mast
       const n=(seen.get(base)||0)+1;seen.set(base,n);if(n>1)base=\`\${base} (\${n})\`;columns.push({name:base,filterButton:true});
     }
     const rows=[];for(let r=spec.headerRow+1;r<=lastRow;r++){const row=[];for(let c=1;c<=lastCol;c++)row.push(excelText(ws.getCell(r,c).value));rows.push(row)}
-    const protection=ws.model?.sheetProtection?structuredClone(ws.model.sheetProtection):null;
-    if(protection)ws.model.sheetProtection=null;
+    const protection=ws.sheetProtection?structuredClone(ws.sheetProtection):null;
+    if(protection)ws.sheetProtection=null;
     if(typeof ws.getTables==='function'&&typeof ws.removeTable==='function'){
       for(const table of [...ws.getTables()]){const name=table?.name||table?.table?.name;if(name)ws.removeTable(name)}
     }
@@ -53,7 +53,7 @@ const finalizer=`async function enhanceWorkbookTables(bytes,{masterSheet='',mast
     ws.autoFilter={from:{row:spec.headerRow,column:1},to:{row:Math.max(spec.headerRow,lastRow),column:lastCol}};
     ws.views=[{state:'frozen',ySplit:spec.headerRow,topLeftCell:\`A\${spec.headerRow+1}\`,activeCell:\`A\${spec.headerRow+1}\`}];
     for(let c=1;c<=lastCol;c++){let max=String(columns[c-1].name).length;for(let r=spec.headerRow+1;r<=Math.min(lastRow,spec.headerRow+300);r++)max=Math.max(max,String(excelText(ws.getCell(r,c).value)??'').length);ws.getColumn(c).width=Math.min(44,Math.max(11,max+2))}
-    if(protection)ws.model.sheetProtection={...protection,autoFilter:true,sort:true,selectLockedCells:true,selectUnlockedCells:true};
+    if(protection)ws.sheetProtection={...protection,autoFilter:true,sort:true,selectLockedCells:true,selectUnlockedCells:true};
   }
   return await book.xlsx.writeBuffer();
 }
