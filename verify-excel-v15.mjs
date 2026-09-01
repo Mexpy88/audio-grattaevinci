@@ -10,7 +10,7 @@ assert.match(direct,/<title>Magazzino NOVA · Teramo · V15<\/title>/);
 assert.match(direct,/columns\.push\(\{name:base,filterButton:true\}\)/);
 assert.match(direct,/ws\.getTables\(\)/);
 assert.match(direct,/ws\.removeTable\(name\)/);
-assert.match(direct,/autoFilter:true,sort:true/);
+assert.match(direct,/ws\.sheetProtection=\{\.\.\.protection,autoFilter:true,sort:true/);
 assert.match(direct,/FF1D6B50/);
 assert.match(direct,/FFF1FAF4/);
 assert.match(direct,/FFFFF9ED/);
@@ -72,8 +72,14 @@ const protectedFinal=await enhance(protectedRaw,{masterSheet:'MAGAZZINO',masterH
 const protectedCheck=new ExcelJS.Workbook();await protectedCheck.xlsx.load(protectedFinal);
 const pfinal=protectedCheck.getWorksheet('MAGAZZINO');
 assert.equal(pfinal.getTables().length,1,'protected sheet must still contain a table');
-assert.equal(pfinal.model.sheetProtection?.sheet,true,'sheet protection must survive');
-assert.equal(pfinal.model.sheetProtection?.autoFilter,true,'protected sheet must allow AutoFilter');
-assert.equal(pfinal.model.sheetProtection?.sort,true,'protected sheet must allow sorting');
+assert.equal(pfinal.sheetProtection?.sheet,true,'sheet protection must survive');
+assert.equal(pfinal.sheetProtection?.autoFilter,true,'protected sheet must allow AutoFilter');
+assert.equal(pfinal.sheetProtection?.sort,true,'protected sheet must allow sorting');
+const protectedZip=await JSZip.loadAsync(protectedFinal);
+const protectedSheetXml=await protectedZip.file('xl/worksheets/sheet1.xml').async('string');
+assert.match(protectedSheetXml,/<sheetProtection[^>]*sheet="1"/,'protected sheet OOXML missing');
+assert.match(protectedSheetXml,/<sheetProtection[^>]*autoFilter="0"/,'protected sheet must explicitly allow filters');
+assert.match(protectedSheetXml,/<sheetProtection[^>]*sort="0"/,'protected sheet must explicitly allow sorting');
+assert.match(protectedSheetXml,/<tableParts count="1">/,'protected worksheet table relationship missing');
 
 console.log('NOVA V15 REAL SheetJS → ExcelJS → OOXML table export: OK');
