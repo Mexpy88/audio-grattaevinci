@@ -1,0 +1,33 @@
+ng(relDoc));
+
+    const columns=headers.map((h,i)=>`<tableColumn id="${i+1}" name="${v20XmlEscape(h)}"/>`).join(''),tableName=spec.name||`Tabella${spec.key.replace(/[^A-Za-z0-9]/g,'')}`;
+    const tableXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="${tableId}" name="${tableName}" displayName="${tableName}" ref="${tableRef}" totalsRowShown="0" headerRowCount="1"><autoFilter ref="${tableRef}"/><tableColumns count="${headers.length}">${columns}</tableColumns><tableStyleInfo name="TableStyleMedium2" showFirstColumn="0" showLastColumn="0" showRowStripes="1" showColumnStripes="0"/></table>`;
+    zip.file(tablePath,tableXml);
+    const ov=ctDoc.createElementNS(ctNs,'Override');ov.setAttribute('PartName',`/${tablePath}`);ov.setAttribute('ContentType','application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml');ctRoot.appendChild(ov);
+    created.push({sheet:spec.sheet,index:info.index,sheetPath:info.path,relPath,relId,tablePath,ref:tableRef,columns:headers.length});
+  }
+
+  // FIX V20: rimuove i defined name _FilterDatabase solo dai fogli che ora hanno una vera Table.
+  [...workbookDoc.getElementsByTagNameNS('*','definedName')].forEach(n=>{if(n.getAttribute('name')==='_xlnm._FilterDatabase'&&tableSheetIndexes.has(Number(n.getAttribute('localSheetId')))){fixes.push(`localSheetId ${n.getAttribute('localSheetId')}: rimosso _FilterDatabase ridondante`);n.remove()}});
+  const definedNames=[...workbookDoc.getElementsByTagNameNS('*','definedNames')][0];if(definedNames&&![...definedNames.children].length)definedNames.remove();
+  zip.file(workbookPath,v20XmlString(workbookDoc));zip.file(contentTypePath,v20XmlString(ctDoc));
+
+  // Validatore pre-download: se la struttura è incoerente l'export viene bloccato.
+  for(const t of created){
+    const sheetDoc=v20ParseXml(await zip.file(t.sheetPath).async('string'),t.sheetPath,errors),root=sheetDoc.documentElement;
+    if([...root.children].some(n=>n.localName==='autoFilter'))errors.push(`${t.sheet}: AutoFilter worksheet ridondante presente`);
+    const parts=[...sheetDoc.getElementsByTagNameNS('*','tablePart')];if(parts.length!==1)errors.push(`${t.sheet}: tableParts non coerente`);
+    const relDoc=v20ParseXml(await zip.file(t.relPath).async('string'),t.relPath,errors),rels=[...relDoc.getElementsByTagNameNS('*','Relationship')],rel=rels.find(r=>r.getAttribute('Id')===t.relId&&String(r.getAttribute('Type')||'').endsWith('/table'));
+    if(!rel)errors.push(`${t.sheet}: relazione tabella ${t.relId} assente`);
+    const tf=zip.file(t.tablePath);if(!tf){errors.push(`${t.sheet}: ${t.tablePath} assente`);continue}
+    const tableDoc=v20ParseXml(await tf.async('string'),t.tablePath,errors),table=tableDoc.documentElement,ref=table.getAttribute('ref')||'',af=[...table.children].find(n=>n.localName==='autoFilter'),cols=[...tableDoc.getElementsByTagNameNS('*','tableColumn')];
+    if(ref!==t.ref)errors.push(`${t.sheet}: ref tabella ${ref} diverso da ${t.ref}`);
+    if(!af||af.getAttribute('ref')!==ref)errors.push(`${t.sheet}: AutoFilter tabella non sincronizzato`);
+    if(v20RangeWidth(ref)!==cols.length||cols.length!==t.columns)errors.push(`${t.sheet}: numero colonne tabella incoerente`);
+  }
+  const checkWorkbookDoc=v20ParseXml(await zip.file(workbookPath).async('string'),workbookPath,errors);
+  [...checkWorkbookDoc.getElementsByTagNameNS('*','definedName')].forEach(n=>{if(n.getAttribute('name')==='_xlnm._FilterDatabase'&&tableSheetIndexes.has(Number(n.getAttribute('localSheetId'))))errors.push(`_FilterDatabase residuo sul foglio ${n.getAttribute('localSheetId')}`)});
+  for(const path of Object.keys(zip.files).filter(p=>/^xl\/worksheets\/sheet\d+\.xml$/.test(p))){const f=zip.file(path);if(!f)continue;const xml=await f.async('string');v20ParseXml(xml,path,errors);if(xml.includes('#REF!'))errors.push(`${path}: contiene #REF!`)}
+
+  const uniqueErrors=[...new Set(errors)],validation={ok:uniqueErrors.length===0,build:V20_BUILD,baseCommit:V20_BASE_COMMIT,checkedAt:nowIso(),tables:created.map(t=>({sheet:t.sheet,ref:t.ref})),fixes:[...new Set(fixes)],errors:uniqueErrors};
+  globalThis.__NOVA_V20_LAST_XLSX_VALIDATION

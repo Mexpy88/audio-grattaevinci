@@ -1,0 +1,32 @@
+=validation;
+  if(uniqueErrors.length)throw new Error(`Export Excel bloccato dal validatore V20: ${uniqueErrors.slice(0,4).join(' · ')}`);
+  return await zip.generateAsync({type:'uint8array',compression:'DEFLATE',compressionOptions:{level:6}});
+}
+try{enhanceWorkbookTables=enhanceWorkbookTablesV20}catch(e){console.warn('[NOVA V20] override enhancer non riuscito',e)}
+
+/* =========================================================
+   2) RETTIFICA — audit esteso senza cambiare schema NOVA_DB_V1
+   ========================================================= */
+domain.rectifications.setQuantity=function({currentKey='',article,size,state,location,pallet,counted,note='',reason='',partials=[],method='RECTIFICATION_MANUAL',sessionId=''}){
+  if(!this.auth.can('RECTIFY'))throw new Error('Operazione non autorizzata.');
+  const current=currentKey?this.stock.findByKey(currentKey):null,item=current?cleanItem(current):cleanItem({article,size,state}),bucket=current?cleanBucket(current):cleanBucket({location,pallet}),old=Number(current?.quantity||0),target=integer(counted),delta=target-old,checkedAt=nowIso(),cleanPartials=(partials||[]).map(integer).filter(x=>x>0);
+  if(!item.article)throw new Error('Inserisci l’articolo.');if(!bucket.location&&!bucket.pallet)throw new Error('Inserisci almeno Fila/Scaffale oppure Bancale.');
+  const source={kind:'RECTIFICATION',method,note:String(note||''),reason:String(reason||''),sessionId:String(sessionId||''),partials:cleanPartials,checkedAt,before:old,after:target,delta};
+  const event=this.ledger.adjust(item,bucket,delta,source);
+  this.audit.record('RECTIFICATION','STOCK',currentKey||bucketKey({...item,...bucket}),{quantity:old},{quantity:target},{article:item.article,size:item.size,state:item.state,location:bucket.location,pallet:bucket.pallet,before:old,after:target,delta,reason:source.reason,note:source.note,partials:cleanPartials,method,sessionId:source.sessionId,checkedAt});
+  this.store.save(method==='ASSISTED_COUNT'?'stock:count-rectify':'stock:rectify');
+  return{event,before:old,after:target,delta,item,bucket};
+};
+
+ui.rectFiltersOpen=false;ui.rectSaving=false;
+ui.openRectify=function(key=''){
+  if(!this.require('RECTIFY',{master:true}))return;const from=this.router.route.name,selected=key?this.domain.stock.findByKey(key):null;
+  this.rectifyContext={from,filters:from==='stock'?this.captureStockFilters():null};
+  this.rectifyDraft={selectedKey:selected?bucketKey(selected):'',counted:selected?.quantity??0,reason:'CONTEGGIO FISICO',note:''};this.rectFiltersOpen=false;this.router.go('rectify',{key:selected?bucketKey(selected):''});
+};
+ui.rectify=function(key=''){
+  if(!this.require('RECTIFY',{master:true}))return'';
+  if(!this.rectifyDraft){const r=key?this.domain.stock.findByKey(key):null;this.rectifyDraft={selectedKey:r?bucketKey(r):'',counted:r?.quantity??0,reason:'CONTEGGIO FISICO',note:''}}
+  const selected=this.rectifyDraft.selectedKey?this.domain.stock.findByKey(this.rectifyDraft.selectedKey):null,searchValue=selected?`${selected.article}${selected.size?` · ${selected.size}`:''}`:'';
+  setTimeout(()=>this.renderRectifyResults(),0);
+  return `${this.sectionTitle('GIACENZE','Rettifica','Seleziona la giacenza reale e registra il nuovo conteggio.')}<div class="v20-rect-shell"><section class="form-card v20-rect-search"><div class="v20-kicker">RETTIFICA INVENTARIALE</div><label>Articolo<input id="rectSearch" class="field stock-query-uppercase" value="${esc(searchValue)}" placeholder="Scrivi codice articolo o taglia…" autocapitalize="characters" autocomplete="off" spellcheck="false"></label><div id="rectifyResults" class="v20-rect-results ${selected?'hidden':''}"></div><button type="button" class="v20-advanced-toggle" data-action="rect-filter-toggle">FILTRI AVANZATI <span>${this.rectFiltersOpen?'▴':'▾'}</span></button><div id="rectAdvanced" class="v20-advanced ${this.rectFiltersOpen?'':'hidden'}"><div class="two"><label>Taglia<input id="rectFilterSize" class="field" placeholder="Tutte"></label><label>Stato<select id="rectFilterState" class="field"><option value="">TUTTI GLI STATI</option>${CONFIG.states.map(s=>`<option>${s}</option>`).join('')}</select></label></div><div class="two"><label>Fila / Sca

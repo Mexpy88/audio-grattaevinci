@@ -1,0 +1,9 @@
+rectSearch'){el.value=el.value.toUpperCase();const current=this.rectifyDraft?.selectedKey?this.domain.stock.findByKey(this.rectifyDraft.selectedKey):null,label=current?norm(`${current.article}${current.size?` · ${current.size}`:''}`):'';if(current&&norm(el.value)!==label){this.rectifyDraft.selectedKey='';this.rectifyDraft.counted=0;const key=document.getElementById('rectKey');if(key)key.value='';this.renderRectifySelected()}this.renderRectifyResults()}if(['rectFilterSize','rectFilterLocation','rectFilterPallet'].includes(el.id))this.renderRectifyResults();if(el.id==='rectCounted')this.rectDirect(el.value);return oldInput(el)};
+const oldChange=ui.change.bind(ui);ui.change=function(el){if(el.id==='rectFilterState')this.renderRectifyResults();if(el.id==='rectReason'&&this.rectifyDraft)this.rectifyDraft.reason=el.value;if(el.id==='rectNote'&&this.rectifyDraft)this.rectifyDraft.note=el.value;return oldChange(el)};
+
+// Indicatore minimo, senza modificare dashboard o moduli non coinvolti.
+const oldMaster=ui.master.bind(ui);ui.master=function(){return oldMaster().replace('EXPORT EXCEL V19','EXPORT EXCEL V20 · VALIDATO').replace('Ricostruisce automaticamente tabelle Excel reali, intestazioni, filtri, righe alternate e range fino all’ultima riga, anche se il file importato aveva perso la modalità tabella.','Mantiene una sola fonte di verità per i range delle Tabelle Excel e valida la struttura OOXML prima del download.')};
+
+globalThis.NOVA_V20=Object.freeze({build:V20_BUILD,baseCommit:V20_BASE_COMMIT,get lastExcelValidation(){return globalThis.__NOVA_V20_LAST_XLSX_VALIDATION||null}});
+console.info('[NOVA V20] patch attiva',globalThis.NOVA_V20);
+})();
