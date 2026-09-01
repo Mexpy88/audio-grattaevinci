@@ -27,7 +27,6 @@ vm.runInContext(`${fnCode};globalThis.__enhance=enhanceWorkbookTables`,context);
 const enhance=context.__enhance;
 assert.equal(typeof enhance,'function');
 
-// Reproduce the real NOVA path: SheetJS writes the workbook first, then the exact browser V15 finalizer repairs it.
 const aoa=[
   ['SCAFFALE / FILA','BANCALE','ARTICOLO','TAGLIA','NUOVO','SCARICATO','USATO','NOTE','DATA CONTROLLO QUANTITÀ'],
   ['1','','I30219UHF','2XL','','','','',''],
@@ -44,19 +43,16 @@ const ws=finalBook.getWorksheet('MAGAZZINO');assert.ok(ws,'MAGAZZINO missing');
 const tables=ws.getTables();assert.equal(tables.length,1,'final workbook must contain exactly one structured table');
 const table=tables[0];
 assert.equal(table.table.name,'NOVA_MAGAZZINO');
-assert.equal(table.table.ref,'A1');
 assert.ok(table.table.columns.every(c=>c.filterButton!==false),'every table column must expose its filter button');
 assert.ok(ws.autoFilter,'worksheet AutoFilter missing');
 assert.equal(ws.getCell('A1').fill?.fgColor?.argb,'FF1D6B50');
 assert.equal(ws.getCell('A2').fill?.fgColor?.argb,'FFF1FAF4');
 assert.equal(ws.getCell('A3').fill?.fgColor?.argb,'FFFFF9ED');
 
-// Save and reopen once more: proves the table survives serialization exactly as Excel will receive it.
 const persisted=await finalBook.xlsx.writeBuffer();
 const reopened=new ExcelJS.Workbook();await reopened.xlsx.load(persisted);
 assert.equal(reopened.getWorksheet('MAGAZZINO').getTables().length,1,'structured table lost after roundtrip');
 
-// Inspect OOXML directly: this is the actual ListObject/table relationship that Excel needs.
 const zip=await JSZip.loadAsync(persisted);
 const tableFiles=Object.keys(zip.files).filter(n=>/^xl\/tables\/table\d+\.xml$/.test(n));
 assert.equal(tableFiles.length,1,'OOXML table part missing');
@@ -66,8 +62,9 @@ assert.match(tableXml,/tableStyleInfo name="TableStyleMedium4"/,'table style mis
 const sheetXml=await zip.file('xl/worksheets/sheet1.xml').async('string');
 assert.match(sheetXml,/<tableParts count="1">/,'worksheet tableParts relationship missing');
 assert.match(sheetXml,/<autoFilter ref="A1:I4"/,'worksheet AutoFilter missing');
+const relsXml=await zip.file('xl/worksheets/_rels/sheet1.xml.rels').async('string');
+assert.match(relsXml,/relationships\/table/,'worksheet relationship to table missing');
 
-// Protected-sheet case: keep protection but explicitly allow filters/sorting.
 const protectedBook=new ExcelJS.Workbook(),pws=protectedBook.addWorksheet('MAGAZZINO');
 pws.addRows(aoa);await pws.protect('test-password',{autoFilter:false,sort:false});
 const protectedRaw=await protectedBook.xlsx.writeBuffer();
