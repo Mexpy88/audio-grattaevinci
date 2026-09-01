@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 
 const direct=fs.readFileSync('index.html','utf8');
-assert.match(direct,/<title>Magazzino NOVA · Teramo · V17<\/title>/);
+assert.match(direct,/<title>Magazzino NOVA · Teramo · V1[78]<\/title>/);
 assert.match(direct,/bundle\/position-v17\.css/);
 assert.match(direct,/const positionKey=value=>norm\(value\)\.replace/);
 assert.match(direct,/const positionMatches=\(row,location='',pallet=''\)=>/);
@@ -35,5 +35,5 @@ assert.equal(positionMatches({location:'52',pallet:'157'},'5',''),false);
 
 const script=(direct.match(/<script>([\s\S]*?)<\/script>/)||[])[1];
 assert.ok(script,'application script missing');
-new vm.Script(script,{filename:'nova-v17.js'});
-console.log('NOVA V17 exact independent position engine + UX: OK');
+new vm.Script(script,{filename:'nova-position-regression.js'});
+console.log('NOVA exact independent position engine + UX regression: OK');
