@@ -40,10 +40,38 @@ html=html.split("mode:parsed.mode,source:'FRESH_IMPORT',masterId:").join("mode:p
 mustReplace("{rows:parsed.rows.length,source:next.master.source,masterId:next.master.masterId,version:next.master.version}","{rows:parsed.rowCount,stockRows:parsed.rows.length,source:next.master.source,masterId:next.master.masterId,version:next.master.version}",'Master import audit row counts');
 mustReplace("return{rows:parsed.rows.length,source:next.master.source,filename:file.name,restored:!!(nova||legacy)}","return{rows:parsed.rowCount,stockRows:parsed.rows.length,source:next.master.source,filename:file.name,restored:!!(nova||legacy)}",'Master import result row count');
 
-/* Rebuild Excel tables to match the user's reference workbook. Do not create hidden filter buttons or a totals row. */
+/* ExcelJS 4.4 serializes hidden table filter buttons and totalsRowShown incorrectly for our reference contract. Load JSZip only during export, then normalize the final OOXML package. */
+mustReplace(
+  "const EXCELJS_URL='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';\nconst X=()=>globalThis.XLSX;",
+  "const EXCELJS_URL='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';\nconst JSZIP_URL='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';\nconst X=()=>globalThis.XLSX;\nconst JZ=()=>globalThis.JSZip;",
+  'JSZip export engine URL'
+);
+mustReplace(
+  "const excelText=v=>",
+  `let jsZipPromise=null;
+async function ensureJsZip(){
+  if(JZ())return JZ();
+  if(typeof document==='undefined')throw new Error('Motore pacchetto Excel non disponibile.');
+  if(!jsZipPromise)jsZipPromise=new Promise((resolve,reject)=>{
+    const existing=document.querySelector('script[data-nova-jszip]');
+    if(existing){existing.addEventListener('load',()=>JZ()?resolve(JZ()):reject(new Error('Motore pacchetto Excel non disponibile.')),{once:true});existing.addEventListener('error',()=>reject(new Error('Impossibile caricare il motore pacchetto Excel.')),{once:true});return}
+    const s=document.createElement('script');s.src=JSZIP_URL;s.async=true;s.dataset.novaJszip='1';s.onload=()=>JZ()?resolve(JZ()):reject(new Error('Motore pacchetto Excel non disponibile.'));s.onerror=()=>reject(new Error('Impossibile caricare il motore pacchetto Excel. Verifica la connessione.'));document.head.appendChild(s);
+  }).catch(e=>{jsZipPromise=null;throw e});
+  return jsZipPromise;
+}
+const excelText=v=>`,
+  'Lazy JSZip loader'
+);
+
+/* Rebuild Excel tables to match the user's reference workbook. */
 const finalizerRe=/async function enhanceWorkbookTables\(bytes,\{masterSheet='',masterHeaderRow=1,registryOnly=false\}=\{\}\)\{[\s\S]*?\n\}\nlet xlsxPromise=null;/;
 if(!finalizerRe.test(html))throw new Error('NOVA V18 build contract missing: Excel finalizer');
-const finalizer=`async function enhanceWorkbookTables(bytes,{masterSheet='',masterHeaderRow=1,registryOnly=false}={}){
+const finalizer=`async function patchExcelTableXml(buffer){
+  const JSZip=await ensureJsZip(),zip=await JSZip.loadAsync(buffer),tableFiles=Object.keys(zip.files).filter(name=>/^xl\\/tables\\/table\\d+\\.xml$/.test(name));
+  for(const name of tableFiles){const entry=zip.file(name);if(!entry)continue;let xml=await entry.async('string');xml=xml.replace(/totalsRowShown="1"/g,'totalsRowShown="0"').replace(/<filterColumn\\b[^>]*\\bhiddenButton="1"[^>]*\\/>/g,'').replace(/\\s+totalsRowLabel="Total"/g,'').replace(/\\s+totalsRowFunction="none"/g,'');zip.file(name,xml)}
+  return await zip.generateAsync({type:'uint8array',compression:'DEFLATE',compressionOptions:{level:6}})
+}
+async function enhanceWorkbookTables(bytes,{masterSheet='',masterHeaderRow=1,registryOnly=false}={}){
   const ExcelJS=await ensureExcelJs(),book=new ExcelJS.Workbook();
   await book.xlsx.load(bytes);
   const specs=registryOnly
@@ -69,7 +97,7 @@ const finalizer=`async function enhanceWorkbookTables(bytes,{masterSheet='',mast
     const protection=ws.sheetProtection?structuredClone(ws.sheetProtection):null;if(protection)ws.sheetProtection=null;
     if(typeof ws.getTables==='function'&&typeof ws.removeTable==='function'){for(const table of [...ws.getTables()]){const name=table?.name||table?.table?.name;if(name)ws.removeTable(name)}}
     ws.autoFilter=null;
-    if(rows.length){const table=ws.addTable({name:spec.key==='MAGAZZINO'?'Tabella1':excelTableName(spec.key),ref:headerRow.getCell(1).address,headerRow:true,style:{theme:'TableStyleMedium2',showFirstColumn:false,showLastColumn:false,showRowStripes:true,showColumnStripes:false},columns,rows});if(table?.commit)table.commit()}
+    if(rows.length){const table=ws.addTable({name:spec.key==='MAGAZZINO'?'Tabella1':excelTableName(spec.key),ref:headerRow.getCell(1).address,headerRow:true,totalsRow:false,style:{theme:'TableStyleMedium2',showFirstColumn:false,showLastColumn:false,showRowStripes:true,showColumnStripes:false},columns,rows});if(table?.commit)table.commit()}
     ws.views=[{state:'frozen',ySplit:spec.headerRow,topLeftCell:\`A\${spec.headerRow+1}\`,activeCell:\`A\${spec.headerRow+1}\`}];
     if(spec.key==='MAGAZZINO'){
       const widths=[58.28515625,20.140625,40.140625,48.7109375,17.85546875,19,11.7109375,34.42578125,32];
@@ -85,7 +113,8 @@ const finalizer=`async function enhanceWorkbookTables(bytes,{masterSheet='',mast
     }
     if(protection)ws.sheetProtection={...protection,autoFilter:true,sort:true,selectLockedCells:true,selectUnlockedCells:true};
   }
-  return await book.xlsx.writeBuffer();
+  const serialized=await book.xlsx.writeBuffer();
+  return await patchExcelTableXml(serialized)
 }
 let xlsxPromise=null;`;
 html=html.replace(finalizerRe,finalizer);
