@@ -1,0 +1,28 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+
+const direct=fs.readFileSync('index.html','utf8');
+assert.match(direct,/<title>Magazzino NOVA · Teramo · V15<\/title>/);
+assert.match(direct,/EXPORT EXCEL V15/);
+assert.match(direct,/data-action="receipt-draft-cancel">ANNULLA BOZZA/);
+assert.match(direct,/data-action="request-draft-cancel">ANNULLA BOZZA/);
+assert.match(direct,/data-action="receipt-cancel"/);
+assert.match(direct,/data-action="request-cancel"/);
+assert.match(direct,/data-action="request-close"/);
+assert.match(direct,/RECEIPT_CANCELLED/);
+assert.match(direct,/REQUEST_CANCELLED/);
+assert.match(direct,/REQUEST_CLOSED_PARTIAL/);
+assert.match(direct,/>Numero Documento</);
+assert.match(direct,/>Data Documento</);
+assert.match(direct,/>Quantità documento</);
+assert.doesNotMatch(direct,/>Numero DDT</);
+assert.match(direct,/async function enhanceWorkbookTables/);
+assert.match(direct,/ws\.getTables\(\)/);
+assert.match(direct,/ws\.removeTable\(name\)/);
+assert.match(direct,/filterButton:true/);
+assert.match(direct,/autoFilter:true,sort:true/);
+const script=(direct.match(/<script>([\s\S]*?)<\/script>/)||[])[1];
+assert.ok(script,'application script missing');
+new vm.Script(script,{filename:'nova-v15.js'});
+console.log('NOVA V15 integrated lifecycle + terminology + export contracts: OK');
