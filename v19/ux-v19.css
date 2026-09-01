@@ -1,5 +1,7 @@
 /* NOVA V19 · WMS rectification + assisted count */
 :root{--v19-violet:#7256b8;--v19-violet-2:#9279ce;--v19-lilac:#f1edfb;--v19-lilac-2:#e8e0f8;--v19-success:#139565;--v19-success-soft:#e9f7f0}
+[data-action="rectify-open"],[data-action="rectify-new"]{background:linear-gradient(145deg,#f1edfb,#e8e0f8)!important;color:#563f8e!important;border:1px solid #d7cbed!important;box-shadow:0 5px 14px rgba(86,63,142,.08)!important}
+[data-action="rectify-open"]:active,[data-action="rectify-new"]:active{transform:translateY(1px);background:#e5dcf7!important}
 .rectify-shell{display:grid;gap:18px}
 .rectify-search-card{border:1px solid #d9d0ef;background:linear-gradient(145deg,#fff,#f8f5ff);box-shadow:0 12px 34px rgba(74,52,130,.10)}
 .rectify-search-card .field:focus{border-color:var(--v19-violet);box-shadow:0 0 0 4px rgba(114,86,184,.13)}
