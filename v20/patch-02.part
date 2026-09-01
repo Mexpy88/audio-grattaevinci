@@ -1,0 +1,38 @@
+eet:'AUDIT',headerRow:1,key:'AUDIT',name:'TabellaAudit'}
+    ];
+
+  // Rimuove esclusivamente la struttura tabellare preesistente che V19 già ricostruiva.
+  for(const path of Object.keys(zip.files).filter(n=>/^xl\/tables\/table\d+\.xml$/.test(n)))zip.remove(path);
+  const contentTypePath='[Content_Types].xml',ctFile=zip.file(contentTypePath);if(!ctFile)throw new Error('Export Excel V20: [Content_Types].xml mancante.');
+  const ctDoc=v20ParseXml(await ctFile.async('string'),contentTypePath,errors),ctRoot=ctDoc.documentElement,ctNs=ctRoot.namespaceURI;
+  [...ctDoc.getElementsByTagNameNS('*','Override')].filter(n=>String(n.getAttribute('PartName')||'').startsWith('/xl/tables/')).forEach(n=>n.remove());
+
+  // Pulisce tableParts/relationship table. Non tocca altri tipi di relationship.
+  for(const info of sheetInfos.values()){
+    const sf=zip.file(info.path);if(sf){const doc=v20ParseXml(await sf.async('string'),info.path,errors);[...doc.getElementsByTagNameNS('*','tableParts')].forEach(n=>n.remove());zip.file(info.path,v20XmlString(doc))}
+    const rp=v20SheetRelsPath(info.path),rf=zip.file(rp);if(rf){const doc=v20ParseXml(await rf.async('string'),rp,errors);[...doc.getElementsByTagNameNS('*','Relationship')].filter(r=>(r.getAttribute('Type')||'').endsWith('/table')).forEach(r=>r.remove());zip.file(rp,v20XmlString(doc))}
+  }
+
+  let tableId=0;const created=[];const tableSheetIndexes=new Set();
+  for(const spec of specs){
+    const ws=book.Sheets[spec.sheet],info=sheetInfos.get(spec.sheet);if(!ws||!info)continue;
+    const ref=X().utils.decode_range(ws['!ref']||`A${spec.headerRow}`),headerIndex=spec.headerRow-1;let lastCol=-1;
+    for(let c=0;c<=ref.e.c;c++)if(v20CellValue(ws,headerIndex,c)!=='')lastCol=c;
+    if(lastCol<0)continue;
+    const headers=[];for(let c=0;c<=lastCol;c++)headers.push(v20CellValue(ws,headerIndex,c)||`COLONNA ${c+1}`);
+    const lastRow=Math.max(spec.headerRow,v20LastDataRow(ws,spec.headerRow,lastCol)),tableRef=`A${spec.headerRow}:${v20ColName(lastCol)}${lastRow}`;
+    tableId++;tableSheetIndexes.add(info.index);
+
+    const sf=zip.file(info.path);if(!sf){errors.push(`${spec.sheet}: XML foglio mancante`);continue}
+    const sheetDoc=v20ParseXml(await sf.async('string'),info.path,errors),root=sheetDoc.documentElement;
+    // FIX V20: se esiste una tabella strutturata, l'AutoFilter del worksheet è ridondante e può restare con un range vecchio.
+    [...root.children].filter(n=>n.localName==='autoFilter').forEach(n=>{n.remove();fixes.push(`${spec.sheet}: rimosso AutoFilter foglio ridondante`)});
+    [...root.getElementsByTagNameNS('*','sheetProtection')].forEach(n=>{n.setAttribute('autoFilter','0');n.setAttribute('sort','0')});
+    if(!root.getAttribute('xmlns:r'))root.setAttributeNS('http://www.w3.org/2000/xmlns/','xmlns:r','http://schemas.openxmlformats.org/officeDocument/2006/relationships');
+
+    const relPath=v20SheetRelsPath(info.path),relFile=zip.file(relPath),relDoc=relFile?v20ParseXml(await relFile.async('string'),relPath,errors):v20ParseXml('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>',relPath,errors),relRoot=relDoc.documentElement;
+    const relId=`rIdV20Table${tableId}`,tablePath=`xl/tables/table${tableId}.xml`,target=`../tables/table${tableId}.xml`;
+    const relationship=relDoc.createElementNS(relRoot.namespaceURI,'Relationship');relationship.setAttribute('Id',relId);relationship.setAttribute('Type','http://schemas.openxmlformats.org/officeDocument/2006/relationships/table');relationship.setAttribute('Target',target);relRoot.appendChild(relationship);
+    const tableParts=sheetDoc.createElementNS(root.namespaceURI,'tableParts');tableParts.setAttribute('count','1');const tablePart=sheetDoc.createElementNS(root.namespaceURI,'tablePart');tablePart.setAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','r:id',relId);tableParts.appendChild(tablePart);
+    const ext=[...root.children].find(n=>n.localName==='extLst');if(ext)root.insertBefore(tableParts,ext);else root.appendChild(tableParts);
+    zip.file(info.path,v20XmlString(sheetDoc));zip.file(relPath,v20XmlStri
