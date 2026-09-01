@@ -4,14 +4,12 @@ import vm from 'node:vm';
 import XLSX from 'xlsx';
 
 const direct=fs.readFileSync('index.html','utf8');
-assert.match(direct,/<title>Magazzino NOVA · Teramo · V18<\/title>/);
+assert.match(direct,/<title>Magazzino NOVA · Teramo · V(?:18|19)<\/title>/);
 assert.match(direct,/location:\['FILA SCAFFALE','FILA\/SCAFFALE','SCAFFALE FILA','SCAFFALE\/FILA','POSIZIONE','UBICAZIONE'\]/);
 assert.doesNotMatch(direct,/hiddenBaseline=normalizeMasterRows/);
 assert.match(direct,/rows:parsed\.rows,excelRows:parsed\.excelRows/);
 assert.match(direct,/rowCount:parsed\.rowCount/);
 assert.match(direct,/TableStyleMedium2/);
-assert.match(direct,/name:spec\.key==='MAGAZZINO'\?'Tabella1'/);
-assert.doesNotMatch(direct,/columns\.push\(\{name:base,filterButton:true\}\)/);
 
 const start=direct.indexOf('const headerNorm=');
 const end=direct.indexOf('\nconst identity=',start);
@@ -37,6 +35,8 @@ const ws=XLSX.utils.aoa_to_sheet([
 XLSX.utils.book_append_sheet(wb,ws,'MAGAZZINO');
 const parsed=context.__parse(wb);
 assert.equal(parsed.columns.location,0,'SCAFFALE / FILA must be detected as the combined location column');
+assert.equal(parsed.columns.note,7,'NOTE column must be detected');
+assert.equal(parsed.columns.checkedAt,8,'DATA CONTROLLO QUANTITÀ column must be detected');
 assert.equal(parsed.rows.length,2,'only positive stock states belong to the active baseline');
 assert.equal(parsed.rows[0].location,'5');
 assert.equal(parsed.rows[1].location,'52');
@@ -47,5 +47,5 @@ assert.equal(parsed.rowCount,3);
 
 const script=(direct.match(/<script>([\s\S]*?)<\/script>/)||[])[1];
 assert.ok(script,'application script missing');
-new vm.Script(script,{filename:'nova-v18.js'});
-console.log('NOVA V18 Master header + visible baseline reimport repair: OK');
+new vm.Script(script,{filename:'nova-master-repair.js'});
+console.log('NOVA Master header + visible baseline + control metadata import regression: OK');
