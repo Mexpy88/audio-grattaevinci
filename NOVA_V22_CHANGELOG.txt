@@ -1,0 +1,33 @@
+NOVA V22 — STATI, RICHIESTE ED EXCEL LEGGIBILE
+Baseline certificata: NOVA V21, commit e1e87d3b747aa23ade7dd6b809d00eed74a7dbf3
+Schema dati: NOVA_DB_V1 (invariato)
+
+1. RETTIFICA E CONTEGGIO ASSISTITO
+- Lo stato fisico può essere corretto tra NUOVO, USATO, SCARICATO, DISMESSO e NON_CHIARO.
+- Il cambio stato è una riclassificazione reale della giacenza, non una modifica grafica.
+- Se il bucket di destinazione esiste, le quantità vengono aggregate.
+- Audit esplicito con stato precedente/nuovo, quantità prima/dopo, delta, posizione, motivo e nota.
+
+2. SPOSTAMENTO
+- Aggiunto lo stato di destinazione.
+- Spostamento e riclassificazione sono un'unica operazione logica e si annullano insieme.
+
+3. RICHIESTE
+- Nome leggibile e immutabile: Richiesta <Destinazione>-GG.MM.AAAA-rN.
+- Progressivo giornaliero separato per destinazione; non viene riutilizzato dopo un'eliminazione.
+- ID tecnico RQ-YYYY-NNNNN mantenuto per Audit e collegamenti interni.
+- CTA INIZIA PREPARAZIONE / CONTINUA PREPARAZIONE visibile subito dopo i KPI.
+- Nessuna CTA di preparazione per richieste completate.
+- Nelle card di Avanzamento la preparazione è l'azione primaria e il dettaglio resta accessibile.
+
+4. EXCEL
+- ARTICOLO e TAGLIA restano sempre colonne separate.
+- RICHIESTE espone ID tecnico, nome leggibile, progressivo, stato e avanzamento.
+- SCARICHI distingue pezzi fisici, pezzi scaricati dalla giacenza e differenza inventario.
+- REGISTRO_MOVIMENTI e AUDIT espongono stati e quantità prima/dopo in colonne dedicate.
+- MAGAZZINO aggiunge automaticamente eventuali colonne stato mancanti nel modello originale (es. DISMESSO e NON_CHIARO).
+- Restano attivi Tabelle Excel reali, AutoFilter coerenti e validatore OOXML V20.
+
+5. COMPATIBILITÀ
+- Migrazione automatica e deterministica dei nomi per le richieste storiche.
+- Import/reimport e database interno restano retrocompatibili con V19/V20/V21.
