@@ -1,0 +1,33 @@
+NOVA V21 — PRELIEVO PROGRESSIVO E CONTROLLO GIACENZA
+Data: 02/09/2026
+Baseline immutabile: NOVA V20 · 2d6d7de042d36a957f05d7f5b04bea0a39764009
+
+AMBITO DELLA PATCH
+- Modulo Richieste > Preparazione/Prelievo.
+- Persistenza dell'avanzamento confermato.
+- Gestione delle eccedenze fisiche rispetto alla giacenza registrata.
+- Evidenza UX e Audit delle anomalie di pallet.
+- Nessuna modifica allo schema NOVA_DB_V1.
+
+COMPORTAMENTO
+1. Ogni posizione di prelievo dispone di "CONFERMA PRELIEVO".
+2. La conferma registra immediatamente cartoni, pezzi, movimento, Audit e avanzamento.
+3. I prelievi confermati restano visibili in verde e sono correggibili.
+4. Le digitazioni non ancora confermate restano bozze e non alterano l'avanzamento.
+5. È consentito registrare una quantità fisica superiore alla disponibilità del gestionale.
+6. La giacenza viene scaricata fino a zero e non può diventare negativa.
+7. La quantità fisica effettiva resta integralmente registrata nella richiesta.
+8. Nova crea automaticamente la nota "INVENTARIO RICHIESTO" con articolo, posizione,
+   pallet, quantità gestionale e quantità fisicamente prelevata.
+9. L'anomalia è visibile in Avanzamento, dettaglio richiesta, SCARICHI e AUDIT.
+10. La correzione annulla in modo tracciato la conferma e ripristina la quantità
+    effettivamente scaricata dal gestionale.
+
+REGRESSIONI VERIFICATE
+- Ciclo V19 Rettifica + Conteggio Assistito invariato.
+- Prelievo normale 10 su 15: giacenza finale 5, nessuna anomalia.
+- Prelievo eccedente 50 su 15: giacenza finale 0, fisico 50, scostamento 35.
+- Persistenza immediata nel database locale.
+- Riapertura prelievo: avanzamento rimosso e giacenza ripristinata a 15.
+- Area Ricevimento: residuo da ubicare mai negativo e correttamente ripristinato.
+- Scarico ordinario superiore alla disponibilità: continua a essere bloccato.
